@@ -1,0 +1,102 @@
+=== TEST os-boot 2026-11-04T19:23:49Z ===
+   Compiling os-boot v0.1.0 (/Users/test/Desktop/meta-os/crates/os-boot)
+    Finished `release` profile [optimized] target(s) in 0.98s
+     Running unittests src/lib.rs (target/release/deps/os_boot-8f74217627553e04)
+
+running 23 tests
+test carried::tests::test_carried_manifest_count ... ok
+test cli::tests::test_caps_empty_and_listed ... ok
+test cli::tests::test_dispatch_with_and_without_workers ... ok
+test cli::tests::test_dispatch_at_file_error ... ok
+test cli::tests::test_reconcile_passthrough ... ok
+test cli::tests::test_expand_text_plain_and_empty ... ok
+test cli::tests::test_register_backend_error ... ok
+test cli::tests::test_register_output_sorted_raw_caps ... ok
+test cli::tests::test_review_and_merge_fake_backend ... ok
+test cli::tests::test_run_cli_arg_errors ... ok
+test cli::tests::test_run_cli_dispatch_defaults ... ok
+test cli::tests::test_split_caps_filters_and_keeps_raw ... ok
+test cli::tests::test_tick_clean_and_errors ... ok
+test cli::tests::test_verify_ok_and_fail ... ok
+test cli::tests::test_worker_once_claim_failed_no_no_dispatches_line ... ok
+test cli::tests::test_worker_once_claim_skip_and_empty ... ok
+test cli::tests::test_expand_text_at_file ... ok
+test carried::tests::test_carried_units_look_like_units ... ok
+test carried::tests::test_carried_files_byte_identical ... ok
+test git::tests::test_gitops_merge_refuses_dirty_and_self ... ok
+test git::tests::test_gitops_review_rejects_self_unknown_and_non_repo ... ok
+test git::tests::test_gitops_review_branch_via_cli ... ok
+test git::tests::test_gitops_approve_merge_via_cli ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-9fa6849f3f47323a)
+
+running 10 tests
+test empty_argv_is_the_empty_case ... ok
+test an_at_sign_alone_is_an_empty_path_and_refuses ... ok
+test duplicate_caps_are_kept_in_order ... ok
+test equals_form_and_space_form_agree ... ok
+test flags_in_reverse_order_parse_the_same ... ok
+test empty_caps_string_registers_with_no_capabilities ... ok
+test duplicate_flags_take_the_first_value ... ok
+test whitespace_only_caps_is_empty ... ok
+test maximum_caps_string_keeps_every_entry ... ok
+test maximum_input_passes_through_untouched ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-d682312722faddf3)
+
+running 13 tests
+test expand_text_refuses_a_missing_at_file ... ok
+test dispatch_refuses_an_unreadable_spec_file_as_exit_one ... ok
+test register_reports_a_backend_failure_as_exit_one ... ok
+test tick_prints_errors_on_stderr_and_exits_two ... ok
+test worker_loop_mode_is_refused_with_the_agent_driven_line ... ok
+test verify_failure_exits_one_and_says_not_verified ... ok
+test usage_refusals_are_exit_two ... ok
+test review_refuses_a_plain_directory ... ok
+test merge_refuses_base_into_itself ... ok
+test review_refuses_base_against_itself_before_touching_git_refs ... ok
+test merge_refuses_a_dirty_working_tree ... ok
+test review_refuses_an_unknown_branch ... ok
+test merge_refuses_an_unknown_branch_on_a_clean_tree ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-c80e81d8f2cdb576)
+
+running 13 tests
+test custos_group_has_four_entries ... ok
+test every_entry_is_a_relative_path_without_traversal ... ok
+test loop_group_has_four_entries ... ok
+test asset_path_mirrors_the_entry_under_assets ... ok
+test manifest_has_no_duplicate_entries ... ok
+test manifest_has_no_empty_entries ... ok
+test t153_group_has_ten_systemd_entries ... ok
+test source_path_resolves_under_the_repo_os_tree ... ok
+test t154_group_has_ten_systemd_entries ... ok
+test t155_group_has_ten_docs_and_build_entries ... ok
+test t156_group_has_nine_image_entries ... ok
+test every_asset_is_non_empty ... ok
+test every_asset_is_a_regular_file ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13_boot.rs (target/release/deps/section13_boot-d656e429442aaba9)
+
+running 3 tests
+test config_missing_kernel_path ... ok
+test config_duplicate_entry ... ok
+test config_unknown_key ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_boot
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:23:52Z

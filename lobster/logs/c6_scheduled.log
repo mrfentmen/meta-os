@@ -1,0 +1,4 @@
+$ lobster scheduled.lobster
+wake 1: memory says: remember: K6 booted before breakfast
+wake 2 (+2s): memory says: remember: K6 booted before breakfast
+RC=0

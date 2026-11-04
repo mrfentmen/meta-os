@@ -5,7 +5,21 @@
 # Every check is a real process with a real assertion. Stated, not
 # hidden: runner script because the language lacks one.
 set -eu
-GOOSE=/Users/test/mcp-servers/toolchains/goose-src/build/goose
+# Toolchain discovery (Lane B, R5): $GOOSE wins, then PATH, then known build
+# trees. The old hard-coded /Users/test/... path worked on one machine only.
+if [ -z "${GOOSE:-}" ]; then GOOSE="$(command -v goose || true)"; fi
+if [ -z "${GOOSE:-}" ]; then
+  for cand in /opt/homebrew/bin/goose /usr/local/bin/goose \
+      "$HOME/mcp-servers/toolchains/goose-src/build/goose" \
+      /Users/test/mcp-servers/toolchains/goose-src/build/goose; do
+    if [ -x "$cand" ]; then GOOSE="$cand"; break; fi
+  done
+  unset cand
+fi
+if [ -z "${GOOSE:-}" ] || [ ! -x "$GOOSE" ]; then
+  echo "goose tests: SKIP (no Goose toolchain found)" >&2
+  exit 2
+fi
 PASS=0; FAIL=0
 check() { # check <name> <expected> <actual>
   if [ "$2" = "$3" ]; then echo "PASS: $1"; PASS=$((PASS+1)); else echo "FAIL: $1 (want [$2] got [$3])"; FAIL=$((FAIL+1)); fi

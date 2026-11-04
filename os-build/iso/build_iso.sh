@@ -30,6 +30,12 @@
 #                               looks for <iso>.sha256 or SHA256SUMS beside it
 #   --no-verify-base            patch an unverified ISO (explicit opt-out;
 #                               the build prints a WARN and the sha256)
+#   --rebuild <base.iso> [--outdir DIR]
+#                               full arm64 rebuild on this Mac: runs
+#                               build-arm64-inner.sh inside
+#                               docker --platform linux/arm64 (needs Docker +
+#                               ~15 GB free). Prints the output sha256.
+#                               Fails if any payload file is missing.
 #
 # Claim label: WRITTEN, UNRUN. XORRISO/mksquashfs are not on the build Mac;
 # --check and --tree-only are the modes proven locally.
@@ -134,6 +140,12 @@ verify_base() {
 
 # Post-build payload check. The VM run proves boot; this proves the build
 # actually wrote our files into the image instead of silently skipping a copy.
+# Two scopes: (a) the squashfs (theme, calamares, hook, autostart, kiosk
+# session, face, agent, autologin, release stamp); (b) the ISO tree itself
+# (.disk/info branding, grub layerfs/branding). The plymouth file names
+# below match what provision.sh actually ships (meta-m.png/background.png/
+# progress.png), not the aspirational logo/wordmark/dot set the first
+# version of this check named.
 inspect_mode() {
     local iso=$1
     [ -f "$iso" ] || die "ISO not found: $iso"
@@ -141,39 +153,96 @@ inspect_mode() {
     have unsquashfs || die "--inspect needs unsquashfs (squashfs-tools)"
     local tmp
     tmp=$(mktemp -d)
-    trap 'rm -rf "$tmp"' EXIT
+    trap 'rm -rf "${tmp:-}"' EXIT
     say "inspecting $iso (sha256 $(sha256_of "$iso"))"
     xorriso -osirrox on -indev "$iso" -extract /casper/filesystem.squashfs "$tmp/fs.squashfs" >/dev/null 2>&1 \
         || die "no casper/filesystem.squashfs inside $iso"
-    unsquashfs -l "$tmp/fs.squashfs" > "$tmp/list.txt" 2>/dev/null \
+    unsquashfs -l "$tmp/fs.squashfs" > "$tmp/list-raw.txt" 2>/dev/null \
         || die "unsquashfs -l failed on the extracted squashfs"
+    # unsquashfs -l prefixes every entry with squashfs-root/; strip that
+    # (plus any leading ./ or /) so the asserts below read clean paths.
+    sed -e 's|^squashfs-root/||' -e 's|^\./||' -e 's|^/||' "$tmp/list-raw.txt" > "$tmp/list.txt"
     local missing=0 checked=0 f
     for f in \
         usr/share/plymouth/themes/metaos/metaos.plymouth \
         usr/share/plymouth/themes/metaos/metaos.script \
-        usr/share/plymouth/themes/metaos/logo.png \
-        usr/share/plymouth/themes/metaos/wordmark.png \
-        usr/share/plymouth/themes/metaos/dot.png \
+        usr/share/plymouth/themes/metaos/background.png \
+        usr/share/plymouth/themes/metaos/meta-m.png \
+        usr/share/plymouth/themes/metaos/progress.png \
         etc/plymouth/plymouthd.conf \
         etc/calamares/settings.conf \
         etc/calamares/modules/meta-branding.conf \
         etc/calamares/branding/metaos/branding.desc \
         usr/local/lib/metaos/meta-branding.sh \
         etc/xdg/autostart/metaos-install.desktop \
-        usr/share/metaos/installer.png ; do
+        usr/share/metaos/installer.png \
+        usr/share/xsessions/metaos.desktop \
+        etc/lightdm/lightdm.conf.d/50-metaos.conf \
+        opt/face/session.sh \
+        opt/face/kiosk.sh \
+        opt/face/shell.html \
+        usr/share/metaos/agent/server/queue/queue_service.py \
+        usr/lib/systemd/user/oc2-queue.service \
+        etc/xdg/autostart/meta-agent-login.desktop \
+        etc/metaos/release ; do
         checked=$((checked + 1))
         # Directory entries end in / in unsquashfs -l output; accept both.
         if grep -qx -e "$f" -e "/$f" -e "$f/" -e "/$f/" "$tmp/list.txt"; then
-            printf '  [OK]      %s\n' "$f"
+            printf '  [OK]      squashfs:%s\n' "$f"
         else
-            printf '  [MISSING] %s\n' "$f"
+            printf '  [MISSING] squashfs:%s\n' "$f"
             missing=1
         fi
     done
+    # Autologin + kiosk session content, not just presence.
+    unsquashfs -cat "$tmp/fs.squashfs" etc/lightdm/lightdm.conf.d/50-metaos.conf > "$tmp/50-metaos.conf" 2>/dev/null \
+        || die "cannot read 50-metaos.conf from squashfs"
+    if grep -q '^autologin-user=meta' "$tmp/50-metaos.conf" && grep -q '^user-session=metaos' "$tmp/50-metaos.conf"; then
+        printf '  [OK]      autologin-user=meta, user-session=metaos\n'
+        checked=$((checked + 1))
+    else
+        printf '  [MISSING] autologin ubuntu + metaos session in 50-metaos.conf\n'
+        missing=1
+    fi
+    unsquashfs -cat "$tmp/fs.squashfs" usr/share/xsessions/metaos.desktop > "$tmp/metaos.desktop" 2>/dev/null \
+        || die "cannot read metaos.desktop from squashfs"
+    if grep -q '^Exec=/opt/face/session.sh' "$tmp/metaos.desktop"; then
+        printf '  [OK]      kiosk session Exec=/opt/face/session.sh\n'
+        checked=$((checked + 1))
+    else
+        printf '  [MISSING] kiosk session Exec line\n'
+        missing=1
+    fi
+    # ISO tree scope: .disk/info branding + grub.
+    xorriso -osirrox on -indev "$iso" -extract /.disk/info "$tmp/disk-info" >/dev/null 2>&1 \
+        || die "no .disk/info inside $iso"
+    if grep -q 'MetaOS' "$tmp/disk-info"; then
+        printf '  [OK]      .disk/info: %s\n' "$(cat "$tmp/disk-info")"
+        checked=$((checked + 1))
+    else
+        printf '  [MISSING] .disk/info branding (got: %s)\n' "$(cat "$tmp/disk-info")"
+        missing=1
+    fi
+    xorriso -osirrox on -indev "$iso" -extract /boot/grub/grub.cfg "$tmp/grub.cfg" >/dev/null 2>&1 \
+        || die "no boot/grub/grub.cfg inside $iso"
+    if grep -q 'layerfs-path=filesystem.squashfs' "$tmp/grub.cfg"; then
+        printf '  [OK]      grub layerfs-path=filesystem.squashfs\n'
+        checked=$((checked + 1))
+    else
+        printf '  [MISSING] grub layerfs-path\n'
+        missing=1
+    fi
+    if grep -q 'MetaOS' "$tmp/grub.cfg"; then
+        printf '  [OK]      grub MetaOS branding\n'
+        checked=$((checked + 1))
+    else
+        printf '  [MISSING] grub MetaOS branding\n'
+        missing=1
+    fi
     if [ "$missing" = "1" ]; then
         die "payload incomplete in $iso"
     fi
-    say "payload complete: all $checked required paths present inside the squashfs"
+    say "payload complete: all $checked required paths present (squashfs + ISO tree)"
 }
 
 usage() {
@@ -463,10 +532,35 @@ DESKTOP
     say "tree-only: tree at $tree"
 }
 
+# ----------------------------------------------------------------- rebuild
+# C6: one-line containerised arm64 rebuild for the Mac. Inputs: the base
+# ISO + this repo. Prints the output sha256. Any missing payload file
+# fails inside build-arm64-inner.sh (STEP payload-check); a manual step
+# would print MANUAL-STEP + exit non-zero (there are none: all automated).
+rebuild_mode() {
+    local base=$1 outdir=$2
+    [ -f "$base" ] || die "--rebuild: base ISO not found: $base"
+    have docker || die "--rebuild needs docker"
+    mkdir -p "$outdir"
+    local base_abs out_abs
+    base_abs=$(CDPATH= cd -- "$(dirname -- "$base")" && pwd)/$(basename -- "$base")
+    out_abs=$(CDPATH= cd -- "$outdir" && pwd)
+    say "rebuild: base=$base_abs out=$out_abs (docker linux/arm64)"
+    docker volume create metaos-arm64-work >/dev/null 2>&1 || true
+    docker run --rm --name metaos-c-build --privileged --platform linux/arm64 \
+        -v "$base_abs:/base.iso:ro" \
+        -v "metaos-arm64-work:/work" \
+        -v "$out_abs:/out" \
+        -v "$ROOT_DIR:/repo:ro" \
+        -e BASE_ISO=/base.iso -e WORK=/work/build -e OUTDIR=/out -e REPO=/repo \
+        ubuntu:24.04 bash /repo/os-build/iso/build-arm64-inner.sh
+}
+
 # -------------------------------------------------------------------- main
 MODE=""
 BASE_ISO=""
 OUT="$HERE/metaos-1.0-amd64.iso"
+REBUILD_OUT="$HERE/output"
 CUBIC_ROOT=""
 TREE_DIR=""
 SUMS_FILE=""
@@ -483,6 +577,8 @@ while [ $# -gt 0 ]; do
         --root) MODE=root; CUBIC_ROOT=${2:-}; shift || true ;;
         --iso) MODE=iso; BASE_ISO=${2:-}; shift || true ;;
         --out) OUT=${2:-}; shift || true ;;
+        --outdir) REBUILD_OUT=${2:-}; shift || true ;;
+        --rebuild) MODE=rebuild; BASE_ISO=${2:-}; shift || true ;;
         --verify-base) MODE=verify; BASE_ISO=${2:-}; shift || true ;;
         --base-info) MODE=baseinfo; BASE_ISO=${2:-}; shift || true ;;
         --inspect) MODE=inspect; BASE_ISO=${2:-}; shift || true ;;
@@ -499,6 +595,7 @@ case "$MODE" in
     treeonly) tree_only_mode "$TREE_DIR" ;;
     root)   root_mode "$CUBIC_ROOT" ;;
     iso)    iso_mode "$BASE_ISO" "$OUT" ;;
+    rebuild) rebuild_mode "$BASE_ISO" "$REBUILD_OUT" ;;
     verify) verify_base "$BASE_ISO" "$SUMS_FILE"; say "base verification complete" ;;
     baseinfo) base_info "$BASE_ISO" ;;
     inspect) inspect_mode "$BASE_ISO" ;;

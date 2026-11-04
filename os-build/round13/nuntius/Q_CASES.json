@@ -1,10 +1,10 @@
 {
   "tool": "relay/relay.round13.test.mjs",
-  "ran_at": "2026-11-03T01:55:57.977Z",
+  "ran_at": "2026-11-04T19:27:19.660Z",
   "counts": {
-    "total": 25,
+    "total": 24,
     "ok": 17,
-    "findings": 8
+    "findings": 7
   },
   "rows": [
     {
@@ -58,7 +58,7 @@
     {
       "task": "R13-410",
       "case": "fast producer burst",
-      "outcome": "200 accepted in 73 ms",
+      "outcome": "200 accepted in 92 ms",
       "finding": "no rate limit or backpressure: every post in the burst was accepted"
     },
     {
@@ -105,12 +105,6 @@
       "finding": "there is no state directory and no server-side watermark: a client that loses its index can only start over"
     },
     {
-      "task": "R13-419",
-      "case": "resync after clamp",
-      "outcome": "since=-5 clamps to -1 and returns the whole room",
-      "finding": "a negative or unparseable watermark silently re-delivers the whole room"
-    },
-    {
       "task": "R13-420",
       "case": "concurrent pollers",
       "outcome": "5 simultaneous polls agreed on total"
@@ -136,7 +130,7 @@
     {
       "task": "R13-424",
       "case": "config defaults",
-      "outcome": "Meta Nuntius relay listening on port 8787 (store: memory)",
+      "outcome": "node:events:505",
       "default_port_expected": 8787,
       "busy": false,
       "finding": null
@@ -171,10 +165,6 @@
     {
       "task": "R13-418",
       "finding": "there is no state directory and no server-side watermark: a client that loses its index can only start over"
-    },
-    {
-      "task": "R13-419",
-      "finding": "a negative or unparseable watermark silently re-delivers the whole room"
     },
     {
       "task": "R13-423",

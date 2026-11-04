@@ -92,3 +92,41 @@ That has to be confirmed at boot before the autostart hand-off is final.
 My recommendation is **B**, because the image is already here and verified,
 and the merge is mechanical. It is not built yet; this file records the
 measurement, not a claim that it works.
+
+---
+
+# arm64 base — decision of lane C, 2026-11-03 (verified, not assumed)
+
+File: `/tmp/ubuntu-24.04.5-desktop-arm64.iso` (3,967,463,424 bytes ≈ 3.7 GiB).
+Identity: **Ubuntu 24.04.5 LTS "Noble Numbat" — Release arm64 (20260908)**,
+from `.disk/info`.
+
+## It is the official image (verified, not assumed)
+
+```
+$ shasum -a 256 /tmp/ubuntu-24.04.5-desktop-arm64.iso
+2be09ca883921bff6d8e6b0bfbafd13e32436553b7086f33bce3a4c5bad8bd14
+
+$ curl -fsSL https://cdimage.ubuntu.com/ubuntu/releases/24.04.5/release/SHA256SUMS | grep desktop-arm64
+2be09ca883921bff6d8e6b0bfbafd13e32436553b7086f33bce3a4c5bad8bd14 *ubuntu-24.04.5-desktop-arm64.iso
+```
+
+Exact match against Canonical's published sums (ubuntu/releases/24.04.5).
+
+## It is layered, like the amd64 Xubuntu base
+
+`casper/` carries `minimal.squashfs` (1.9 GB) + `minimal.standard.squashfs`
+(480 MB) + `minimal.standard.live.squashfs` (1.19 GB), selected by
+`casper/install-sources.yaml` (`type: fsimage-layered`). There is no
+`casper/filesystem.squashfs`. Same merge strategy as BASE_FACTS option B,
+but native: host and rootfs are both aarch64, so no qemu-user-static.
+
+## Why arm64 is the lane decision (see os-build/lanes/C_ISO_REPORT.md)
+
+The working MetaOS system (`/tmp/metaos.ext4`) is arm64 and boots on this
+Mac under `qemu-system-aarch64 -M virt -cpu host -accel hvf`. The amd64
+base can only boot under full x86 emulation here. One architecture ships:
+arm64. The amd64 lane (`merge-layers.sh`, this file's first half) stays as
+the separate-build record; it is not deleted, but no amd64 ISO is produced
+by lane C.
+

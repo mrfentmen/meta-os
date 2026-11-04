@@ -180,7 +180,7 @@ The base is Debian — we say so, because a judge will check."
 | Messaging app | `bus.html` ships with a tile, but it needs a relay REST URL + token; offline it says `Status: not connected` |
 | 3D fps numbers | measurement (agent-4) |
 | Every tile clicked | per-tile proof; 27 tiles exist, Board is the only one with a capture |
-| Icons are all distinct | several tiles share a shield glyph, so the dock reads repetitive |
+| Icon glyphs read clearly at 40px | none are duplicates (`shasum` over the 26 files shows 0 identical pairs), but the two shields (Aegis, Imperium) look alike and the terminal mark is a bare slash — polish, not a bug |
 
 ---
 

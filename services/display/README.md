@@ -1,6 +1,6 @@
 # display — virtual consoles over one framebuffer
 
-Status: **RUNS** — `tests/t56_input_display` (49 checks, exit 0), plus
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/display/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `tests/t56_input_display` (49 checks, exit 0), plus
 `tests/t115_display_r11` for the console limits and the text helpers; the text module is
 also driven by `t79_limit_drivers` and `t103_limits_rest`. Layer 4, service 11.
 

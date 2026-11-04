@@ -58,8 +58,12 @@ pub const DENIED: u64 = u64::MAX - 1;
 /// Ask the kernel for this task's remaining capability budget:
 /// `(remaining_ticks << 32) | remaining_write_bytes`. Returns
 /// `u64::MAX` when the task has no policy.
+///
+/// Number 8, not 6: 6 and 7 are the frozen IPC pair (`ipc_send`,
+/// `ipc_recv`) per `os-build/KERNEL_SPEC.md`. The capability slice is
+/// not merged into the booting tree yet; 8 is its number when it lands.
 pub fn sys_cap_query() -> u64 {
-    syscall(6, 0, 0, 0)
+    syscall(8, 0, 0, 0)
 }
 
 /// One page. The kernel's write arm refuses anything larger instead of

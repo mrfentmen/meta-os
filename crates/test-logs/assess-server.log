@@ -1,0 +1,62 @@
+=== TEST assess-server 2026-11-04T19:23:43Z ===
+   Compiling assess-server v0.1.0 (/Users/test/Desktop/meta-os/crates/assess-server)
+    Finished `release` profile [optimized] target(s) in 1.25s
+     Running unittests src/main.rs (target/release/deps/assess_server-f7bb3658edbda548)
+
+running 43 tests
+test tests::build_job_refuses_bad_product_timestamp_and_empty_frame ... ok
+test tests::edge_poll_with_zero_bound_still_fetches_once ... ok
+test tests::direct_model_held_returns_503 ... ok
+test tests::assess_missing_product ... ok
+test tests::bad_request_is_400 ... ok
+test tests::edge_poll_out_of_order_returns_done_after_two_pending ... ok
+test tests::assess_unknown_product ... ok
+test tests::direct_model_ok_returns_200 ... ok
+test tests::edge_duplicate_json_keys_keep_the_last_value ... ok
+test tests::assess_bad_json ... ok
+test tests::fetch_refuses_an_empty_job_id_before_transport ... ok
+test tests::fetch_refuses_disabled_and_unconfigured_before_transport ... ok
+test tests::http_caps_are_the_documented_values ... ok
+test tests::http_content_types_are_the_documented_five ... ok
+test tests::image_refuses_a_non_string_and_bad_base64 ... ok
+test tests::image_rejects_a_non_data_url_and_zero_bytes ... ok
+test tests::image_requires_the_jpeg_magic_bytes ... ok
+test tests::invalid_model_answer_is_502_never_silent_fallback ... ok
+test tests::model_held_and_not_configured_are_distinct_refusals ... ok
+test tests::parse_refuses_malformed_envelopes ... ok
+test tests::poll_propagates_a_transport_error_without_retrying ... ok
+test tests::poll_timeout_is_typed_queue_error ... ok
+test tests::guardrail_stop_refuses_before_send ... ok
+test tests::prompt_refuses_an_unknown_product ... ok
+test tests::proposed_shape_refuses_a_mismatched_job_and_non_string_error ... ok
+test tests::queue_disabled_never_touched ... ok
+test tests::queue_done_off_contract_is_502 ... ok
+test tests::queue_done_answer_is_returned_without_calling_the_model ... ok
+test tests::queue_failure_and_submit_failure_fall_back_to_the_direct_path ... ok
+test tests::queue_first_invalid_answer_is_502 ... ok
+test tests::queue_job_id_deterministic ... ok
+test tests::result_shapes_normalize ... ok
+test tests::submit_refuses_layers_before_any_transport ... ok
+test tests::timestamp_strict ... ok
+test tests::validate_collects_every_missing_field ... ok
+test tests::validate_rejects_non_object_bodies ... ok
+test tests::http_invalid_json_is_a_400 ... ok
+test tests::http_refuses_oversize_body_with_413_before_reading ... ok
+test tests::http_static_refuses_traversal_and_missing_files ... ok
+test tests::http_answers_options_with_204_and_wrong_methods_with_405 ... ok
+test tests::http_routes_refuse_unknown_routes_and_wrong_methods ... ok
+test tests::image_refuses_one_byte_over_the_cap ... ok
+test tests::image_accepts_exactly_the_cap ... ok
+
+test result: ok. 43 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/section14_assess.rs (target/release/deps/section14_assess-d9f6a97ef29c4ba1)
+
+running 3 tests
+test assess_confidence_types ... ok
+test assess_response_contract ... ok
+test assess_region_bounds ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:23:45Z

@@ -1,0 +1,123 @@
+=== TEST os-misc 2026-11-04T19:24:02Z ===
+   Compiling os-misc v0.1.0 (/Users/test/Desktop/meta-os/crates/os-misc)
+    Finished `release` profile [optimized] target(s) in 1.40s
+     Running unittests src/lib.rs (target/release/deps/os_misc-b97d672f1dc6eeea)
+
+running 47 tests
+test b24::presence::tests::suffix_shapes ... ok
+test b24::send::tests::basename_shapes ... ok
+test b24::send::tests::at_shapes ... ok
+test b24::send::tests::pomodoro_shapes ... ok
+test b24::send::tests::duration_shapes ... ok
+test b24::poll::tests::missing_seen_starts_at_zero ... ok
+test b24::presence::tests::empty_means_no_one ... ok
+test b24::watch::tests::interval_must_be_positive ... ok
+test b24::watch_nick::tests::flag_and_render_shapes ... ok
+test b24::watch_nick::tests::matches_canonical_or_display ... ok
+test b25::announce::tests::filter_keeps_announcer_only ... ok
+test b25::announce::tests::filter_no_announcer_keeps_all ... ok
+test b25::announce::tests::gate_shapes ... ok
+test b25::clipboard::tests::tool_order_matches_spec ... ok
+test b25::edits::tests::length_limit ... ok
+test b25::edits::tests::parse_shapes ... ok
+test b25::forward::tests::fwd_parse_shapes ... ok
+test b25::forward::tests::via_collapse_single_hop ... ok
+test b25::paste::tests::known_vector ... ok
+test b25::saved::tests::key_and_label_shapes ... ok
+test b25::paste::tests::verify_round_trip ... ok
+test b25::saved::tests::list_filter_and_render ... ok
+test b26::admin::tests::display_shapes ... ok
+test b26::admin::tests::rekey_and_envelope ... ok
+test b26::digest::tests::talkers_and_hours ... ok
+test b26::export::tests::bad_time_is_unknown ... ok
+test b26::export::tests::md_and_json_shapes ... ok
+test b26::health::tests::uptime_shapes ... ok
+test b26::health::tests::line_shape ... ok
+test b26::timecapsule::tests::sweep_shapes ... ok
+test b26::webhook::tests::resolve_shapes ... ok
+test b27::par_clock::tests::alert_line_shape ... ok
+test b24::store::tests::bad_lines_skipped ... ok
+test b27::par_clock::tests::enter_twice_refused_and_id_rules ... ok
+test b27::par_clock::tests::complete_resets_and_exit_silences ... ok
+test b27::par_clock::tests::grace_escalates_and_dedupes ... ok
+test b27::par_clock::tests::inputs_never_mutated_and_crews_independent ... ok
+test b27::par_clock::tests::quiet_before_interval_and_once_per_cycle ... ok
+test b24::poll::tests::filters_own_and_advances ... ok
+test b27::validate::tests::dir_match ... ok
+test b27::validate::tests::privacy_crossing_rule ... ok
+test b27::validate::tests::rejects_non_object_and_missing_keys ... ok
+test b28::tests::inventory_complete ... ok
+test b29::tests::inventory_complete ... ok
+test b30::tests::inventory_complete ... ok
+test b24::store::tests::edit_only_author_and_history ... ok
+test b24::store::tests::append_ids_increment_and_survive ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-ea4f5aa97f2a0147)
+
+running 4 tests
+test maximum_input ... ok
+test empty_input ... ok
+test out_of_order_input ... ok
+test duplicate_input ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-0748ad67cea22bbf)
+
+running 17 tests
+test missing_seen_file_reads_as_zero ... ok
+test clip_hash_mismatch_is_loud ... ok
+test crew_id_rules_and_lifecycle_refusals ... ok
+test edit_text_refuses_empty_and_over_max ... ok
+test pack_validator_refuses_non_object_and_missing_keys ... ok
+test admin_display_and_rekey_refusals ... ok
+test announce_gate_names_claim_holder_and_mods ... ok
+test duration_refusals_name_the_accepted_shapes ... ok
+test positive_only_intervals ... ok
+test pack_validator_names_unknown_serves_and_bad_severity ... ok
+test presence_render_carries_both_suffixes ... ok
+test watch_refuses_nonpositive_interval_and_bus_error ... ok
+test store_write_failure_is_returned_not_panicked ... ok
+test webhook_url_resolution_refusals ... ok
+test store_refuses_empty_nick_and_empty_text ... ok
+test poll_surfaces_transport_failure_and_warns_on_best_effort_writes ... ok
+test store_edit_refusals_are_exact ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-8d5db6876f958936)
+
+running 7 tests
+test bus_key_round_trips_the_default_and_a_room ... ok
+test mark_seen_default_succeeds ... ok
+test max_text_is_the_relay_common_value ... ok
+test presence_beat_default_succeeds ... ok
+test room_for_key_extracts_a_room_name ... ok
+test room_for_key_treats_the_default_list_as_no_room ... ok
+test own_prefixes_defaults_to_the_canonical_nick_only ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13_misc.rs (target/release/deps/section13_misc-f74dc867bdb17a4e)
+
+running 8 tests
+test misc_numeric_bounds_zero ... ok
+test misc_string_edges_basename ... ok
+test misc_string_edges_duration ... ok
+test misc_string_edges_room_keys ... ok
+test misc_string_edges_pomodoro ... ok
+test misc_numeric_bounds_timestamps ... ok
+test misc_string_edges_ttl ... ok
+test misc_numeric_bounds_interval ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_misc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:04Z

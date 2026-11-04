@@ -1,6 +1,6 @@
 # dns — the resolver client
 
-Status: **RUNS** — `tests/t57_dhcp_dns` passes 45 checks and `tests/t79_limit_drivers`
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/dns/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `tests/t57_dhcp_dns` passes 45 checks and `tests/t79_limit_drivers`
 drives the three name limits in the native host corpus; Round 11 adds
 `tests/t116_dns_r11` for both sides of the jump cap. Layer 4, service 16. Pure: bytes
 in, bytes out, no cache and no timers.

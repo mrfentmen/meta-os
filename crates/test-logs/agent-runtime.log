@@ -1,0 +1,94 @@
+=== TEST agent-runtime 2026-11-04T19:23:41Z ===
+   Compiling agent-runtime v0.1.0 (/Users/test/Desktop/meta-os/crates/agent-runtime)
+    Finished `release` profile [optimized] target(s) in 1.14s
+     Running unittests src/lib.rs (target/release/deps/agent_runtime-fe5ed5595e469f23)
+
+running 3 tests
+test tests::full_contract_vectors ... ok
+test tests::valid_first_output_is_exactly_one_call ... ok
+test tests::invalid_then_valid_retries_once ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-6bc1e6f765506ac2)
+
+running 11 tests
+test empty_observations_array_is_valid ... ok
+test confidence_boundaries_are_inclusive ... ok
+test empty_image_bytes_reach_the_generator_as_empty ... ok
+test long_ascii_error_is_capped_at_500_in_the_result ... ok
+test empty_job_id_is_served_and_echoed ... ok
+test duplicate_serve_skips_before_generating ... ok
+test duplicate_submit_keeps_the_first_envelope ... ok
+test out_of_order_serve_loses_the_claim_then_wins_after_release ... ok
+test long_ascii_error_is_capped_at_200_in_the_finish_note ... ok
+test utf8_error_is_capped_without_panicking ... ok
+test five_hundred_observations_are_accepted ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-aca214d79e42743f)
+
+running 12 tests
+test relay_failed_payload_is_a_warning_and_names_the_error ... ok
+test relay_ok_payload_does_not_panic_and_is_capped ... ok
+test claim_race_lost_writes_nothing ... ok
+test missing_envelope_refuses ... ok
+test first_generation_error_refuses ... ok
+test non_jpeg_data_url_refuses ... ok
+test bad_base64_refuses ... ok
+test sha256_mismatch_refuses ... ok
+test invalid_after_exactly_one_retry_refuses ... ok
+test retry_generation_error_refuses_with_first_model_and_latency ... ok
+test validator_names_an_empty_expected_product ... ok
+test validator_refuses_a_non_object ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-29d0460a2eef93df)
+
+running 17 tests
+test confidence_key_must_be_present_even_when_null ... ok
+test extra_fields_are_tolerated_and_do_not_change_the_result ... ok
+test now_iso_is_epoch_millis_not_iso8601 ... ok
+test observation_evidence_must_be_present_and_a_string ... ok
+test observations_must_be_an_array_not_null ... ok
+test iso8601_accepts_zulu_seconds_fractions_and_numeric_offsets ... ok
+test observation_category_cannot_be_whitespace_only ... ok
+test observation_item_must_be_an_object ... ok
+test an_empty_evidence_string_is_accepted ... ok
+test iso8601_rejects_impossible_dates_times_and_offsets ... ok
+test outcome_values_are_distinct ... ok
+test processing_block_is_required_with_model_and_latency ... ok
+test product_must_match_exactly_including_case_and_spacing ... ok
+test relay_payload_needs_a_job_id ... ok
+test requires_human_review_must_be_boolean ... ok
+test summary_must_be_a_string ... ok
+test uncertainty_must_be_an_array_of_strings ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section14_registry.rs (target/release/deps/section14_registry-a9bd2f2a52262c75)
+
+running 4 tests
+test agent_draft_detected ... ok
+test registry_duplicate_name ... ok
+test agent_empty_command_refused ... ok
+test registry_fixture_loads ... FAILED
+
+failures:
+
+---- registry_fixture_loads stdout ----
+
+thread 'registry_fixture_loads' (20894086) panicked at crates/agent-runtime/tests/section14_registry.rs:93:44:
+the real registry loads: RegistryError("registry: entry 0 (imperium-patrol) command must not be empty")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    registry_fixture_loads
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p agent-runtime --test section14_registry`
+EXIT=101 2026-11-04T19:23:43Z

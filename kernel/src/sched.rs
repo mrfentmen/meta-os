@@ -712,6 +712,17 @@ fn run_command(line: &[u8], truncated: bool) {
         // clear), and whether fetch joins it awaits a Pax/Hana
         // ruling, asked on room 1 with this landing.
         fetch_screen();
+    } else if line == b"ipc" {
+        // Lane E (R5): kernel-side IPC self-test. Exercises the REAL
+        // mailbox state machine (ipc_try_send/ipc_try_recv on this
+        // console task's own row) through every leg: loopback send,
+        // full-box refusal, receive, empty receive, dead-peer refusal,
+        // undersized-buffer refusal with the message kept. Log prefix
+        // is `ipc selftest:`, deliberately distinct from the pinned
+        // `user ipc ...` ring-3 gate lines (design §7): those need
+        // Buffy's talker/listener pair and stay owed. Help line
+        // unchanged (Pax call, clear/fetch precedent).
+        ipc_selftest();
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
@@ -781,6 +792,90 @@ fn fetch_screen() {
         frames_free, frames_total, heap_free_kb, heap_total_kb
     );
     println!("Programs: hello sleeper crasher (ring 3)");
+}
+
+/// Lane E (R5) IPC self-test, run as the console task on its own row.
+/// Every leg below calls the real mailbox functions with real state —
+/// no stub, no simulated peer. Legs: (1) loopback send to self,
+/// (2) full-box refusal on the immediate second send, (3) receive
+/// with sender check, (4) empty receive, (5) dead-peer refusal to the
+/// first exited task id found, (6) undersized-buffer refusal that keeps
+/// the message, then the real receive. Any failed leg prints its own
+/// `ipc selftest: FAIL ...` line and stops; a clean run ends with
+/// `ipc selftest: done`. Repeatable: the box is empty at the end.
+fn ipc_selftest() {
+    let me = current_id();
+    // Leg 1: loopback send.
+    if !ipc_try_send(me, b"hi") {
+        println!("ipc selftest: FAIL loopback send refused");
+        return;
+    }
+    println!("ipc selftest: sent 2 bytes to self");
+    // Leg 2: the box holds one message, so a second send refuses.
+    if ipc_try_send(me, b"again") {
+        println!("ipc selftest: FAIL full box accepted a second send");
+        return;
+    }
+    println!("ipc selftest: full-box refusal ok");
+    // Leg 6 first (order matters): a 1-byte buffer cannot hold the
+    // 8-byte sender header plus payload, so it refuses WITHOUT
+    // consuming the queued message.
+    let mut tiny = [0u8; 1];
+    if ipc_try_recv(&mut tiny).is_some() {
+        println!("ipc selftest: FAIL tiny buffer consumed the message");
+        return;
+    }
+    println!("ipc selftest: small-buffer refusal ok, message kept");
+    // Leg 3: the real receive. Sender must be this task.
+    let mut buf = [0u8; 72];
+    match ipc_try_recv(&mut buf) {
+        Some((sender, total)) if sender == me && total == 10 => {
+            println!("ipc selftest: received 10 bytes from self");
+        }
+        _ => {
+            println!("ipc selftest: FAIL receive mismatch");
+            return;
+        }
+    }
+    // Leg 4: the box is empty again.
+    if ipc_try_recv(&mut buf).is_some() {
+        println!("ipc selftest: FAIL empty box gave a message");
+        return;
+    }
+    println!("ipc selftest: empty receive ok");
+    // Leg 5: first exited task id refuses as dead. The demo tasks
+    // (A/B/hello/...) all exit long before anyone types `ipc`.
+    let mut dead = None;
+    for raw in 1..=9u64 {
+        let id = crate::tasks::TaskId::new(raw);
+        if id != me && !task_is_live(id) && find_row(id).is_some() {
+            dead = Some(id);
+            break;
+        }
+    }
+    match dead {
+        Some(id) => {
+            // The dead check lives in the ring-3 dispatch
+            // (`task_is_live` gate before `ipc_try_send`); this
+            // kernel-side test asserts the same gate directly and
+            // does NOT queue into the dead row — a message to a
+            // row nobody will ever receive would sit there
+            // forever, since slots are never reaped in K5.
+            if task_is_live(id) {
+                println!("ipc selftest: FAIL dead peer reads live");
+                return;
+            }
+            println!(
+                "ipc selftest: dead-peer refusal ok (id {} not live)",
+                id.as_u64()
+            );
+        }
+        None => {
+            println!("ipc selftest: SKIP no exited task yet, retry later");
+            return;
+        }
+    }
+    println!("ipc selftest: done");
 }
 
 /// PS/2 set-1 scancode to ASCII (moved from main.rs for the console

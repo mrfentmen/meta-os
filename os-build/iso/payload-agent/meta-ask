@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""meta-ask — put work on the agent board from a shell.
+
+The README has documented this command since the layer was written; the file
+never existed. It talks to the local queue only (`127.0.0.1:8935`), refuses an
+agent that is not in the registry, and prints what the queue answered rather
+than assuming success.
+
+    meta-ask --list
+    meta-ask "sweep the tree for stray licenses" --agent watch
+    meta-ask "..." --agent aegis --dry-run
+"""
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+QUEUE = os.environ.get("OC2_QUEUE_URL", "http://127.0.0.1:8935")
+STATE = os.environ.get("METAOS_AGENT_STATE",
+                       os.path.join(os.path.expanduser("~"), ".local/state/oc2-agent"))
+# The node runtime lands at /usr/share/metaos/agent/agents (agent-layer/stage.sh
+# keeps server/queue and js/ beside it), so the registry sits one level down
+# from the payload root as well as at it.
+REGISTRY_CANDIDATES = [
+    os.environ.get("METAOS_AGENT_DIR", ""),
+    "/usr/share/metaos/agent/agents",
+    "/usr/share/metaos/agent",
+    os.path.join(os.path.expanduser("~"), "meta-os", "agents"),
+    os.path.join(os.path.expanduser("~"), "meta-os"),
+]
+
+
+def registry():
+    for d in REGISTRY_CANDIDATES:
+        if not d:
+            continue
+        p = os.path.join(d, "registry.json")
+        if os.path.exists(p):
+            with open(p) as f:
+                return json.load(f)
+    return None
+
+
+def live_agents(reg):
+    if not reg:
+        return []
+    return [a for a in reg.get("agents", []) if a.get("draft") is not True]
+
+
+def halted(name):
+    return os.path.exists(os.path.join(STATE, "stop", name + ".STOP"))
+
+
+def submit_script():
+    """The documented submission path: agents/submit.mjs writes a
+    <id>.job.json into the jobs dir, and watchman.mjs polls exactly those.
+
+    The service on 8935 is the Trio *assessment* queue — it validates a
+    trio-assessment v1 envelope and correctly refuses an agent job. Posting
+    orders there was the wrong wire, not a queue bug.
+    """
+    for d in REGISTRY_CANDIDATES:
+        if not d:
+            continue
+        p = os.path.join(d, "submit.mjs")
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def post_job(agent, orders):
+    script = submit_script()
+    if script:
+        import subprocess
+        cmd = ["node", script, "--root", STATE,
+               "--agent", agent, "--orders", orders]
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+        except Exception as e:
+            return None, "could not run submit.mjs: %s" % e
+        out = (p.stdout or "").strip()
+        err = (p.stderr or "").strip()
+        return (0 if p.returncode == 0 else p.returncode), (out + (("\n" + err) if err else ""))[:2000]
+
+    body = json.dumps({"agent": agent, "orders": orders}).encode()
+    req = urllib.request.Request(
+        QUEUE + "/jobs", data=body,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.status, r.read().decode()[:2000]
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode()[:2000]
+    except Exception as e:
+        return None, "no submit.mjs and queue unreachable at %s: %s" % (QUEUE, e)
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return 2
+
+    reg = registry()
+    if "--list" in argv:
+        if reg is None:
+            print("no registry.json found in: " + ", ".join(c for c in REGISTRY_CANDIDATES if c))
+            return 1
+        agents = live_agents(reg)
+        if not agents:
+            print("registry has no live agents")
+            return 1
+        width = max(len(a["name"]) for a in agents)
+        for a in agents:
+            flag = "  HALTED" if halted(a["name"]) else ""
+            print("%-*s  %s%s" % (width, a["name"], a.get("lane") or "", flag))
+        return 0
+
+    orders = None
+    agent = None
+    dry = "--dry-run" in argv
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--agent":
+            agent = argv[i + 1] if i + 1 < len(argv) else None
+            i += 2
+            continue
+        if argv[i].startswith("--agent="):
+            agent = argv[i].split("=", 1)[1]
+        elif argv[i] in ("--dry-run", "--list"):
+            pass
+        elif orders is None:
+            orders = argv[i]
+        i += 1
+
+    if not orders:
+        print("meta-ask: no orders given", file=sys.stderr)
+        return 2
+    if not agent:
+        print("meta-ask: --agent is required (see meta-ask --list)", file=sys.stderr)
+        return 2
+    if reg is None:
+        print("meta-ask: cannot verify agent '%s' — no registry.json found" % agent,
+              file=sys.stderr)
+        return 1
+    names = {a["name"] for a in live_agents(reg)}
+    if agent not in names:
+        print("meta-ask: unknown agent '%s'. known: %s"
+              % (agent, ", ".join(sorted(names)) or "(none)"), file=sys.stderr)
+        return 1
+    if halted(agent):
+        print("meta-ask: '%s' is halted (remove %s to resume)"
+              % (agent, os.path.join(STATE, "stop", agent + ".STOP")), file=sys.stderr)
+        return 1
+
+    if dry:
+        target = submit_script() or (QUEUE + "/jobs")
+        print("would submit via %s: {agent: %r, orders: %r}" % (target, agent, orders))
+        return 0
+
+    status, text = post_job(agent, orders)
+    if status is None:
+        print("meta-ask: " + text, file=sys.stderr)
+        return 1
+    if status == 0 or (isinstance(status, int) and 200 <= status < 300):
+        print("queued for %s" % agent)
+        if text:
+            print(text)
+        return 0
+    print("meta-ask: submission refused (%s): %s" % (status, text), file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

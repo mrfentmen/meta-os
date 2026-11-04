@@ -124,28 +124,51 @@ number in the saved RAX, arguments in RDI/RSI):
 - 2 — sleep: sleep the calling task for the given tick count.
 - 3 — pid: return the calling task's id.
 - 4 — yield: yield the processor to the scheduler.
-- 5 — read_key: return the next keyboard byte to the caller.
-  Ruled by F1; implementation in `user.rs` is R-lane work
-  (RW4-1). Until it lands, 5 falls in the refusal arm below.
-- 6 — cap_query: return the calling task's remaining capability
-  budget, packed as `(remaining_ticks << 32) | remaining_write_bytes`;
-  `u64::MAX` when the caller has no policy. Allocated 2026-11-03 on the
-  boss's order for the K6.1 in-kernel capability slice; the policy table
-  is `kernel/src/caps.rs`, and this spec update lands in the same commit.
-  A policy refusal returns `u64::MAX - 1` (`DENIED`), distinct from the
-  normal refusal below, so userspace can tell a capability denial from an
-  empty read or a bad call.
-- 7–15 — reserved. Never allocated without a Pax ruling and a
+- 5 — read_key: return the next raw keyboard byte to the caller.
+  Ruled by F1; landed in `user.rs` (R-7) as a non-blocking read of the
+  R-FP2 ring: the set-1 scancode byte, or `u64::MAX` when empty.
+- 6 — ipc_send: K4 IPC, ruled by Pax
+  (`os-build/K4_REVIEW_PAX.md:24-30`). `rdi` destination task id,
+  `rsi` sender buffer, `rdx` length 1..=64. Returns 0, or `u64::MAX`
+  on any refusal (dead peer, unmapped buffer, bad length, full box).
+- 7 — ipc_recv: `rdi` receiver buffer, `rsi` capacity (>= 72).
+  Returns total bytes copied (8 header + payload), or `u64::MAX` when
+  the box is empty or the call is refused.
+- 8–15 — reserved. Never allocated without a Pax ruling and a
   spec update in the same commit.
 - Every other number is refused: the kernel logs
   `user bad syscall <n> refused`, returns `u64::MAX`, and the
   task carries on. There is no silent compatibility.
 
-## In-kernel agent capability policy (K6.1, 2026-11-03)
+Amendment 2026-11-04, withdraws the 2026-11-03 `cap_query` allocation.
+That entry gave number 6 to `cap_query`, which reallocated a number
+this table had already frozen to IPC — the collision Lane E refused to
+merge (`kernel/BUILD_LOG.md:221-226`, merge `4fd9653c`). The rule at the
+top of this section wins: 6 and 7 stay the IPC pair that
+`kernel/src/user.rs` dispatches and that `os-build/K4_IPC_DESIGN.md:235-251`,
+`os-build/ROWAN_TASKS_500.md:405-406` and `os-build/userspace/` are
+written against. `cap_query` therefore has no number, and it is not in
+this tree: `kernel/src/caps.rs` exists only on the caps branch (commits
+`f6c11df3`, `381bd73d`). To land it, restore `caps.rs`, wire `mod caps;`
+in `main.rs`, and take the next free number (8) with a Pax ruling and
+this table updated in the same commit. Until that happens
+`os-build/userspace/user/src/bin/capcheck.rs` and the
+`K6.1-cap-policy.txt` capture describe that branch, not this tree.
 
-The kernel now owns a first, real slice of agent policy. It is not a
-claim that the whole agent layer lives in ring 0; it is the part the
-kernel can actually mediate.
+## In-kernel agent capability policy (K6.1, 2026-11-03) — not in this tree
+
+Status 2026-11-04: the slice described below is NOT merged into the
+tree this file ships with. `kernel/src/caps.rs` is absent here; it
+lives on the caps branch at commits `f6c11df3` and `381bd73d` and was
+excluded from merge `4fd9653c` because its 2026-11-03 amendment gave it
+number 6, which this table had already frozen to IPC (see the note under
+the table). What follows describes that branch, and the capture named at
+the end of it is a real boot of that branch, not of this one. Nothing in
+the tree this file ships with enforces a capability policy.
+
+On that branch the kernel owns a first, real slice of agent policy. It
+is not a claim that the whole agent layer lives in ring 0; it is the part
+the kernel can actually mediate.
 
 - A policy is assigned at ELF entry (`caps::assign_current`) and is in
   force before the first ring-3 instruction. It names the allowed
@@ -166,10 +189,13 @@ kernel can actually mediate.
 
 Proof: `os-build/logs/K6.1-cap-policy.txt` contains the grant, three
 refusals (`write`, `syscall 5`, `sleep`), `capcheck: done`, and
-`user exit code 0` from the image built by this tree.
+`user exit code 0` from the image built by the caps branch.
 
-`kernel/src/caps.rs` is the K6.1 policy table; it does not add any
-number beyond 6. `kernel/src/syscalls.rs` is NOT this table. It carries an older
+`kernel/src/caps.rs` is the K6.1 policy table on that branch; it adds
+no number to the frozen table above. The amendment's grab at 6 is
+withdrawn, so `cap_query` waits for 8.
+
+`kernel/src/syscalls.rs` is NOT this table. It carries an older
 set of DRAFT numbers (from the K6 shape document) that conflicts
 with the table above at every number from 2 on, it is not declared
 in `main.rs`, and it is frozen untouched while the boss rules on

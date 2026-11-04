@@ -1,0 +1,171 @@
+=== TEST os-budget 2026-11-04T19:23:52Z ===
+   Compiling os-budget v0.1.0 (/Users/test/Desktop/meta-os/crates/os-budget)
+    Finished `release` profile [optimized] target(s) in 2.14s
+     Running unittests src/lib.rs (target/release/deps/os_budget-813824f733a3d22d)
+
+running 61 tests
+test tests::budgets_env_int_falls_back_on_bad_input ... ok
+test tests::budgets_spend_ratio_edges ... ok
+test tests::cgroup_real_slice_file_carries_expected_values ... ok
+test tests::budgets_from_snapshot_skips_malformed ... ok
+test tests::cgroup_slice_parses_expected_values ... ok
+test tests::cgroup_gate_needs_cpu_and_memory ... ok
+test tests::cgroup_slice_mismatch_fails_file_phase ... ok
+test tests::disk_audit_artifact_bytes_unreadable_is_a_leak ... ok
+test tests::disk_audit_decisions_shared_agent_and_missing ... ok
+test tests::disk_audit_clean_job_passes_and_reconstructs ... ok
+test tests::cost_table_renders_rows_budgets_and_headroom ... ok
+test tests::disk_audit_goal_from_spec_line ... ok
+test tests::disk_audit_artifact_verification_layers ... ok
+test tests::cost_check_passes_with_exact_totals ... ok
+test tests::disk_audit_progress_falls_back_to_latest_note ... ok
+test tests::disk_audit_record_shape_errors ... ok
+test tests::cost_check_twice_identical ... ok
+test tests::disk_audit_journal_leaks_filed_once_per_agent ... ok
+test tests::brief_template_record_carries_null_spend ... ok
+test tests::disk_audit_shared_journal_error_is_a_leak ... ok
+test tests::forecast_already_paused_never_paused_twice ... ok
+test tests::forecast_confidence_comes_from_elapsed_hours_alone ... ok
+test tests::disk_audit_spec_baton_and_claim_leaks ... ok
+test tests::forecast_drill_phases ... ok
+test tests::forecast_entry_carries_basis_and_verdict ... ok
+test tests::forecast_high_priority_never_paused ... ok
+test tests::forecast_line_names_figures_basis_confidence_verdict ... ok
+test tests::forecast_malformed_job_yields_none ... ok
+test tests::forecast_pause_decision_uses_the_os085_warning_band ... ok
+test tests::forecast_pause_only_low_running_in_warning_lane ... ok
+test tests::forecast_preempt_record_names_job_lane_action ... ok
+test tests::forecast_projection_at_or_past_day_end_is_spent ... ok
+test tests::forecast_projection_scales_the_ledger_rate ... ok
+test tests::forecast_resume_only_when_budget_freed ... ok
+test tests::forecast_unprojectable_inputs_yield_none ... ok
+test tests::forecast_unusable_entries_and_empty_input_yield_no_lines ... ok
+test tests::forecast_unusable_entries_yield_none ... ok
+test tests::brief_cost_script_main_passes ... ok
+test tests::forecast_within_cap_entry_has_no_breach ... ok
+test tests::brief_cost_check_passes_with_exact_totals ... ok
+test tests::forecast_within_cap_line_says_within_cap ... ok
+test tests::gate_budget_state_names_all_three_states ... ok
+test tests::gate_cap_includes_overspend ... ok
+test tests::gate_claim_gate_follows_cap_only ... ok
+test tests::gate_duplicate_lane_warns_once ... ok
+test tests::gate_drill_phases ... ok
+test tests::gate_entry_without_flag_renders_as_before ... ok
+test tests::gate_held_lane_line_names_the_hold ... ok
+test tests::gate_hold_entry_flags_only_at_cap ... ok
+test tests::gate_malformed_budget_entries_do_not_crash_detector ... ok
+test tests::gate_no_warning_below_threshold_or_at_cap ... ok
+test tests::gate_unbudgeted_and_malformed_never_warned_or_held ... ok
+test tests::gate_unheld_lane_line_unchanged ... ok
+test tests::gate_warning_band_is_threshold_to_cap_exclusive ... ok
+test tests::gate_warning_fires_at_threshold_with_lane_figures ... ok
+test tests::missing_dispatch_is_an_error ... ok
+test tests::spend_line_formats_match_brief_renderer ... ok
+test tests::value_estimate_tokens_matches_client ... ok
+test tests::value_py_repr_matches_python ... ok
+test tests::value_rate_parsing_falls_back ... ok
+test tests::value_trim_to_budget_drops_bullets_from_the_end ... ok
+
+test result: ok. 61 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/code100_section4.rs (target/release/deps/code100_section4-f829c1536115ed81)
+
+running 3 tests
+test spend_one_unit_over_cap_is_refused ... ok
+test negative_amount_and_unusable_cap_are_refused ... ok
+test spend_to_exactly_cap_is_allowed ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-0957b044bc2b824d)
+
+running 4 tests
+test empty_input_is_handled_everywhere ... ok
+test maximum_input_stays_finite ... ok
+test duplicate_input_is_kept_and_deduped_where_documented ... ok
+test out_of_order_input_keeps_input_order ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-36e34e7372c766f5)
+
+running 23 tests
+test audit_refuses_non_list_records ... ok
+test bad_rate_falls_back_to_default ... ok
+test empty_snapshot_is_unbudgeted_not_zero ... ok
+test cgroup_gate_reports_missing_controllers ... ok
+test audit_empty_list_passes_vacuously ... ok
+test breach_flips_passed_and_headroom ... ok
+test budgets_from_snapshot_skips_bad_entries ... ok
+test audit_files_record_and_spec_leaks ... ok
+test budget_gate_never_warns_or_holds_malformed_figures ... ok
+test env_int_refuses_blank_bad_and_out_of_range ... ok
+test fake_queue_refuses_claim_at_cap_and_keeps_job_open ... ok
+test empty_snapshot_yields_empty_sections ... ok
+test fixtures_used_by_this_file_are_the_public_shapes ... ok
+test cost_totals_panics_without_a_boot_row - should panic ... ok
+test forecast_refuses_unprojectable_inputs ... ok
+test parse_artifact_ref_refuses_every_malformed_shape ... ok
+test preempt_refuses_every_other_state ... ok
+test render_tables_mark_fail_for_breach ... ok
+test slice_mismatch_fails_file_phase ... ok
+test spend_line_refuses_entries_without_a_usable_figure ... ok
+test spend_ratio_refuses_non_int_zero_cap_and_negative ... ok
+test unreadable_artifact_store_is_a_leak ... ok
+test unreadable_journal_is_one_leak_per_agent ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-b48fef10d79ea09a)
+
+running 30 tests
+test brief_budget_kinds ... ok
+test brief_cost_claims_are_ten_and_match_the_manifest ... ok
+test cost_totals_excludes_boot_from_headline ... ok
+test cost_totals_zero_worst_has_zero_breakeven ... ok
+test busy_snapshot_long_titles_variant ... ok
+test brief_prompt_names_kind_and_budget ... ok
+test cost_uses_both_rates ... ok
+test busy_snapshot_has_22_jobs_and_6_owners ... ok
+test build_rows_expected_output_for_dispatch_is_the_proxy ... ok
+test build_rows_has_five_classes_and_counts ... ok
+test cost_zero_tokens_is_zero ... ok
+test estimate_tokens_counts_characters_not_bytes ... ok
+test demo_snapshot_shape ... ok
+test build_rows_matches_the_disk_reader ... ok
+test measure_scored_variant_shape ... ok
+test polish_prompt_carries_the_facts_rule ... ok
+test render_brief_cost_table_breakeven_uses_the_worst_row ... ok
+test measure_tokens_in_matches_brief_prompt ... ok
+test measure_long_variant_shape ... ok
+test build_rows_returns_both_variants ... ok
+test round6_rounds_to_six_places ... ok
+test measure_actual_spend_is_zero ... ok
+test render_cost_table_names_every_class ... ok
+test template_record_passes_kind_through ... ok
+test run_cost_check_returns_a_passing_code ... ok
+test measure_template_fits_the_morning_budget ... ok
+test render_brief_cost_table_names_the_ledger_note ... ok
+test build_rows_is_deterministic ... ok
+test run_brief_cost_check_returns_zero ... ok
+test render_brief_cost_table_passes_under_the_caps ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13.rs (target/release/deps/section13-711c811c1f2fc89c)
+
+running 3 tests
+test budget_limit_boundary ... ok
+test budget_negative_refused ... ok
+test budget_remaining_arithmetic ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_budget
+
+running 1 test
+test crates/os-budget/src/lib.rs - spend_allowed (line 293) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+EXIT=0 2026-11-04T19:23:55Z

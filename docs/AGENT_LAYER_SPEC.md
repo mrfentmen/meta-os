@@ -261,18 +261,23 @@ tampered contract. The runner prints `PASS`/`FAIL` per drill and exits 1 if any 
 
 ## Where it runs — kernel and OS
 
-The kernel now enforces the first real slice of agent policy, and it is explicit about where
-that slice ends. K6.1 (`kernel/src/caps.rs`, syscall 6 = `cap_query`) assigns every embedded
-ELF a per-task permit at entry and checks it on every syscall: an allow mask, a total
-console-write quota, a per-sleep cap, and a wall-clock tick budget. A refusal returns `DENIED`
-and logs `cap deny <name> ...`; an expired budget logs `cap kill <name> budget ...` and exits
-the task. The grant itself is logged as `cap grant <name> write=<n> ticks=<n> sleep=<n>`.
-The proof is `os-build/logs/K6.1-cap-policy.txt`: the `capcheck` program's over-limit write,
-ungranted `read_key`, and 1000-tick sleep are all refused by the kernel, not by the program.
+The kernel has a first real slice of agent policy, and it is explicit about where that
+slice ends. It is NOT in the tree this document ships with: `kernel/src/caps.rs` lives on
+the caps branch (commits `f6c11df3`, `381bd73d`) and was excluded from merge `4fd9653c`
+because the slice claimed syscall 6, which the frozen table gives to IPC. On that branch
+K6.1 assigns every embedded ELF a per-task permit at entry and checks it on every syscall:
+an allow mask, a total console-write quota, a per-sleep cap, and a wall-clock tick budget.
+A refusal returns `DENIED` and logs `cap deny <name> ...`; an expired budget logs
+`cap kill <name> budget ...` and exits the task. The grant itself is logged as
+`cap grant <name> write=<n> ticks=<n> sleep=<n>`. The proof is
+`os-build/logs/K6.1-cap-policy.txt`, a capture from that branch: the `capcheck` program's
+over-limit write, ungranted `read_key`, and 1000-tick sleep are refused by the kernel, not
+by the program. Read it as evidence of the slice, not of the booting tree; the booting
+tree's own serial logs contain no `cap` lines at all.
 
-That is still not a full sandbox. The syscall table is 0–6 — `exit`, `write`, `sleep`, `pid`,
-`yield`, `read_key`, `cap_query` — and there is no file, network, spawn, or exec syscall
-(`os-build/KERNEL_SPEC.md`). File, network, exec, and spend grants therefore cannot be kernel
+That is still not a full sandbox. The syscall table in this tree is 0–7 — `exit`, `write`,
+`sleep`, `pid`, `yield`, `read_key`, `ipc_send`, `ipc_recv` — and there is no file, network,
+spawn, exec or capability-query syscall (`os-build/KERNEL_SPEC.md`). File, network, exec, and spend grants therefore cannot be kernel
 checks today and remain in the L5 userspace gateway (`tools.mjs` + `grants.mjs`). The scheduler
 is cooperative, so a task that never makes a syscall is never checked. The kernel isolates
 tasks and now polices their syscalls; the host-side tool gateway still polices the tools the

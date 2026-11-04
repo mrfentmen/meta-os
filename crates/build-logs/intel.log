@@ -1,0 +1,24 @@
+=== BUILD intel 2026-11-04T19:23:04Z ===
+   Compiling intel v0.1.0 (/Users/test/Desktop/meta-os/crates/intel)
+warning: fields `gate` and `push` are never read
+  --> crates/intel/src/b12a_drills/drills/attempt_gate.rs:56:5
+   |
+53 | struct Ctx<'a> {
+   |        --- fields in this struct
+...
+56 |     gate: &'a dyn Gate,
+   |     ^^^^
+57 |     push: &'a dyn Push,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `find_sub` is never used
+  --> crates/intel/src/b12a_drills/security_pass.rs:92:4
+   |
+92 | fn find_sub(chars: &[char], needle: &str) -> Option<usize> {
+   |    ^^^^^^^^
+
+warning: `intel` (lib) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 5.29s
+EXIT=0 2026-11-04T19:23:09Z

@@ -1,0 +1,38 @@
+[00] GET /health BODY DIFF
+  node: {"ok": true, "rooms": 4, "store": "memory"}
+  rust: {"ok": true, "rooms": 5, "store": "memory"}
+[01] GET / status=200 viewer-html-both=True
+[02] POST /rooms/run1793820411/messages BODY DIFF
+  node: {"index": 0, "id": "msg-9e0ee3ba664f43fd"}
+  rust: {"index": 0}
+[03] POST /rooms/run1793820411/messages BODY DIFF
+  node: {"index": 1, "id": "msg-754cc7cc0f48a6ce"}
+  rust: {"index": 1}
+[04] GET /rooms/run1793820411/messages?since=-1 status=200 IDENTICAL
+[05] GET /rooms/run1793820411/messages?since=0 status=200 IDENTICAL
+[06] GET /rooms/run1793820411/messages status=200 IDENTICAL
+[07] POST /rooms/run1793820411/notify status=201 IDENTICAL
+[08] GET /rooms/run1793820411/messages?since=1 status=200 IDENTICAL
+[09] POST /rooms/BADROOM!/messages status=400 IDENTICAL
+[10] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[11] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[12] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[13] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[14] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[15] POST /rooms/run1793820411/notify status=400 IDENTICAL
+[16] POST /rooms/run1793820411/messages status=400 IDENTICAL
+[17] GET /rooms/run1793820411/messages?since=abc STATUS DIFF node=400 rust=200
+  node: {"error":"since must be -1 or a non-negative integer"}
+  rust: {"room":"run1793820411","total":3,"messages":["pax: hello [ts:1793820411]","rowan: world [ts:1793820411]","relay: NOTIFY:ntf-8f4cfb5b7cf3c128 warning [ops] drill [ts:1793820411]"]}
+[18] GET /rooms/run1793820411/messages?since=999999 status=200 IDENTICAL
+[19] GET /rooms/run1793820411/messages?limit=1&since=-1 BODY DIFF
+  node: {"room": "run1793820411", "total": 3, "messages": ["pax: hello [ts:1793820411]"]}
+  rust: {"room": "run1793820411", "total": 3, "messages": ["pax: hello [ts:1793820411]", "rowan: world [ts:1793820411]", "relay: NOTIFY:ntf-8f4cfb5b7cf3c128 warning [ops] drill [ts:1793820411]"]}
+[20] GET /rooms/run1793820411/messages?limit=99999&since=-1 STATUS DIFF node=400 rust=200
+  node: {"error":"limit must be an integer from 1 to 1000"}
+  rust: {"room":"run1793820411","total":3,"messages":["pax: hello [ts:1793820411]","rowan: world [ts:1793820411]","relay: NOTIFY:ntf-8f4cfb5b7cf3c128 warning [ops] drill [ts:1793820411]"]}
+[21] GET /nope status=404 IDENTICAL
+WHITESPACE CASES (space after comma, Node-accepted JSON):
+  b'{"nick": "pax", "text": "hi"}' node=201 {"index":3,"id":"msg-d2a4b1106b5f7586"} | rust=400 {"error":"request body is not valid JSON"}
+  b'{"nick":"pax", "text": "hi"}' node=201 {"index":4,"id":"msg-f3d873a6df3962c5"} | rust=400 {"error":"request body is not valid JSON"}
+MISMATCHES: 8

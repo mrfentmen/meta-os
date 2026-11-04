@@ -10,7 +10,7 @@ Meta OS is three things, and this README keeps them apart because the difference
 
 | | What it is | Status |
 |---|---|---|
-| **The OS** | Our own kernel, in Rust, written from nothing: `kernel/`. Boots, maps memory, schedules, runs userspace, enforces an agent capability policy. | **Proven in QEMU.** K1–K6 with committed boot logs |
+| **The OS** | Our own kernel, in Rust, written from nothing: `kernel/`. Boots, maps memory, schedules, runs userspace, enumerates PCI, draws a 1280×720 framebuffer. | **Proven in QEMU.** K1–K6 with committed boot logs. The agent capability slice is on its own branch, not in this tree |
 | **The platform** | The agent platform: Imperium's watch floor, the lab, the workshop, the studio, the board. Real model calls, real records, real budget guardrails. | **Running daily** |
 | **The carrier** | A demo image remastered from Xubuntu so the platform has a desktop while the kernel's drivers are unfinished. | **Remastered demo — labelled, not a claim** |
 
@@ -42,21 +42,29 @@ What it does, from the committed logs in `os-build/logs/` (`K1-boot.txt`, `K3-bo
 - parses a 15-region memory map, manages 127,996 frames, stress-tests a heap
 - rotates three tasks, sleeps one for 200 ticks and wakes it (`C awake`); the demo capture
   also shows a task that never yields being preempted (`K5 preempt: task 1 -> 2`)
-- loads and runs **five userspace ELF programs** in ring 3, each with a capability grant
-- refuses what it should: `cap deny capcheck write 256 over 109`, `cap deny capcheck syscall 5`,
-  `cap deny capcheck sleep 1000 over 100`
-- kills a runaway task when its budget expires: `cap kill spinner budget 50 ticks`
+- loads and runs **five userspace ELF programs** in ring 3 — `hello`, `sleeper`, `crasher`,
+  `readkey`, `demand`
+- enumerates PCI (six devices, the IDE controller among them) and draws a 1280×720
+  framebuffer console
 - survives a page fault by killing only the faulting task: `INT user page-fault … task killed`
 - answers a typed shell command, and exits cleanly: `user exit code 0`
 
-**The agent layer starts in ring zero.** A capability policy is assigned at ELF entry and
-checked on every syscall — allowed calls, write quota, sleep cap, wall-clock budget. Grants,
-denials and budget kills are serial log lines. That is the first honest claim this project
-can make about being an *agentic* OS: the kernel mediates agents, it does not just host them.
+**The capability policy is written and proven, and it is one merge from this tree.** The
+slice lives on its own branch: it assigns a per-task permit at ELF entry, checks it on every
+syscall and preempts a ring-3 task on the timer. Its capture, `K6.1-cap-policy.txt`, is a
+real boot of that branch — `cap grant capcheck write=128 ticks=2000 sleep=100`, then
+`cap deny capcheck write 256 over 109`, `cap deny capcheck syscall 5`,
+`cap deny capcheck sleep 1000 over 100`, then `cap kill spinner budget 50 ticks`. It was held
+out of the merge because it had claimed syscall 6, which the frozen table had already given
+to IPC. The tree you are reading dispatches 6 = `ipc_send`, 7 = `ipc_recv` and enforces no
+capability policy; landing the slice means taking syscall 8. `os-build/KERNEL_SPEC.md` carries
+the amendment and the steps. We are not going to claim the enforcement is shipped when it is
+one branch away.
 
-**What the kernel does not have yet:** PCI, storage, any filesystem, network, USB, graphics
-modesetting, SMP, real-hardware boot. It runs programs because they are in its image, not
-because it can read a disk. `os-build/KERNEL_STATUS.md` is the honest matrix.
+**What the kernel does not have yet:** storage (PCI is enumerated, but no block driver reads
+a disk), any filesystem, network, USB, mouse, windowing, SMP, real-hardware boot. It runs
+programs because they are in its image, not because it can read a disk.
+`os-build/KERNEL_STATUS.md` is the honest matrix.
 
 ---
 
@@ -103,7 +111,7 @@ them where a garbage collector or a lifetime annotation would get in the way.
 |---|---|---|---|
 | 1 Boot | Rust | Our entry path, bootloader handoff, serial + console | **Proven** |
 | 2 Kernel core | Rust | Memory, frames, heap, scheduling, IRQs, traps, ELF loader, capability policy | **Proven (QEMU)** |
-| 3 Drivers | Rust | Framebuffer text console, keyboard, timer | **Proven (QEMU)**; no storage/net/graphics-mode driver |
+| 3 Drivers | Rust | VGA text console, keyboard, timer, PCI enumeration, 1280×720 linear framebuffer | **Proven (QEMU)**; detection only — nothing reads a disk, no network, no mouse |
 | 4 Services | Goose | 21 services + 12 libraries, 40,269 lines | **Written, not compiled** — no build log yet |
 | 5 Agent runtime | Lobster | identity, budget, memory, bus, scheduling shims, 180 lines | **Shape proof** |
 | 6 Shell and apps | Lobster | Spec only; today's desktop surfaces are HTML on the carrier | **Not built** |
@@ -127,8 +135,10 @@ Every claim above has a file. If a claim has no file, it is not in this README.
 | Paging, frames, heap stress | `os-build/logs/K1-boot.txt` (`mem summary: K4 up`) |
 | Tasks rotate, sleep, wake | `os-build/logs/K1-boot.txt` (`C awake`) |
 | Syscalls, userspace, refusals | `os-build/logs/K1-boot.txt` (`HELLO FROM USERSPACE`, `bad syscall 99 refused`) |
-| Capability policy: grant, deny, budget kill | `os-build/logs/K6.1-cap-policy.txt` |
-| Five userspace programs, grants and refusals | `os-build/logs/K1-boot.txt`, `os-build/logs/K6.1-cap-policy.txt` |
+| Capability policy: grant, deny, budget kill (**caps branch, not this tree**) | `os-build/logs/K6.1-cap-policy.txt` |
+| Five userspace programs in ring 3 | `kernel/src/user.rs` (embedded) + `kernel/logs/E-boot-vnc.txt` (all five loaded) |
+| Syscall refusals | `os-build/logs/K1-boot.txt` (`bad syscall 99 refused`) |
+| PCI enumeration, framebuffer console | `kernel/logs/E-boot-vnc.txt`, `kernel/BUILD_LOG.md` |
 | Imperium pipeline end to end | `server/queue/` + `os-build/demo/EVAL4.md` |
 | Agent loop, tools, budgets | `agents/agent_loop.mjs`, `agents/runtime.mjs`, `server/budget.mjs` |
 | Desk chat: roster, rooms, routed `@mentions`, thread memory | `docs/AGENT_PROOF.md` §4 |
@@ -205,7 +215,7 @@ crates/            Rust service crates (supervisor, runtime, queue, guardrail, i
 agents/            agent loop, runtime, tools, providers
 server/            product API, model client, queue, budget ledger
 trio/              Vigiles, Ignis, Medicus — three apps, one backend
-imperium/          the original single watch floor the trio was split from
+imperium/          archived: the single watch floor the trio was split from (not shipped, no tile)
 js/agent-chat.js   the desk chat every app carries
 labs/              Scientia surfaces
 design/            Officina, Musica, Custos surfaces

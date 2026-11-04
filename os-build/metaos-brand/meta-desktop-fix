@@ -1,0 +1,41 @@
+#!/bin/sh
+# Runs once at login inside the guest.
+#
+#   1. kill a greeter that is left painted over the desktop
+#   2. make EVERY backdrop property zoom-fill the screen (image-style 5)
+#   3. never overwrite a wallpaper the user picked
+#
+# Style is the whole "my wallpaper is tiny in the corner" bug: with no
+# image-style, xfdesktop draws the file at native size, centred. The guest's
+# resolution changes with the window (1920x1080 .. 2562x1442), so a 1920-wide
+# image looks small the moment the window grows. Style 5 (zoomed) fills any
+# resolution, which is the only setting that survives a resize.
+WP=/usr/share/backgrounds/meta-wallpaper.png
+
+sleep 1
+pkill -f unity-greeter 2>/dev/null
+pkill -f lightdm-gtk-greeter 2>/dev/null
+sleep 1
+
+LIST=$(xfconf-query -c xfce4-desktop -l 2>/dev/null)
+
+# 1) if the user already has a wallpaper, leave the path alone
+if ! echo "$LIST" | grep -q '/last-image$'; then
+  for m in monitorVirtual-1 monitorVirt-1 monitor0 monitor1 monitorHDMI-1 monitorLVDS-1; do
+    xfconf-query -c xfce4-desktop -p "/backdrop/screen0/$m/workspace0/last-image" \
+      -n -t string -s "$WP" >/dev/null 2>&1
+  done
+  LIST=$(xfconf-query -c xfce4-desktop -l 2>/dev/null)
+fi
+
+# 2) style 5 on every monitor that has a backdrop, and on the common names
+for p in $(echo "$LIST" | grep '/image-style$'); do
+  xfconf-query -c xfce4-desktop -p "$p" -t int -s 5 >/dev/null 2>&1
+done
+for p in $(echo "$LIST" | grep '/last-image$'); do
+  base=${p%/last-image}
+  xfconf-query -c xfce4-desktop -p "$base/image-style" -n -t int -s 5 >/dev/null 2>&1
+done
+
+# 3) repaint
+xfdesktop --reload >/dev/null 2>&1 || true

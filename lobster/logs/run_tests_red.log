@@ -1,0 +1,19 @@
+$ cp runtime/rt_budget.lobster runtime/rt_budget_broken.lobster && sed budget_left 2->3
+$ lobster runtime/rt_budget_broken.lobster
+FAIL: call-3 allowed past cap
+FAIL: refusal not recorded
+RC=2 (expect non-zero, no SELFTEST OK line)
+$ rm runtime/rt_budget_broken.lobster (reverted)
+$ ./run-tests.sh (after revert)
+PASS hello
+PASS rt_identity
+PASS rt_lifecycle
+PASS rt_capabilities
+PASS rt_audit(write)
+PASS rt_audit(verify, restarted process)
+PASS rt_budget
+PASS rt_bus
+PASS board-roundtrip(:18935)
+---
+9 passed, 0 failed
+RC=0

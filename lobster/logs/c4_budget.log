@@ -1,0 +1,7 @@
+$ lobster budget.lobster
+spent on call-1
+spent on call-2
+spent on call-3
+REFUSED: call-4 (budget exhausted)
+refusal recorded
+RC=0

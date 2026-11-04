@@ -1,6 +1,6 @@
 # input — scancodes to key events
 
-Status: **RUNS** as a host process: `tests/t56_input_display` (49 checks) and
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/input/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) as a host process: `tests/t56_input_display` (49 checks) and
 `tests/t102_keycompose` (38 checks), both exit 0. Round 11 adds
 `tests/t121_input_r11` (repeat floors, out-of-range refusals, caps+shift). Layer 4,
 service 10.

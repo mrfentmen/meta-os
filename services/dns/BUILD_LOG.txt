@@ -1,0 +1,182 @@
+# BUILD_LOG — services/dns (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_dns.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import dns.dns;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_dns.goose
+services/dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/dns.c --standalone services/.run_dns.goose
+services/dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/dns.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_dns
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t57_dhcp_dns.c --standalone services/.run_t57_dhcp_dns.goose  (from services/tests/t57_dhcp_dns.goose)
+services/.run_t57_dhcp_dns.goose:464: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dhcp/dhcp.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dhcp/dhcp.goose:293: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t57_dhcp_dns: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t57_dhcp_dns.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t57_dhcp_dns
+  cc t57_dhcp_dns: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t57_dhcp_dns  (host run, 2s cap)
+t57 dhcp + dns loopback
+ok   discover built
+ok   discover is a BOOTREQUEST
+ok   hardware type is ethernet
+ok   xid echoed in the header
+ok   mac in chaddr
+ok   magic cookie
+ok   first option is message type
+ok   message type is DISCOVER
+ok   ack built
+ok   ack is a BOOTREPLY
+ok   ack message type
+ok   ack parsed
+ok   address from yiaddr
+ok   mask offered
+ok   gateway offered
+ok   server id
+ok   lease in ms
+ok   t1 defaults to half
+ok   t2 defaults to 7/8
+ok   t2 after t1
+ok   zero address refused
+ok   missing mask refused
+ok   zero lease refused
+ok   truncated packet refused
+ok   wrong cookie refused
+ok   request parsed as reply refused
+ok   client starts idle
+ok   client remembers its xid
+ok   client has no retries yet
+ok   query built
+ok   query id on the wire
+ok   query is a standard query with recursion
+ok   one question
+ok   no answers in a query
+ok   name encoded
+ok   query type is A
+ok   query class is IN
+ok   response built
+ok   answer parsed
+ok   answer address
+ok   answer ttl
+ok   answer rcode is ok
+ok   wrong id refused
+ok   nxdomain reports its rcode
+ok   dangling compression pointer refused
+passed 45
+t57 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t116_dns_r11.c --standalone services/.run_t116_dns_r11.goose  (from services/tests/t116_dns_r11.goose)
+services/.run_t116_dns_r11.goose:40: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t116_dns_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t116_dns_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t116_dns_r11
+  cc t116_dns_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t116_dns_r11  (host run, 2s cap)
+t116 dns round 11
+ok   build: a normal name builds
+ok   build: the id is on the wire, big-endian
+ok   build: recursion desired, opcode 0
+ok   build: one question, no answers
+ok   build: the first label is 7 bytes of 'example'
+ok   build: QTYPE A and QCLASS IN at the tail
+ok   build: the name is encoded from byte 0, not offset 12
+ok   build: an empty name is refused
+ok   build: a leading dot is an empty label
+ok   build: a doubled dot is an empty label
+ok   build: a trailing dot is accepted
+ok   build: trailing dot produces identical bytes
+ok   build: a 63-byte label is accepted
+ok   build: a 64-byte label is refused
+ok   build: a 255-byte name is accepted
+ok   build: a 256-byte name is refused
+ok   read: exactly DNS_MAX_JUMPS backwards jumps resolve
+ok   read: one jump past the cap is refused
+ok   read: a forward pointer is refused
+ok   read: a same-offset pointer is refused
+ok   read: a reserved label type is refused
+ok   read: a label that runs past the packet is refused
+ok   read: a name past DNS_NAME_MAX is refused
+ok   parse: the fixture's question is rebuilt
+ok   parse: the reply is longer than the question
+ok   parse: a well-formed answer parses
+ok   parse: the address is the record's
+ok   parse: the ttl is the record's
+ok   parse: rcode is OK
+ok   parse: a wrong id is E_STATE
+ok   parse: a query is not a response
+ok   parse: QDCOUNT != 1 is E_CORRUPT
+ok   parse: no answers is E_RESOLVE
+ok   parse: an A record that is not 4 bytes is E_CORRUPT
+ok   parse: NXDOMAIN is a reportable answer
+ok   parse: SERVFAIL is E_RESOLVE
+ok   parse: a packet under 12 bytes is E_CORRUPT
+ok   query: starts idle with no attempts
+ok   query: idle never expires
+ok   query: sent sets state and counts the attempt
+ok   query: not expired one millisecond early
+ok   query: expired exactly at the timeout
+ok   query: a backwards clock counts as expired
+ok   query: somebody else's reply is E_STATE
+ok   query: and the query is still waiting
+ok   query: our answer completes it
+ok   query: the result is kept
+ok   query: feeding a completed query is E_STATE
+ok   load: ninety good replies parsed
+ok   load: ten wrong-id replies refused
+LOAD dns ops=100 ok=90 refused=10
+t116 done  pass=50 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/dns/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_dns + run above)

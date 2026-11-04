@@ -1,6 +1,6 @@
 # supervisor — the service table and lifecycle state machine
 
-Status: **RUNS** — driven by `tests/t52_supervisor`, `t75_supervisor_load`,
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/supervisor/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — driven by `tests/t52_supervisor`, `t75_supervisor_load`,
 `t83_sup_deep` and `tests/t135_supervisor_r11`. Every symbol in this file was
 checked against the Goose docs (`struct` with fixed-size fields is `reference#32`,
 `Entry { field: value }` is `tutorial#9`, and `class` is not a keyword); the run

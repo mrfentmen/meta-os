@@ -35,9 +35,12 @@ export function validateJob({ registry, agent, orders, id }) {
     throw new SubmitError("submit-agent", "submit: no such agent: " + agent);
   }
   if (entry.draft === true || !Array.isArray(entry.command) || entry.command.length === 0) {
+    // B4 — the refusal is explicit and quotes the registry's own reason, so a
+    // draft never fails silent and never pretends it ran.
+    const why = entry.draftReason ? ": " + entry.draftReason : "";
     throw new SubmitError(
       "submit-draft",
-      "submit: " + agent + " has no program yet (draft); nothing would run"
+      "submit: " + agent + " has no program yet (draft)" + why + "; nothing would run"
     );
   }
   if (typeof orders !== "string" || orders.trim() === "") {

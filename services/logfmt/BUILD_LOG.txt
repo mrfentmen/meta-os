@@ -1,0 +1,126 @@
+# BUILD_LOG — services/logfmt (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_logfmt.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import logfmt.logfmt;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_logfmt.goose
+services/logfmt/logfmt.goose:271: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/logfmt/logfmt.goose:285: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/logfmt.c --standalone services/.run_logfmt.goose
+services/logfmt/logfmt.goose:271: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/logfmt/logfmt.goose:285: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/logfmt.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_logfmt
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t96_logfmt.c --standalone services/.run_t96_logfmt.goose  (from services/tests/t96_logfmt.goose)
+services/logfmt/logfmt.goose:271: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/logfmt/logfmt.goose:285: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t96_logfmt: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t96_logfmt.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t96_logfmt
+  cc t96_logfmt: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t96_logfmt  (host run, 2s cap)
+t96 logfmt
+ok   level: debug is D
+ok   level: info is I
+ok   level: warn is W
+ok   level: error is E
+ok   level: fatal is F
+ok   level: an unknown level renders as ?, not as silence
+ok   level: ? is not a level, so it parses to -1
+ok   level: letters map back
+ok   level: names
+ok   make: a level below debug clamps to debug
+ok   make: a level above fatal clamps to fatal
+ok   make: a tag longer than the column is cut to 7
+ok   make: an overlong message is marked, not refused
+ok   render: 42.3 s is a four-digit field
+ok   render: the line is exactly the documented shape
+ok   render: 9.999 s pads to four digits
+ok   render: 10 s is still four digits
+ok   render: 999.9 s is still four digits
+ok   render: past 10000 s the field grows
+ok   render: uptime zero is padded too
+ok   render: a 7-char tag fills the column
+ok   render: the widest record the struct allows still fits the line budget
+ok   render: the widest record parses back
+ok   parse: the rendered line parses
+ok   parse: the uptime survived
+ok   parse: the level survived
+ok   parse: the tag survived
+ok   parse: the tag bytes survived
+ok   parse: the message survived
+ok   round trip: parses
+ok   round trip: uptime to the millisecond
+ok   round trip: level
+ok   round trip: message with spaces
+ok   round trip: tag
+ok   round trip: a truncated message keeps its marker
+ok   parse: the padded tag column is not part of the message
+ok   make: leading spaces are trimmed, not rendered as part of the message
+ok   parse: an empty line is refused
+ok   parse: a line shorter than the minimum is refused
+ok   parse: a missing dot is refused
+ok   parse: two-digit milliseconds are refused
+ok   parse: a non-digit in the milliseconds is refused
+ok   parse: an unknown level letter is refused
+ok   parse: a missing space after the level is refused
+ok   parse: a tag past the column is refused
+ok   parse: no newline at all still parses (a last line may lack one)
+ok   parse: seconds above nine digits are refused
+ok   parse: a bad line reports false
+ok   parse: a bad line does not touch the caller's record
+     0001.500 I notify  3 unread
+ok   the demo line is a log line
+t96 done  pass=50 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t123_logfmt_r11.c --standalone services/.run_t123_logfmt_r11.goose  (from services/tests/t123_logfmt_r11.goose)
+services/logfmt/logfmt.goose:271: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/logfmt/logfmt.goose:285: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t123_logfmt_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t123_logfmt_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t123_logfmt_r11
+  cc t123_logfmt_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t123_logfmt_r11  (host run, 2s cap)
+t123 logfmt record shape
+ok   logfmt_make: level is kept
+ok   logfmt_make: tag length is the tag
+ok   logfmt_make: message is kept
+ok   logfmt_render: a record renders
+ok   logfmt_render: seconds and millis are fixed width
+ok   logfmt_render: one letter level follows
+ok   logfmt_render: the tag column is padded
+ok   logfmt_render: the message ends the line
+ok   logfmt_make: a tag past TAG_MAX-1 is cut
+ok   logfmt_make: an oversize message keeps MSG_MAX bytes
+ok   logfmt_make: the cut is marked
+ok   logfmt_make: leading spaces are trimmed
+ok   logfmt_make: a level below DEBUG clamps
+ok   logfmt_make: a level above FATAL clamps
+ok   logfmt_render: a five-digit uptime grows the field
+ok   logfmt_parse: a rendered line parses
+ok   logfmt_parse: uptime round trips
+ok   logfmt_parse: level round trips
+ok   logfmt_parse: tag round trips
+ok   logfmt_parse: message round trips
+ok   logfmt_parse: a short line is refused
+ok   logfmt_parse: an unknown level is refused
+ok   logfmt_parse: a missing message separator is refused
+ok   logfmt_parse: a bad millisecond field is refused
+ok   logfmt_parse: a refusal changes nothing
+LOAD logfmt ops=300 ok=300 refused=0
+t123 done  pass=25 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/logfmt/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_logfmt + run above)

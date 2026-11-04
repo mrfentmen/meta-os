@@ -1,0 +1,155 @@
+# BUILD_LOG — services/input (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_input.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import input.input;
+#   import input.keymaps2;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_input.goose
+services/input/keymaps2.goose:65: warning: redundant `as u8`: (c - 32) is already u8
+services/input/keymaps2.goose:68: warning: redundant `as u8`: (c + 32) is already u8
+services/input/input.goose:127: warning: redundant `as u8`: shifted[i] is already u8
+services/input/input.goose:128: warning: redundant `as u8`: digits[i] is already u8
+services/input/input.goose:147: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:154: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:161: warning: redundant `as u8`: row[i] is already u8
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/input.c --standalone services/.run_input.goose
+services/input/keymaps2.goose:65: warning: redundant `as u8`: (c - 32) is already u8
+services/input/keymaps2.goose:68: warning: redundant `as u8`: (c + 32) is already u8
+services/input/input.goose:127: warning: redundant `as u8`: shifted[i] is already u8
+services/input/input.goose:128: warning: redundant `as u8`: digits[i] is already u8
+services/input/input.goose:147: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:154: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:161: warning: redundant `as u8`: row[i] is already u8
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/input.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_input
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t56_input_display.c --standalone services/.run_t56_input_display.goose  (from services/tests/t56_input_display.goose)
+services/.run_t56_input_display.goose:55: warning: redundant `as u8`: 0 fits u8 here
+services/.run_t56_input_display.goose:112: warning: redundant `as u8`: 27 fits u8 here
+services/input/input.goose:127: warning: redundant `as u8`: shifted[i] is already u8
+services/input/input.goose:128: warning: redundant `as u8`: digits[i] is already u8
+services/input/input.goose:147: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:154: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:161: warning: redundant `as u8`: row[i] is already u8
+  codegen t56_input_display: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t56_input_display.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t56_input_display
+  cc t56_input_display: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t56_input_display  (host run, 2s cap)
+t56 input + display
+ok   a unshifted
+ok   a shifted
+ok   is a letter
+ok   enter has no character
+ok   enter is not a letter
+ok   press decoded
+ok   press is not a repeat
+ok   release decoded
+ok   shift press has no character
+ok   shift sets a modifier
+ok   letter while shift is held is uppercase
+ok   shift release decodes
+ok   letter after shift release is lowercase
+ok   caps lock produces no character
+ok   caps lock makes it uppercase
+ok   caps lock does not change a digit
+ok   caps lock second press toggles off
+ok   caps lock release decodes
+ok   caps lock off returns lowercase
+ok   no repeat before the delay
+ok   repeat after the delay
+ok   a repeat is not a press
+ok   no repeat after release
+ok   passthrough carries the byte
+ok   init leaves nothing valid
+ok   create first console
+ok   first console valid
+ok   active defaults to the first
+ok   second slot not yet valid
+ok   create second console
+ok   both valid
+ok   invalid index refused
+ok   zero columns refused
+ok   zero rows refused
+ok   empty name refused
+ok   write to console 0
+ok   write to console 1
+ok   write to an invalid console refused
+A
+ok   switch returns the previous console
+ok   active followed the switch
+ok   switch to an invalid console refused
+ok   failed switch did not move
+ok   ctrl+alt+F1 targets console 0
+ok   ctrl+alt+F2 targets console 1
+ok   ctrl+alt+F3 targets nothing (only two consoles exist)
+ok   F1 without modifiers targets nothing
+ok   ctrl+alt+F5 is not a switch
+ok   scrolling recorded history
+ok   history is bounded
+passed 49
+t56 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t121_input_r11.c --standalone services/.run_t121_input_r11.goose  (from services/tests/t121_input_r11.goose)
+services/input/keymaps2.goose:65: warning: redundant `as u8`: (c - 32) is already u8
+services/input/keymaps2.goose:68: warning: redundant `as u8`: (c + 32) is already u8
+services/input/input.goose:127: warning: redundant `as u8`: shifted[i] is already u8
+services/input/input.goose:128: warning: redundant `as u8`: digits[i] is already u8
+services/input/input.goose:147: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:154: warning: redundant `as u8`: row[i] is already u8
+services/input/input.goose:161: warning: redundant `as u8`: row[i] is already u8
+  codegen t121_input_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t121_input_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t121_input_r11
+  cc t121_input_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t121_input_r11  (host run, 2s cap)
+t121 input r11
+ok   decode: a press produces an event with its character
+ok   repeat: silent at 249 ms, so the 250 ms floor is real
+ok   repeat: due at exactly 250 ms
+ok   repeat: silent 15 ms after a repeat, so the 16 ms rate floor is real
+ok   repeat: one repeat at 16 ms, exactly one
+ok   repeat: it still reports the held key
+ok   decode: -1 is refused
+ok   decode: 256 is refused
+ok   decode: 255 is a legal raw byte (release of 0x7F)
+ok   decode: a release without a press is still an event, pressed=false
+ok   repeat: a release with no press leaves nothing to repeat
+ok   caps: the press sets the latch
+ok   caps: a second press clears it
+ok   caps: a letter is upper case while the latch is set
+ok   caps+shift: the two cancel, as on a real keyboard
+ok   shift: the release clears only MOD_SHIFT, the caps latch stays
+ok   keymap: US does not claim the UK-only key
+ok   keymap: an unknown layout falls back to US and says ok=false
+ok   keymap: Dvorak maps the Q position to p
+ok   keymap: the US layout has no holes
+ok   keymap: the Dvorak layout has no holes
+ok   keymap: the UK layout has no holes
+ok   compose: an unknown dead key is refused
+ok   compose: a known dead key arms
+ok   compose: acute over e is the Latin-1 e-acute
+ok   compose: the composed total follows
+ok   compose: a NUL byte is E_NOKEY, never a typed NUL
+ok   compose: arm again for the miss
+ok   compose: an unpaired letter passes through unchanged
+ok   compose: and the dropped dead key is counted
+ok   compose: the dead key for a scancode is layout-dependent
+ok   passthrough: a byte above ASCII is delivered as itself
+ok   load: every one of 200 decodes produced an event
+t121 done  pass=33 fail=0
+LOAD input ops=200 ok=200 refused=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/input/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_input + run above)

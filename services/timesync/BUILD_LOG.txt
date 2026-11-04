@@ -1,0 +1,64 @@
+# BUILD_LOG — services/timesync (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_timesync.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import timesync.timesync;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_timesync.goose
+services/timesync/timesync.goose:155: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/timesync.c --standalone services/.run_timesync.goose
+services/timesync/timesync.goose:155: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/timesync.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_timesync
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t137_timesync_r11.c --standalone services/.run_t137_timesync_r11.goose  (from services/tests/t137_timesync_r11.goose)
+services/.run_t137_timesync_r11.goose:118: warning: redundant `as u8`: 228 fits u8 here
+services/timesync/timesync.goose:155: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t137_timesync_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t137_timesync_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t137_timesync_r11
+  cc t137_timesync_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t137_timesync_r11  (host run, 2s cap)
+t137 timesync r11
+ok   build: 48 bytes written
+ok   build: LI 0, version 4, mode 3
+ok   build: stratum and identifiers are the server's
+ok   build: transmit stamp reads back as the clock it was given
+ok   build: the millisecond fraction is exact at every edge
+ok   reply: accepted
+ok   reply: offset is the average of the two legs
+ok   reply: round trip subtracts the server's 30 ms
+ok   reply: applying a measurement does not step the clock
+ok   smear: the first step is a tenth of the error
+ok   smear: the applied offset moved, the measurement did not
+ok   smear: the gap closes
+ok   smear: every step moves forward and none overshoots
+ok   smear: the settled offset is the measured one
+ok   smear: a settled offset is a no-op
+ok   refuse: a client-mode packet is E_CORRUPT
+ok   refuse: a rejected packet does not move the clock
+ok   refuse: stratum 0 is E_REFUSED
+ok   refuse: an unsynchronised server is E_UNSUPPORTED
+ok   refuse: a reply with no transmit time is E_CORRUPT
+ok   refuse: a negative delay is E_CORRUPT
+ok   refuse: an offset beyond a day is E_INVAL
+ok   refuse: a packet shorter than 48 bytes is E_CORRUPT
+ok   refuse: no refusal in this section moved the clock
+ok   refuse: no refusal left a pending correction
+ok   load: 100 request stamps, no drift
+LOAD timesync ops=100 ok=100 refused=0
+t137 done  pass=26 fail=0
+exit: 0
+tests built+run: 1/1
+# --- sys_* externs referenced by services/timesync/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_timesync + run above)

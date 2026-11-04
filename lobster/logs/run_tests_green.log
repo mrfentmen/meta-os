@@ -1,0 +1,11 @@
+PASS hello
+PASS rt_identity
+PASS rt_lifecycle
+PASS rt_capabilities
+PASS rt_audit(write)
+PASS rt_audit(verify, restarted process)
+PASS rt_budget
+PASS rt_bus
+PASS board-roundtrip(:18935)
+---
+9 passed, 0 failed

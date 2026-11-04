@@ -124,3 +124,122 @@ reference clock". Anything that needs wall time must not derive it from ticks al
 `os-build/layer1/build_kernel.sh` builds, boots, and refuses to continue if the alive line is
 missing. `os-build/layer1/prove_k2_k3.sh` adds the screen and keyboard evidence and exits
 non-zero unless the timer line, the typed command and both non-blank screens are all present.
+
+## Lane E entry (R5, 2026-11-04, branch agent-r5)
+
+Status: **BUILT and BOOTED on this Mac. New proofs: K3 demand paging
+(first-ever `page mapped, retry` from this tree), syscall-5 typed-key
+delivery to userspace (`readkey got 35` … `enter seen`), read-only PCI
+scan (6 real QEMU devices), kernel-side IPC self-test (all 6 legs),
+framebuffer screendump (kernel-drawn desktop, 1280x720).** No new
+syscall numbers; `user.rs` dispatch untouched; `syscalls.rs` untouched.
+
+Toolchain (measured, same pins as the first entry above):
+
+| item | value |
+|---|---|
+| rustc | `1.101.0-nightly (f9ceb4a4d 2026-10-31)` |
+| cargo | `1.101.0-nightly (31d3246e0 2026-10-27)` |
+| target | `x86_64-unknown-none` (installed; `rust-src` + `llvm-tools-preview` present) |
+| bootloader | `0.11.17` (`kernel/Cargo.lock`) |
+| QEMU | `11.1.3` |
+
+Exact commands, in order (nightly pinning is the same one-liner as above):
+
+```sh
+export RUSTC="$(rustup which --toolchain nightly rustc)"
+export PATH="$(dirname "$RUSTC"):$HOME/.cargo/bin:$PATH"
+export RUSTUP_TOOLCHAIN=nightly RUSTC_BOOTSTRAP=1
+python3 os-build/userspace/build_userspace.py   # 5 bins, first-LOAD == base verified
+sh os-build/rk007/build.sh                      # kernel ELF + 0.11.17 BiosBoot disk.img
+# boot 1 (serial evidence, typed help+status):
+qemu-system-x86_64 -drive format=raw,file=os-build/rk007/disk.img \
+  -serial file:kernel/logs/E-boot-20261104.txt -display none -m 512M -no-reboot \
+  -monitor unix:$TMPDIR/E-mon.sock,server,nowait
+python3 os-build/tools/drive.py --monitor $TMPDIR/E-mon.sock help status
+# boot 2 (PCI + IPC + framebuffer evidence, typed help+status+ipc):
+qemu-system-x86_64 -drive format=raw,file=os-build/rk007/disk.img \
+  -serial file:kernel/logs/E-boot-vnc.txt -display none -vnc :43 -m 512M -no-reboot \
+  -monitor unix:$TMPDIR/E-vnc-mon.sock,server,nowait
+python3 os-build/tools/drive.py --monitor $TMPDIR/E-vnc-mon.sock help status ipc
+# screendump through the monitor, then PPM->PNG with sips
+```
+
+Artifacts (this lane's evidence, committed under `kernel/`):
+
+```
+kernel/target/x86_64-unknown-none/debug/metaos-kernel  17588736 bytes
+os-build/rk007/disk.img                                20415488 bytes (built, not committed)
+kernel/logs/E-boot-20261104.txt  (boot 1: K1-K6 + demand + readkey typed proof)
+kernel/logs/E-boot-vnc.txt       (boot 2: + PCI scan + ipc selftest + STATUS)
+kernel/logs/E-framebuffer.png    (1280x720 screendump of the kernel desktop;
+                                  converted from QEMU's PPM with sips, PPM not kept)
+```
+
+E20 regression quotes (all from `kernel/logs/E-boot-vnc.txt`):
+
+| milestone | line |
+|---|---|
+| K1 | `META OS KERNEL - alive (K1)` (:26) |
+| K2 | `KF-03 framebuffer: 1280x720 stride 1280 bpp 3 (screen live)` (:24) + `E-framebuffer.png` |
+| K3 | `K3 timer: 10 ticks after 505620 spins` (:27), `K3 keyboard: first scancode 0x23` (:783), `STATUS tasks=9 ticks=1878 heap_free_kb=223` (:809) |
+| K4 | `mem frames: 125449 usable total`, `mem probe page ok, unmapped`, `mem Box+Vec ok (box 42, vec sum 120)`, `mem summary: K4 up` (:143) |
+| K5 | `A`/`B` interleave (:144-148), `C sleeping 200 ticks` (:146), `C awake` (:180) |
+| K6 | `HELLO FROM USERSPACE` (:151), `user exit code 0` (:152, :167), page-fault kill (:163, :179) |
+
+Known gap in this log (not a regression, stated): no `user bad syscall
+99 refused` line — the current `sleeper.rs` no longer issues syscall 99
+(the drill lives in `badcall.rs`, which is WRITTEN but not in
+`build.rs` BINS and has no spawn slot; `MAX_TASKS` is full at 9/9).
+The refusal arm in `user.rs` is byte-identical to the proven tree.
+
+New-behavior quotes (same log unless noted):
+
+- Demand: `demand: touching promised page` (:175),
+  `INT user demand-fault addr 0x0000700000000000: page mapped, retry`
+  (:176), `demand: zero-fill confirmed` (:177),
+  `demand: writeback OK, touching outside region` (:178),
+  `INT user page-fault addr 0x0000700000100000 ... task killed` (:179),
+  then `C awake` (:180, other tasks continue).
+- Readkey typed proof (boot 1, `kernel/logs/E-boot-20261104.txt`
+  :912-937): `K3 keyboard: first scancode 0x23`, `readkey got 35`
+  (0x23 press), `163` (release), … `readkey got 28` (Enter),
+  `readkey: enter seen, done got=9`, `user exit code 0`, then the
+  shell's own `commands:` + `STATUS` lines — both readers saw every byte.
+- PCI (`:118-125`): `00:0.0 8086:1237`, `00:1.0 8086:7000`,
+  `00:1.1 8086:7010 class 01/01/80` (IDE — the device the storage
+  lane must drive), `00:1.3 8086:7113`, `00:2.0 1234:1111 class
+  03/00/00` (VGA), `00:3.0 8086:100e class 02/00/00` (e1000 net).
+- IPC self-test (`:811-817`): sent / full-box refusal / small-buffer
+  refusal with message kept / received 10 bytes from self / empty /
+  dead-peer (`id 1 not live`) / done. Prefix is `ipc selftest:`, NOT
+  the pinned `user ipc ...` ring-3 gate lines — the talker/listener
+  acceptance pair (Buffy) stays owed.
+
+What was NOT done (Lane E findings, no paint):
+
+- Syscall 6 collision: `os-build/KERNEL_SPEC.md:130` says 6 = cap_query,
+  but Pax assigned 6/7 to K4 IPC (`os-build/K4_REVIEW_PAX.md:24-30`)
+  and the tree implements 6 = ipc_send / 7 = ipc_recv. The caps kernel
+  files were deliberately excluded from the merge for exactly this
+  collision (merge `4fd9653c`). Lane E did NOT implement cap_query and
+  added no syscall: E7 waits on the boss's syscall-6 call.
+- Storage E9-E12 (sector read, FAT/ext2 mount, list/read file): no
+  driver exists; the scan above is detection only. Nothing written to disk.
+- Graphics E13 verdict: the E13 premise (no framebuffer under
+  bootloader 0.9.35) is outdated — under 0.11 the bootloader supplies
+  1280x720 Bgr and the kernel draws real rectangles on it (desktop,
+  bars, window, dock; see PNG). Still true: no modesetting of its own,
+  no windowing/compositor, no mouse — E25 holds, no desktop claimed.
+- Driver gaps: timer rate measured every boot (100.0153 Hz by divisor);
+  serial mirror is the dual-output `print!` (+ bounded UART drop after
+  `SERIAL_TX_SPINS`); PS/2 mouse, ACPI shutdown, PCI storage/net
+  drivers do not exist (`grep -ri mouse\|acpi kernel/src/` is empty
+  save the icons.rs decorative note). QEMU exposes the ACPI PM device
+  (`00:1.3 8086:7113`) and e1000 (`00:3.0`) for those lanes.
+- Hardware-vs-QEMU (E22): NOTHING in this log has run on metal. QEMU
+  11.1.3 TCG supplies the PIT at exact crystal rate, the i8042, the
+  1280x720 Bgr framebuffer, SeaBIOS PCI topology above, and unbounded
+  serial patience. A real board changes all five; the timer divisor,
+  keyboard controller, GOP framebuffer format, PCI topology, and UART
+  presence each need re-proof on hardware.

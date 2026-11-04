@@ -1,0 +1,163 @@
+# BUILD_LOG — services/common/ libraries (Lane B B4, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports.
+# Method per lib: generated driver services/.run_lib_<lib>.goose ('import std;' + lib imports + empty main), then goose check, goose -o --standalone, clang link with shim, host run (2s cap).
+# Note: 'import std;' in the driver mirrors every real program root (tests import fmt which imports std; the 5 root_<svc>.goose reach std through their entries). Without any std-importing module in the program, cfg.goose:212 'parse_int' (a std helper) does not resolve; service/lib sources are byte-identical, only the driver carries the import.
+
+## args
+$ goose check --color never services/.run_lib_args.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_args.c --standalone services/.run_lib_args.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_args.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_args
+run exit: 0
+VERDICT args: COMPILED
+
+## boot
+$ goose check --color never services/.run_lib_boot.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_boot.c --standalone services/.run_lib_boot.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_boot.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_boot
+run exit: 0
+VERDICT boot: COMPILED
+
+## bytes
+$ goose check --color never services/.run_lib_bytes.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_bytes.c --standalone services/.run_lib_bytes.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_bytes.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_bytes
+run exit: 0
+VERDICT bytes: COMPILED
+
+## cfg
+$ goose check --color never services/.run_lib_cfg.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_cfg.c --standalone services/.run_lib_cfg.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_cfg.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_cfg
+run exit: 0
+VERDICT cfg: COMPILED
+
+## enc
+$ goose check --color never services/.run_lib_enc.goose
+services/common/enc/enc.goose:47: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_enc.c --standalone services/.run_lib_enc.goose
+services/common/enc/enc.goose:47: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_enc.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_enc
+run exit: 0
+VERDICT enc: COMPILED
+
+## err
+$ goose check --color never services/.run_lib_err.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_err.c --standalone services/.run_lib_err.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_err.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_err
+run exit: 0
+VERDICT err: COMPILED
+
+## fmt
+$ goose check --color never services/.run_lib_fmt.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_fmt.c --standalone services/.run_lib_fmt.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_fmt.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_fmt
+run exit: 0
+VERDICT fmt: COMPILED
+
+## hash
+$ goose check --color never services/.run_lib_hash.goose
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hash.c --standalone services/.run_lib_hash.goose
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hash.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hash
+run exit: 0
+VERDICT hash: COMPILED
+
+## hex
+$ goose check --color never services/.run_lib_hex.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hex.c --standalone services/.run_lib_hex.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hex.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_hex
+run exit: 0
+VERDICT hex: COMPILED
+
+## json
+$ goose check --color never services/.run_lib_json.goose
+services/common/json/json.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/json/json.goose:309: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/json/json.goose:322: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_json.c --standalone services/.run_lib_json.goose
+services/common/json/json.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/json/json.goose:309: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/json/json.goose:322: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_json.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_json
+run exit: 0
+VERDICT json: COMPILED
+
+## pool
+$ goose check --color never services/.run_lib_pool.goose
+services/common/pool/pool.goose:156: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_pool.c --standalone services/.run_lib_pool.goose
+services/common/pool/pool.goose:156: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_pool.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_pool
+run exit: 0
+VERDICT pool: COMPILED
+
+## ring
+$ goose check --color never services/.run_lib_ring.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_ring.c --standalone services/.run_lib_ring.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_ring.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_ring
+run exit: 0
+VERDICT ring: COMPILED
+
+## sort
+$ goose check --color never services/.run_lib_sort.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sort.c --standalone services/.run_lib_sort.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sort.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sort
+run exit: 0
+VERDICT sort: COMPILED
+
+## status
+$ goose check --color never services/.run_lib_status.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_status.c --standalone services/.run_lib_status.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_status.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_status
+run exit: 0
+VERDICT status: COMPILED
+
+## str
+$ goose check --color never services/.run_lib_str.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_str.c --standalone services/.run_lib_str.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_str.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_str
+run exit: 0
+VERDICT str: COMPILED
+
+## sys
+$ goose check --color never services/.run_lib_sys.goose
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sys.c --standalone services/.run_lib_sys.goose
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sys.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_sys
+run exit: 0
+VERDICT sys: COMPILED
+
+## table
+$ goose check --color never services/.run_lib_table.goose
+services/common/table/table.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_table.c --standalone services/.run_lib_table.goose
+services/common/table/table.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_table.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_table
+run exit: 0
+VERDICT table: COMPILED
+
+## text
+$ goose check --color never services/.run_lib_text.goose
+services/common/text/text.goose:100: warning: redundant `as u8`: (c + 32) is already u8
+services/common/text/text.goose:105: warning: redundant `as u8`: (c - 32) is already u8
+services/common/text/text.goose:176: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_text.c --standalone services/.run_lib_text.goose
+services/common/text/text.goose:100: warning: redundant `as u8`: (c + 32) is already u8
+services/common/text/text.goose:105: warning: redundant `as u8`: (c - 32) is already u8
+services/common/text/text.goose:176: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_text.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/lib_text
+run exit: 0
+VERDICT text: COMPILED
+

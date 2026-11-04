@@ -4,7 +4,7 @@ Two entry points: `sh_exec(line, out, cap)` runs one line into a buffer (testabl
 no console), and `sh_run()` is the REPL that owns the keyboard. Everything worth
 testing lives in the first.
 
-**Status: RUNS** — `t66_shell` (57 checks, exit 0) on the host, plus `t131_shell_r11` for
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/shell/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `t66_shell` (57 checks, exit 0) on the host, plus `t131_shell_r11` for
 the refusal catalogue. `sh_run` has never read a key: the REPL path needs the kernel
 keyboard, and `SH_LINE_MAX` lives in that buffer, so it has no host proof.
 

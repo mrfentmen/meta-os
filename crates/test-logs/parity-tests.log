@@ -1,0 +1,1156 @@
+=== TEST parity-tests 2026-11-04T19:24:19Z ===
+warning: unused import: `Path`
+  --> crates/parity-tests/src/tests/test_os_tree.rs:11:17
+   |
+11 | use std::path::{Path, PathBuf};
+   |                 ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `os_misc::b27::validate as vp`
+  --> crates/parity-tests/src/tests/test_worlds_pack.rs:10:5
+   |
+10 | use os_misc::b27::validate as vp;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> crates/parity-tests/src/tests/test_os_base.rs:75:9
+   |
+75 |     let mut flush = |token: &mut String, found: &mut Option<String>| {
+   |         ----^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> crates/parity-tests/src/tests/test_os_livebuild.rs:109:9
+    |
+109 |     let mut flush = |token: &mut String, found: &mut Option<String>| {
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: type `StrVal` is more private than the item `FakeUpstash::strings`
+  --> crates/parity-tests/src/support/fake_redis.rs:17:5
+   |
+17 |     pub strings: HashMap<String, StrVal>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `FakeUpstash::strings` is reachable at visibility `pub`
+   |
+note: but type `StrVal` is only usable at visibility `pub(self)`
+  --> crates/parity-tests/src/support/fake_redis.rs:10:1
+   |
+10 | struct StrVal {
+   | ^^^^^^^^^^^^^
+   = note: `#[warn(private_interfaces)]` on by default
+
+warning: constant `I` is never used
+  --> crates/parity-tests/src/tests/test_fdny_par_clock.rs:38:7
+   |
+38 | const I: i64 = pc::DEFAULT_INTERVAL_SECONDS;
+   |       ^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `G` is never used
+  --> crates/parity-tests/src/tests/test_fdny_par_clock.rs:39:7
+   |
+39 | const G: i64 = pc::DEFAULT_GRACE_SECONDS;
+   |       ^
+
+warning: function `entered` is never used
+  --> crates/parity-tests/src/tests/test_fdny_par_clock.rs:41:4
+   |
+41 | fn entered(crew: &str, at: i64, location: Option<&str>) -> pc::ParState {
+   |    ^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os021_update.rs:29:4
+   |
+29 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `script_path` is never used
+  --> crates/parity-tests/src/tests/test_os021_update.rs:32:4
+   |
+32 | fn script_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `readme_path` is never used
+  --> crates/parity-tests/src/tests/test_os021_update.rs:35:4
+   |
+35 | fn readme_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `git` is never used
+  --> crates/parity-tests/src/tests/test_os021_update.rs:39:4
+   |
+39 | fn git(cwd: &Path, args: &[&str]) -> String {
+   |    ^^^
+
+warning: struct `Fixture` is never constructed
+  --> crates/parity-tests/src/tests/test_os021_update.rs:54:8
+   |
+54 | struct Fixture {
+   |        ^^^^^^^
+
+warning: associated items `setup`, `make_repo`, `run`, `live_content`, and `live_head` are never used
+   --> crates/parity-tests/src/tests/test_os021_update.rs:64:8
+    |
+ 63 | impl Fixture {
+    | ------------ associated items in this implementation
+ 64 |     fn setup() -> Self {
+    |        ^^^^^
+...
+ 77 |     fn make_repo(path: &Path, content: &str) -> String {
+    |        ^^^^^^^^^
+...
+ 85 |     fn run(&self, args: &[&str], relay_root: Option<&Path>) -> (i32, String, String) {
+    |        ^^^
+...
+100 |     fn live_content(&self) -> String {
+    |        ^^^^^^^^^^^^
+...
+103 |     fn live_head(&self) -> String {
+    |        ^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:28:4
+   |
+28 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:31:4
+   |
+31 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:34:4
+   |
+34 | fn read(p: &std::path::Path) -> String {
+   |    ^^^^
+
+warning: function `unit_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:37:4
+   |
+37 | fn unit_path() -> PathBuf {
+   |    ^^^^^^^^^
+
+warning: function `target_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:40:4
+   |
+40 | fn target_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `build_image_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:43:4
+   |
+43 | fn build_image_path() -> PathBuf {
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `live_hook_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:46:4
+   |
+46 | fn live_hook_path() -> PathBuf {
+   |    ^^^^^^^^^^^^^^
+
+warning: function `readme_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:50:4
+   |
+50 | fn readme_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `spec_path` is never used
+  --> crates/parity-tests/src/tests/test_os058_gateway_unit.rs:53:4
+   |
+53 | fn spec_path() -> PathBuf {
+   |    ^^^^^^^^^
+
+warning: constant `GATEWAY_UNIT` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:37:7
+   |
+37 | const GATEWAY_UNIT: &str = "relay-mcp-gateway.service";
+   |       ^^^^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:39:4
+   |
+39 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:42:4
+   |
+42 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:45:4
+   |
+45 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `target` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:48:4
+   |
+48 | fn target() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `unit` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:51:4
+   |
+51 | fn unit() -> PathBuf {
+   |    ^^^^
+
+warning: function `build_image` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:54:4
+   |
+54 | fn build_image() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `build_live` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:57:4
+   |
+57 | fn build_live() -> PathBuf {
+   |    ^^^^^^^^^^
+
+warning: function `hook` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:60:4
+   |
+60 | fn hook() -> PathBuf {
+   |    ^^^^
+
+warning: function `packer` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:63:4
+   |
+63 | fn packer() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `sweep` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:66:4
+   |
+66 | fn sweep() -> PathBuf {
+   |    ^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:69:4
+   |
+69 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `spec` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:72:4
+   |
+72 | fn spec() -> PathBuf {
+   |    ^^^^
+
+warning: function `enablement_loop` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:76:4
+   |
+76 | fn enablement_loop(text: &str) -> String {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `bake_section` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:80:4
+   |
+80 | fn bake_section(text: &str) -> String {
+   |    ^^^^^^^^^^^^
+
+warning: function `shell_check` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:92:4
+   |
+92 | fn shell_check(shell: &str, flag: &str, path: &Path) -> (i32, String) {
+   |    ^^^^^^^^^^^
+
+warning: function `gateway_rootfs` is never used
+  --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:97:4
+   |
+97 | fn gateway_rootfs(extra: &[&str]) -> tempfile::TempDir {
+   |    ^^^^^^^^^^^^^^
+
+warning: function `run_sweep` is never used
+   --> crates/parity-tests/src/tests/test_os059_gateway_bake.rs:112:4
+    |
+112 | fn run_sweep(rootfs: &Path) -> (i32, String) {
+    |    ^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os065_skills_loader.rs:57:4
+   |
+57 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os065_skills_loader.rs:60:4
+   |
+60 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os065_skills_loader.rs:63:4
+   |
+63 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `fixtures` is never used
+  --> crates/parity-tests/src/tests/test_os065_skills_loader.rs:66:4
+   |
+66 | fn fixtures() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `skills_loader_py` is never used
+  --> crates/parity-tests/src/tests/test_os065_skills_loader.rs:69:4
+   |
+69 | fn skills_loader_py() -> PathBuf {
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os083_artifact_store.rs:48:4
+   |
+48 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os083_artifact_store.rs:51:4
+   |
+51 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os083_artifact_store.rs:54:4
+   |
+54 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:30:4
+   |
+30 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `script_path` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:33:4
+   |
+33 | fn script_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `readme_path` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:36:4
+   |
+36 | fn readme_path() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:39:4
+   |
+39 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: constant `QGA_DEVICE` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:43:7
+   |
+43 | const QGA_DEVICE: &str = "org.qemu.guest_agent.0";
+   |       ^^^^^^^^^^
+
+warning: constant `READY_MARKER` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:44:7
+   |
+44 | const READY_MARKER: &str = "/run/metaos/ready";
+   |       ^^^^^^^^^^^^
+
+warning: constant `VERSION_FILE` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:45:7
+   |
+45 | const VERSION_FILE: &str = "/etc/metaos-version";
+   |       ^^^^^^^^^^^^
+
+warning: function `heredoc_bodies` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:48:4
+   |
+48 | fn heredoc_bodies(text: &str) -> Vec<(String, String)> {
+   |    ^^^^^^^^^^^^^^
+
+warning: function `run_script` is never used
+  --> crates/parity-tests/src/tests/test_os_boot_harness.rs:76:4
+   |
+76 | fn run_script(args: &[&str], path_override: Option<&std::ffi::OsStr>) -> (i32, String, String) {
+   |    ^^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:26:4
+   |
+26 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:29:4
+   |
+29 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:32:4
+   |
+32 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `unit` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:35:4
+   |
+35 | fn unit() -> PathBuf {
+   |    ^^^^
+
+warning: function `target` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:38:4
+   |
+38 | fn target() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `build_image` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:41:4
+   |
+41 | fn build_image() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `build_live` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:44:4
+   |
+44 | fn build_live() -> PathBuf {
+   |    ^^^^^^^^^^
+
+warning: function `watch_py` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:47:4
+   |
+47 | fn watch_py() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:50:4
+   |
+50 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `spec` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:53:4
+   |
+53 | fn spec() -> PathBuf {
+   |    ^^^^
+
+warning: function `sections` is never used
+  --> crates/parity-tests/src/tests/test_os_bus_unit.rs:57:4
+   |
+57 | fn sections(text: &str) -> HashMap<String, HashMap<String, Vec<String>>> {
+   |    ^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:57:4
+   |
+57 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:60:4
+   |
+60 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `live_dir` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:63:4
+   |
+63 | fn live_dir() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `config` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:66:4
+   |
+66 | fn config() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `package_list` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:69:4
+   |
+69 | fn package_list() -> PathBuf {
+   |    ^^^^^^^^^^^^
+
+warning: function `hook` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:72:4
+   |
+72 | fn hook() -> PathBuf {
+   |    ^^^^
+
+warning: function `wrapper` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:75:4
+   |
+75 | fn wrapper() -> PathBuf {
+   |    ^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:78:4
+   |
+78 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `live_build_files` is never used
+  --> crates/parity-tests/src/tests/test_os_livebuild.rs:82:4
+   |
+82 | fn live_build_files() -> Vec<PathBuf> {
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `name_list` is never used
+   --> crates/parity-tests/src/tests/test_os_livebuild.rs:101:4
+    |
+101 | fn name_list(text: &str) -> Vec<String> {
+    |    ^^^^^^^^^
+
+warning: function `second_base_in` is never used
+   --> crates/parity-tests/src/tests/test_os_livebuild.rs:105:4
+    |
+105 | fn second_base_in(text: &str) -> Option<String> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:36:4
+   |
+36 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:39:4
+   |
+39 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `manifest` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:42:4
+   |
+42 | fn manifest() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `package_list` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:45:4
+   |
+45 | fn package_list() -> PathBuf {
+   |    ^^^^^^^^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:48:4
+   |
+48 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:51:4
+   |
+51 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `names` is never used
+  --> crates/parity-tests/src/tests/test_os_manifest.rs:54:4
+   |
+54 | fn names(p: &Path) -> Vec<String> {
+   |    ^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:27:4
+   |
+27 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:30:4
+   |
+30 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `os_top` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:33:4
+   |
+33 | fn os_top() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:36:4
+   |
+36 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `unit` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:39:4
+   |
+39 | fn unit() -> PathBuf {
+   |    ^^^^
+
+warning: function `timer` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:42:4
+   |
+42 | fn timer() -> PathBuf {
+   |    ^^^^^
+
+warning: function `target` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:45:4
+   |
+45 | fn target() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `mos_shim` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:48:4
+   |
+48 | fn mos_shim() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `mos_cli` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:51:4
+   |
+51 | fn mos_cli() -> PathBuf {
+   |    ^^^^^^^
+
+warning: function `overseer` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:54:4
+   |
+54 | fn overseer() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:57:4
+   |
+57 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `spec` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:60:4
+   |
+60 | fn spec() -> PathBuf {
+   |    ^^^^
+
+warning: function `build_image` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:63:4
+   |
+63 | fn build_image() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `build_live` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:66:4
+   |
+66 | fn build_live() -> PathBuf {
+   |    ^^^^^^^^^^
+
+warning: function `sections` is never used
+  --> crates/parity-tests/src/tests/test_os_overseer_unit.rs:70:4
+   |
+70 | fn sections(text: &str) -> HashMap<String, HashMap<String, Vec<String>>> {
+   |    ^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:46:4
+   |
+46 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:49:4
+   |
+49 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:52:4
+   |
+52 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `template` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:55:4
+   |
+55 | fn template() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `wrapper` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:58:4
+   |
+58 | fn wrapper() -> PathBuf {
+   |    ^^^^^^^
+
+warning: function `preseed` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:61:4
+   |
+61 | fn preseed() -> PathBuf {
+   |    ^^^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:64:4
+   |
+64 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `second_base_in` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:68:4
+   |
+68 | fn second_base_in(text: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^
+
+warning: function `var_block` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:85:4
+   |
+85 | fn var_block(text: &str, name: &str) -> Option<String> {
+   |    ^^^^^^^^^
+
+warning: function `literal_password_at` is never used
+  --> crates/parity-tests/src/tests/test_os_packer.rs:93:4
+   |
+93 | fn literal_password_at(text: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `sha40_in` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:30:4
+   |
+30 | fn sha40_in(text: &str) -> Vec<String> {
+   |    ^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:52:4
+   |
+52 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:55:4
+   |
+55 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:58:4
+   |
+58 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `script` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:61:4
+   |
+61 | fn script() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_stackbake.rs:64:4
+   |
+64 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:42:4
+   |
+42 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:45:4
+   |
+45 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:48:4
+   |
+48 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `target` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:51:4
+   |
+51 | fn target() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `ready` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:54:4
+   |
+54 | fn ready() -> PathBuf {
+   |    ^^^^^
+
+warning: function `checklist` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:57:4
+   |
+57 | fn checklist() -> PathBuf {
+   |    ^^^^^^^^^
+
+warning: function `build_image` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:60:4
+   |
+60 | fn build_image() -> PathBuf {
+   |    ^^^^^^^^^^^
+
+warning: function `packer` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:63:4
+   |
+63 | fn packer() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `hook` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:66:4
+   |
+66 | fn hook() -> PathBuf {
+   |    ^^^^
+
+warning: function `readme` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:69:4
+   |
+69 | fn readme() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `spec` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:72:4
+   |
+72 | fn spec() -> PathBuf {
+   |    ^^^^
+
+warning: function `sections` is never used
+  --> crates/parity-tests/src/tests/test_os_target_unit.rs:76:4
+   |
+76 | fn sections(text: &str) -> HashMap<String, HashMap<String, Vec<String>>> {
+   |    ^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_tree.rs:73:4
+   |
+73 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_dir` is never used
+  --> crates/parity-tests/src/tests/test_os_tree.rs:76:4
+   |
+76 | fn os_dir() -> PathBuf {
+   |    ^^^^^^
+
+warning: function `read_rel` is never used
+  --> crates/parity-tests/src/tests/test_os_tree.rs:79:4
+   |
+79 | fn read_rel(rel: &str) -> String {
+   |    ^^^^^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_os_uplink.rs:41:4
+   |
+41 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `os_inner` is never used
+  --> crates/parity-tests/src/tests/test_os_uplink.rs:44:4
+   |
+44 | fn os_inner() -> PathBuf {
+   |    ^^^^^^^^
+
+warning: function `read` is never used
+  --> crates/parity-tests/src/tests/test_os_uplink.rs:47:4
+   |
+47 | fn read(p: &Path) -> String {
+   |    ^^^^
+
+warning: function `root` is never used
+  --> crates/parity-tests/src/tests/test_worlds_pack.rs:33:4
+   |
+33 | fn root() -> PathBuf {
+   |    ^^^^
+
+warning: function `pack_path` is never used
+  --> crates/parity-tests/src/tests/test_worlds_pack.rs:36:4
+   |
+36 | fn pack_path(name: &str) -> PathBuf {
+   |    ^^^^^^^^^
+
+warning: function `read_manifest` is never used
+  --> crates/parity-tests/src/tests/test_worlds_pack.rs:39:4
+   |
+39 | fn read_manifest(name: &str) -> Value {
+   |    ^^^^^^^^^^^^^
+
+warning: function `valid_manifest` is never used
+  --> crates/parity-tests/src/tests/test_worlds_pack.rs:43:4
+   |
+43 | fn valid_manifest() -> Value {
+   |    ^^^^^^^^^^^^^^
+
+   Compiling parity-tests v0.1.0 (/Users/test/Desktop/meta-os/crates/parity-tests)
+warning: `parity-tests` (lib) generated 140 warnings (run `cargo fix --lib -p parity-tests` to apply 4 suggestions)
+warning: type `StrVal` is more private than the item `fake_redis::FakeUpstash::strings`
+  --> crates/parity-tests/src/support/fake_redis.rs:17:5
+   |
+17 |     pub strings: HashMap<String, StrVal>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `fake_redis::FakeUpstash::strings` is reachable at visibility `pub`
+   |
+note: but type `StrVal` is only usable at visibility `pub(self)`
+  --> crates/parity-tests/src/support/fake_redis.rs:10:1
+   |
+10 | struct StrVal {
+   | ^^^^^^^^^^^^^
+   = note: `#[warn(private_interfaces)]` on by default
+
+warning: field `src` is never read
+  --> crates/parity-tests/src/tests/test_os021_update.rs:57:5
+   |
+54 | struct Fixture {
+   |        ------- field in this struct
+...
+57 |     src: PathBuf,
+   |     ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `parity-tests` (lib test) generated 5 warnings (3 duplicates)
+    Finished `release` profile [optimized] target(s) in 2.03s
+     Running unittests src/lib.rs (target/release/deps/parity_tests-30bd0c94bc904dd1)
+
+running 235 tests
+test support::acceptance::tests::empty_and_bad ... ok
+test tests::test_boss_trigger::tests::test_canonical_matches ... ok
+test support::fake_redis::tests::set_nx_and_ttl ... ok
+test tests::test_boss_trigger::tests::test_bad_hex_rejected ... ok
+test support::acceptance::tests::parse_shapes ... ok
+test tests::test_boss_trigger::tests::test_canonical_payload_stable ... ok
+test support::fake_redis::tests::zrangebyscore_order ... ok
+test tests::test_boss_trigger::tests::test_bad_version_rejected ... ok
+test support::fake_redis::tests::lrem_semantics ... ok
+test tests::test_boss_trigger::tests::test_empty_text_canonical ... ok
+test tests::test_boss_trigger::tests::test_future_ts_within_skew_ok ... ok
+test tests::test_boss_trigger::tests::test_hex_roundtrip ... ok
+test tests::test_boss_trigger::tests::test_hmac_agrees ... ok
+test tests::test_boss_trigger::tests::test_malformed_fields_rejected ... ok
+test support::helpers::tests::tmp_routing ... ok
+test tests::test_boss_trigger::tests::test_null_sig_without_flag_rejected ... ok
+test tests::test_boss_trigger::tests::test_replay_rejected ... ok
+test tests::test_boss_trigger::tests::test_stale_ts_rejected ... ok
+test tests::test_boss_trigger::tests::test_tampered_text_rejected ... ok
+test tests::test_boss_trigger::tests::test_unicode_payload_agrees ... ok
+test tests::test_boss_trigger::tests::test_unsigned_replay_rejected ... ok
+test tests::test_boss_trigger::tests::test_unsigned_stale_ts_rejected ... ok
+test tests::test_boss_trigger::tests::test_unsigned_test_envelope_accepted ... ok
+test tests::test_boss_trigger::tests::test_uppercase_sig_accepted ... ok
+test tests::test_boss_trigger::tests::test_valid_envelope ... ok
+test tests::test_boss_trigger::tests::test_wrong_secret_rejected ... ok
+test tests::test_bus_rename::tests::test_history_entry_shape ... ok
+test tests::test_bus_rename::tests::test_keyless_entry_passes_admin_verify ... ok
+test tests::test_bus_rename::tests::test_is_admin_case_insensitive ... ok
+test tests::test_bus_rename::tests::test_label_for ... ok
+test tests::test_bus_rename::tests::test_log_entry_is_keyless ... ok
+test tests::test_bus_rename::tests::test_log_entry_is_valid_json ... ok
+test tests::test_bus_rename::tests::test_names_hash_entry_shape ... ok
+test tests::test_bus_rename::tests::test_nonce_shape ... ok
+test tests::test_bus_rename::tests::test_parse_names_flat_array_form ... ok
+test tests::test_bus_rename::tests::test_parse_names_nullish ... ok
+test tests::test_bus_rename::tests::test_parse_names_object_form ... ok
+test tests::test_bus_rename::tests::test_pystr_matches_json_dumps ... ok
+test tests::test_bus_rename::tests::test_qnick_encoding ... ok
+test tests::test_bustools_parity::tests::test_live_matches_vendored ... ok
+test tests::test_clip::tests::test_read_all_tools_fail_is_loud ... ok
+test tests::test_clip::tests::test_read_falls_through_failing_tool ... ok
+test tests::test_clip::tests::test_read_no_tools_installed_is_loud ... ok
+test tests::test_clip::tests::test_read_uses_first_working_tool ... ok
+test tests::test_clip::tests::test_write_no_tools_is_loud ... ok
+test tests::test_clip::tests::test_write_returns_tool_name_and_sends_data ... ok
+test tests::test_fdny_par_clock::tests::test_crew_id_rules ... ok
+test tests::test_fdny_par_clock::tests::test_completion_resets_cycle_and_clears_alarm ... ok
+test tests::test_fdny_par_clock::tests::test_due_fires_once_per_cycle ... ok
+test tests::test_fdny_par_clock::tests::test_enter_starts_interval_from_entry ... ok
+test tests::test_fdny_par_clock::tests::test_enter_twice_is_refused ... ok
+test tests::test_fdny_par_clock::tests::test_exit_removes_crew_and_cleans_ledger ... ok
+test tests::test_fdny_par_clock::tests::test_exit_silences_overdue ... ok
+test tests::test_fdny_par_clock::tests::test_exit_unknown_crew_is_refused ... ok
+test tests::test_fdny_par_clock::tests::test_grace_escalates_to_life_safety ... ok
+test tests::test_fdny_par_clock::tests::test_ids_carry_no_spaces_or_explanations ... ok
+test tests::test_fdny_par_clock::tests::test_inputs_never_mutated ... ok
+test tests::test_fdny_par_clock::tests::test_line_matches_fnd020_shape ... ok
+test tests::test_fdny_par_clock::tests::test_location_present_on_life_safety_event ... ok
+test tests::test_fdny_par_clock::tests::test_quiet_before_interval ... ok
+test tests::test_fdny_par_clock::tests::test_second_crew_counts_independently ... ok
+test tests::test_os021_update::tests::test_readme_documents_rollback ... ok
+test tests::test_os021_update::tests::test_script_defaults_to_opt_relay_and_names_hook ... ok
+test tests::test_os058_gateway_unit::tests::test_header_names_bake_and_has_no_em_dash ... ok
+test tests::test_os058_gateway_unit::tests::test_image_routes_enable_after_bake ... ok
+test tests::test_os058_gateway_unit::tests::test_exec_runs_gateway_with_no_secret_on_command_line ... ok
+test tests::test_os058_gateway_unit::tests::test_readme_section_and_spec_record ... ok
+test tests::test_os058_gateway_unit::tests::test_install_and_target_wiring_live_after_bake ... ok
+test tests::test_os058_gateway_unit::tests::test_unit_exists ... ok
+test tests::test_os058_gateway_unit::tests::test_service_identity_workdir_and_restart ... ok
+test tests::test_os058_gateway_unit::tests::test_unit_ordering_target_and_secrets_gate ... ok
+test tests::test_os059_gateway_bake::tests::test_bake_block_copies_only_daemon_and_catalog ... ok
+test tests::test_os059_gateway_bake::tests::test_bake_block_refuses_missing_source ... ok
+test tests::test_os059_gateway_bake::tests::test_enablement_loop_names_gateway ... ok
+test tests::test_os059_gateway_bake::tests::test_file_provisioners_carry_only_daemon_and_catalog ... ok
+test tests::test_os059_gateway_bake::tests::test_hook_enables_gateway ... ok
+test tests::test_os059_gateway_bake::tests::test_build_image_bash_syntax ... ok
+test tests::test_os059_gateway_bake::tests::test_hook_shell_syntax ... ok
+test tests::test_os059_gateway_bake::tests::test_allowlisted_gateway_tree_sweeps_clean ... ok
+test tests::test_os059_gateway_bake::tests::test_readme_carries_os059_section_without_em_dash ... ok
+test tests::test_os059_gateway_bake::tests::test_shell_installs_stamp_and_enables ... ok
+test tests::test_os059_gateway_bake::tests::test_spec_records_os059_bake ... ok
+test tests::test_os059_gateway_bake::tests::test_planted_env_file_is_finding ... ok
+test tests::test_os059_gateway_bake::tests::test_target_wants_gateway ... ok
+test tests::test_os059_gateway_bake::tests::test_unit_header_no_longer_defers_enablement ... ok
+test tests::test_os059_gateway_bake::tests::test_sweep_script_shell_syntax ... ok
+test tests::test_os059_gateway_bake::tests::test_wrapper_stages_gateway_and_stamp ... ok
+test tests::test_os065_skills_loader::tests::test_build_image_bakes_collection_root ... ok
+test tests::test_os059_gateway_bake::tests::test_wrapper_bash_syntax ... ok
+test tests::test_os065_skills_loader::tests::test_build_live_stages_collection_root ... ok
+test tests::test_os065_skills_loader::tests::test_live_hook_owns_collection_root ... ok
+test tests::test_os065_skills_loader::tests::test_no_em_dash_in_new_files ... ok
+test tests::test_os065_skills_loader::tests::test_packer_bakes_collection_root ... ok
+test tests::test_os083_artifact_store::tests::test_build_image_bakes_store_root ... ok
+test tests::test_os083_artifact_store::tests::test_build_live_stages_store_root ... ok
+test tests::test_os065_skills_loader::tests::test_build_scripts_parse ... ok
+test tests::test_os083_artifact_store::tests::test_no_em_dash_in_new_module ... ok
+test tests::test_os083_artifact_store::tests::test_packer_bakes_store_root ... ok
+test tests::test_os094_job_artifacts::tests::test_parse_artifact_ref_shape ... ok
+test tests::test_os_base::tests::test_base_doc_carries_no_em_dash ... ok
+test tests::test_os_base::tests::test_base_doc_names_the_frozen_base_and_source ... ok
+test tests::test_os_base::tests::test_base_doc_states_checksum_limit_honestly ... ok
+test tests::test_os_base::tests::test_build_script_pins_bookworm_suite_and_mirror ... ok
+test tests::test_os083_artifact_store::tests::test_build_scripts_parse ... ok
+test tests::test_os_base::tests::test_preseed_names_no_suite_or_mirror ... ok
+test tests::test_os_base::tests::test_no_second_base_in_build_files ... ok
+test tests::test_os_boot_harness::tests::test_bad_numbers_fail ... ok
+test tests::test_os_boot_harness::tests::test_launch_contract_in_script ... ok
+test tests::test_os_boot_harness::tests::test_missing_image_fails_naming_path ... ok
+test tests::test_os_boot_harness::tests::test_missing_qemu_fails_naming_binary ... ok
+test tests::test_os_boot_harness::tests::test_no_em_dash_in_new_content ... ok
+test tests::test_os_boot_harness::tests::test_no_image_is_usage_error ... ok
+test tests::test_os_boot_harness::tests::test_non_ppm_screenshot_fails ... ok
+test tests::test_os_boot_harness::tests::test_readme_section_states_unproven_limit ... ok
+test tests::test_os_boot_harness::tests::test_script_exists_and_bash_clean ... ok
+test tests::test_os_bus_unit::tests::test_exec_runs_watchpy_with_no_secret_on_command_line ... ok
+test tests::test_os_bus_unit::tests::test_image_route_enables_and_live_route_stages ... ok
+test tests::test_os_bus_unit::tests::test_install_and_target_want_each_other ... ok
+test tests::test_os_bus_unit::tests::test_readme_section_and_spec_record ... ok
+test tests::test_os_bus_unit::tests::test_service_identity_workdir_and_restart ... ok
+test tests::test_os_bus_unit::tests::test_unit_exists ... ok
+test tests::test_os_bus_unit::tests::test_unit_ordering_target_and_secrets_gate ... ok
+test tests::test_os_bus_unit::tests::test_watchpy_is_the_named_process ... ok
+test tests::test_os_livebuild::tests::test_base_carries_fallback_divergences ... ok
+test tests::test_os_livebuild::tests::test_config_exists_and_names_bookworm_amd64_iso_hybrid ... ok
+test tests::test_os_livebuild::tests::test_config_shell_syntax ... ok
+test tests::test_os_livebuild::tests::test_config_states_unproven_limit ... ok
+test tests::test_os_livebuild::tests::test_covers_packages_txt_names ... ok
+test tests::test_os_livebuild::tests::test_covers_spec_extras_as_real_package_names ... ok
+test tests::test_os_livebuild::tests::test_hook_enables_exactly_the_build_image_unit_set ... ok
+test tests::test_os_livebuild::tests::test_hook_enables_nothing_else_from_services ... ok
+test tests::test_os_livebuild::tests::test_hook_shell_syntax ... ok
+test tests::test_os_livebuild::tests::test_new_doc_sections_carry_no_em_dash ... ok
+test tests::test_os_livebuild::tests::test_no_second_base_in_live_build_files ... ok
+test tests::test_os_livebuild::tests::test_no_unit_copy_lives_in_live_build_tree ... ok
+test tests::test_os_livebuild::tests::test_no_versions_pinned_here ... ok
+test tests::test_os_livebuild::tests::test_readme_carries_os008_section_with_limit ... ok
+test tests::test_os_livebuild::tests::test_wrapper_bash_syntax ... ok
+test tests::test_os_livebuild::tests::test_wrapper_build_steps_and_output_naming ... ok
+test tests::test_os_livebuild::tests::test_wrapper_guards ... ok
+test tests::test_os_livebuild::tests::test_wrapper_stages_from_repo_sources_and_cleans_up ... ok
+test tests::test_os_manifest::tests::test_header_states_unpinned_and_owed_diff ... ok
+test tests::test_os_manifest::tests::test_live_build_list_matches_packages_txt ... ok
+test tests::test_os_manifest::tests::test_no_duplicates_and_no_version_pins ... ok
+test tests::test_os_manifest::tests::test_no_em_dash_in_manifest_files ... ok
+test tests::test_os_manifest::tests::test_openssh_disabled_by_default_noted ... ok
+test tests::test_os_manifest::tests::test_packages_txt_is_exactly_the_frozen_set ... ok
+test tests::test_os_manifest::tests::test_readme_carries_os010_section_with_limit ... ok
+test tests::test_os_manifest::tests::test_spec_set_present ... ok
+test tests::test_os_overseer_unit::tests::test_exec_runs_mos_tick_with_no_secret_on_command_line ... ok
+test tests::test_os_overseer_unit::tests::test_install_target_and_image_routes ... ok
+test tests::test_os059_gateway_bake::tests::test_planted_venv_and_servers_files_are_findings ... ok
+test tests::test_os_overseer_unit::tests::test_readme_section_and_spec_record ... ok
+test tests::test_os_overseer_unit::tests::test_mospy_is_the_named_process ... ok
+test tests::test_os_overseer_unit::tests::test_service_identity_workdir_and_oneshot ... ok
+test tests::test_os_overseer_unit::tests::test_timer_is_the_loop ... ok
+test tests::test_os_overseer_unit::tests::test_unit_exists ... ok
+test tests::test_os_overseer_unit::tests::test_unit_ordering_wants_and_secrets_gate ... ok
+test tests::test_os_packer::tests::test_committed_preseed_still_locked ... ok
+test tests::test_os_packer::tests::test_readme_carries_os007_section_with_unproven_limit ... ok
+test tests::test_os_packer::tests::test_template_bookworm_only_no_second_base ... ok
+test tests::test_os_packer::tests::test_no_literal_password_in_template_or_wrapper ... ok
+test tests::test_os_packer::tests::test_template_exists_and_names_qemu_source ... ok
+test tests::test_os_packer::tests::test_template_iso_checksum_is_publisher_file_not_invented_hash ... ok
+test tests::test_os_packer::tests::test_template_iso_url_has_no_default ... ok
+test tests::test_os_packer::tests::test_template_provisioners_mirror_build_image_glue ... ok
+test tests::test_os_packer::tests::test_template_raw_output_and_names ... ok
+test tests::test_os_packer::tests::test_template_ssh_password_sensitive_and_undefaulted ... ok
+test tests::test_os_packer::tests::test_wrapper_generates_password_with_openssl_not_a_literal ... ok
+test tests::test_os_packer::tests::test_wrapper_guards ... ok
+test tests::test_os_packer::tests::test_wrapper_syntax_clean ... ok
+test tests::test_os_stackbake::tests::test_dirty_guard_runs_before_any_image_write ... ok
+test tests::test_os_stackbake::tests::test_no_hardcoded_commit_sha_in_script ... ok
+test tests::test_os_stackbake::tests::test_no_requirements_file_exists ... ok
+test tests::test_os_stackbake::tests::test_payload_still_excludes_git ... ok
+test tests::test_os_stackbake::tests::test_pinned_commit_captured_from_checkout_head ... ok
+test tests::test_os_stackbake::tests::test_readme_has_no_em_dash ... ok
+test tests::test_os_stackbake::tests::test_readme_has_os011_section_with_limits ... ok
+test tests::test_os_stackbake::tests::test_readme_states_no_venv_step_and_why ... ok
+test tests::test_os_stackbake::tests::test_refuses_dirty_checkout ... ok
+test tests::test_os_packer::tests::test_wrapper_preseed_transform_changes_exactly_one_line ... ok
+test tests::test_os_stackbake::tests::test_source_commit_stamp_file_written_from_variable ... ok
+test tests::test_os_stackbake::tests::test_stamp_written_after_git_removal ... ok
+test tests::test_os_stackbake::tests::test_version_stamp_carries_source_commit_line ... ok
+test tests::test_os_target_unit::tests::test_gate_documents_the_oneshot_and_timer_limits ... ok
+test tests::test_os_target_unit::tests::test_gate_probes_the_gateable_set ... ok
+test tests::test_os_target_unit::tests::test_marker_write_is_guarded_and_block_is_reported ... ok
+test tests::test_os_target_unit::tests::test_no_secret_on_any_command_line ... ok
+test tests::test_os_target_unit::tests::test_readme_carries_os016_section_with_exclusions ... ok
+test tests::test_os_target_unit::tests::test_ready_does_not_wait_on_the_brief ... ok
+test tests::test_os_target_unit::tests::test_ready_is_oneshot_checklist_under_relay_target ... ok
+test tests::test_os_target_unit::tests::test_ready_orders_after_every_checked_unit ... ok
+test tests::test_os_target_unit::tests::test_spec_carries_os016_record ... ok
+test tests::test_os_target_unit::tests::test_target_enabled_identically_on_all_image_routes ... ok
+test tests::test_os_target_unit::tests::test_target_keeps_preexisting_base_ordering ... ok
+test tests::test_os_target_unit::tests::test_target_names_worker_template_exclusion ... ok
+test tests::test_os_target_unit::tests::test_target_wants_full_os016_set ... ok
+test tests::test_os_stackbake::tests::test_script_bash_syntax ... ok
+test tests::test_os_tree::tests::test_build_image_code_lines_reference_no_lane_src ... ok
+test tests::test_os_tree::tests::test_build_image_referenced_inputs_exist ... ok
+test tests::test_os_tree::tests::test_enabled_units_exist_in_services ... ok
+test tests::test_os_tree::tests::test_new_os_docs_carry_no_em_dash ... ok
+test tests::test_os_tree::tests::test_packages_list_carries_proven_set ... ok
+test tests::test_os_tree::tests::test_preseed_carries_os009_answers ... ok
+test tests::test_os_tree::tests::test_readme_states_honesty_limits ... ok
+test tests::test_os_boot_harness::tests::test_embedded_python_compiles ... ok
+test tests::test_os_tree::tests::test_tree_files_exist ... ok
+test tests::test_os_uplink::tests::test_enabled_on_all_three_image_routes ... ok
+test tests::test_os_uplink::tests::test_unit_wiring ... ok
+test tests::test_pomodoro::tests::test_fmt_remaining ... ok
+test tests::test_pomodoro::tests::test_parse_compound_durations ... ok
+test tests::test_pomodoro::tests::test_parse_rejects_garbage ... ok
+test tests::test_worlds_pack::tests::test_agent_serving_unknown_watcher_fails ... ok
+test tests::test_worlds_pack::tests::test_bad_severity_fails ... ok
+test tests::test_worlds_pack::tests::test_bad_status_fails ... ok
+test tests::test_worlds_pack::tests::test_duplicate_urgency_rank_fails ... ok
+test tests::test_worlds_pack::tests::test_local_alert_may_not_cross_bus ... ok
+test tests::test_worlds_pack::tests::test_missing_key_fails ... ok
+test tests::test_worlds_pack::tests::test_send_without_never_carries_fails ... ok
+test tests::test_worlds_pack::tests::test_shipped_packs_are_honest_spec ... ok
+test tests::test_worlds_pack::tests::test_shipped_packs_have_docs ... ok
+test tests::test_worlds_pack::tests::test_shipped_packs_validate ... ok
+test tests::test_worlds_pack::tests::test_summary_alert_may_cross_bus ... ok
+test tests::test_worlds_pack::tests::test_unknown_urgency_class_fails ... ok
+test tests::test_os_tree::tests::test_bash_scripts_syntax_clean ... ok
+test tests::test_worlds_pack::tests::test_valid_manifest_passes ... ok
+test tests::tests::index_complete ... ok
+test tests::test_os_tree::tests::test_sh_scripts_syntax_clean ... ok
+test tests::test_os021_update::tests::test_missing_bundle_is_usage_error ... ok
+test tests::test_os021_update::tests::test_no_args_without_hook_exits_before_touching_target ... ok
+test tests::test_os021_update::tests::test_non_git_target_refuses ... ok
+test tests::test_os021_update::tests::test_rollback_without_previous_refuses ... ok
+test tests::test_os021_update::tests::test_corrupt_bundle_refuses_and_leaves_target ... ok
+test tests::test_os021_update::tests::test_apply_moves_tree_and_keeps_previous ... ok
+test tests::test_os021_update::tests::test_rollback_swaps_and_second_rollback_swaps_back ... ok
+
+test result: ok. 235 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+     Running tests/parity_fixtures.rs (target/release/deps/parity_fixtures-224367e8d274ffa8)
+
+running 2 tests
+test parity_incident_keys ... ok
+test parity_envelope_fixture ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests parity_tests
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:22Z

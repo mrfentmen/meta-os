@@ -1,0 +1,117 @@
+=== TEST os-workspace 2026-11-04T19:24:15Z ===
+   Compiling os-workspace v0.1.0 (/Users/test/Desktop/meta-os/crates/os-workspace)
+    Finished `release` profile [optimized] target(s) in 1.35s
+     Running unittests src/lib.rs (target/release/deps/os_workspace-70c207b23fe48662)
+
+running 39 tests
+test tests::attach_rejects_non_object ... ok
+test tests::deposit_default_author_is_unknown ... ok
+test tests::attach_preserves_existing_artifacts ... ok
+test tests::deposit_nested_name ... ok
+test tests::cli_full_flow_and_errors ... ok
+test tests::deposit_first_version ... ok
+test tests::gitops_reject_branch ... ok
+test tests::deposit_identical_is_noop ... ok
+test tests::attach_two_deposits_mirrors_caller_test ... ok
+test tests::deposit_unicode_name_and_author_roundtrip ... ok
+test tests::cli_read_version_flag ... ok
+test tests::binary_bytes_survive_versioned_read ... ok
+test tests::json_compact_serialization_is_sorted ... ok
+test tests::json_parse_escapes_and_surrogate_pairs ... ok
+test tests::json_parse_numbers_nesting_and_literals ... ok
+test tests::json_parse_rejects_malformed_escapes_and_surrogates ... ok
+test tests::json_rejects_trailing_garbage ... ok
+test tests::json_roundtrip ... ok
+test tests::history_without_repo_errors ... ok
+test tests::manifest_malformed_and_wrong_shape_error ... ok
+test tests::deposit_str_matches_bytes ... ok
+test tests::deposit_changed_bumps_version_and_reads_versions ... ok
+test tests::history_unknown_artifact_in_existing_store_is_empty ... ok
+test tests::sha256_abc_vector ... ok
+test tests::sha256_empty_vector ... ok
+test tests::sha256_long_input_matches_block_boundary ... ok
+test tests::validate_job_id_ok ... ok
+test tests::validate_job_id_rejects ... ok
+test tests::validate_name_ok ... ok
+test tests::validate_name_rejects ... ok
+test tests::gitops_review_guards ... ok
+test tests::manifest_preserves_unknown_fields_on_redeposit ... ok
+test tests::gitops_worktree_add_remove ... ok
+test tests::list_sorted_and_empty_job ... ok
+test tests::gitops_is_repo_and_branch_and_clean ... ok
+test tests::read_errors ... ok
+test tests::read_latest_missing_file_errors ... ok
+test tests::gitops_review_branch_ok ... ok
+test tests::gitops_approve_merge_ok_and_guards ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.90s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-735dac062e99d4c4)
+
+running 9 tests
+test empty_record_attaches_an_empty_artifact_list ... ok
+test non_array_artifacts_field_is_treated_as_absent ... ok
+test duplicate_attach_entries_are_appended_not_deduped ... ok
+test empty_input_deposits_a_zero_byte_artifact ... ok
+test maximum_name_depth_and_long_job_id_round_trip ... ok
+test duplicate_identical_deposit_is_one_version ... ok
+test maximum_input_one_mebibyte_round_trips ... ok
+test out_of_order_attach_keeps_existing_order_then_appends_store_order ... ok
+test out_of_order_version_reads_return_the_right_bytes ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.49s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-00eeb919386edfe0)
+
+running 17 tests
+test cli_missing_flag_values_are_usage_errors ... ok
+test cli_usage_refusals_exit_two ... ok
+test job_id_refusals_are_the_documented_messages ... ok
+test name_refusals_are_the_documented_messages ... ok
+test reject_branch_needs_a_reason ... ok
+test attach_refuses_a_non_object_record ... ok
+test deposit_validates_before_it_creates_the_store ... ok
+test store_root_that_is_a_file_fails_as_an_artifact_error ... ok
+test manifest_corruption_and_shape_are_refused ... ok
+test non_repo_gitops_helpers_error_or_are_false ... ok
+test cli_non_integer_version_is_refused ... ok
+test cli_missing_source_and_artifact_are_artifact_store_errors ... ok
+test cli_negative_version_is_refused ... ok
+test read_refusals_are_exact ... ok
+test worktree_refusals_are_exact ... ok
+test merge_refusals_are_exact ... ok
+test review_refusals_are_exact ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-93cbcd6c83c7f8ba)
+
+running 9 tests
+test attach_preserves_top_level_fields_and_does_not_mutate_input ... ok
+test run_cli_identical_deposit_reports_no_new_commit ... ok
+test is_repo_accepts_a_subdirectory ... ok
+test clean_tree_counts_an_untracked_file_as_dirty ... ok
+test current_branch_is_empty_on_a_detached_head ... ok
+test branch_exists_is_false_for_a_commit_sha ... ok
+test run_cli_show_lists_oldest_first ... ok
+test worktree_add_detaches_and_remove_cleans_up ... ok
+test approve_merge_refuses_an_unknown_base ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+     Running tests/section13_workspace.rs (target/release/deps/section13_workspace-4f86bddedf277b92)
+
+running 3 tests
+test workspace_path_traversal_refused ... ok
+test workspace_list_empty ... ok
+test workspace_entry_roundtrip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+   Doc-tests os_workspace
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:19Z

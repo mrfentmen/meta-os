@@ -61,6 +61,7 @@ mod interrupts;
 mod logo_frames;
 mod mem;
 mod memory;
+mod pci;
 mod sched;
 mod tasks;
 mod traps;
@@ -360,6 +361,10 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     interrupts::enable();
     prove_timer();
     boot_splash();
+    // Lane E (R5): read-only PCI scan, K5 storage step 1. Pure port
+    // I/O, no allocator, no interrupts needed — safe before mem_init.
+    // Names the block devices the storage lane must drive; attaches none.
+    pci::probe();
     // Section D: frames, mapper, heap (IDT is live, so a stray fault
     // prints instead of triple-faulting).
     unsafe {

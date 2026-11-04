@@ -1,0 +1,173 @@
+=== TEST os-worker 2026-11-04T19:24:12Z ===
+   Compiling os-worker v0.1.0 (/Users/test/Desktop/meta-os/crates/os-worker)
+    Finished `release` profile [optimized] target(s) in 2.29s
+     Running unittests src/lib.rs (target/release/deps/os_worker-409ca74e5ebff4dd)
+
+running 96 tests
+test tests::accept_parse_accept_cases ... ok
+test tests::drill_kill_worker::test_sweep_leaves_unexpired_and_open_jobs_alone ... ok
+test tests::drill_kill_worker::test_cli_main_exits_zero_and_prints_pass ... ok
+test tests::drill_kill_worker::test_drill_passes_and_reports_the_stall_alert ... ok
+test tests::driver_contract::test_c10_no_bus_or_redis_imports ... ok
+test tests::driver_contract::test_c1_unsigned_spec_rejected_and_nothing_spawns ... ok
+test tests::driver_contract::test_c3_empty_files_rejected ... ok
+test tests::driver_contract::test_c2_unparseable_accept_rejected ... ok
+test tests::driver_contract::test_docs_pin_contract_and_checklist ... ok
+test tests::driver_heartbeat_bridge::test_bridge_mapping_does_not_mutate ... ok
+test tests::driver_heartbeat_bridge::test_drill_and_eval_exist ... ok
+test tests::driver_heartbeat_bridge::test_fresh_heartbeat_no_alert ... ok
+test tests::driver_heartbeat_bridge::test_no_em_dash_in_new_files ... ok
+test tests::driver_heartbeat_bridge::test_stale_absent_is_presence_stall_only ... ok
+test tests::driver_heartbeat_bridge::test_stale_present_is_progress_stall_only ... ok
+test tests::driver_heartbeat_bridge::test_template_joins_driver_slice ... ok
+test tests::driver_heartbeat_bridge::test_tick_leaves_job_claimed ... ok
+test tests::driver_heartbeat_bridge::test_watchdog_has_no_driver_special_casing ... ok
+test tests::driver_muse::test_argv_shape_and_extra_args ... ok
+test tests::driver_muse::test_c10_no_bus_or_redis_imports ... ok
+test tests::driver_muse::test_c1_unsigned_spec_rejected_and_nothing_spawns ... ok
+test tests::driver_muse::test_c2_unparseable_accept_rejected ... ok
+test tests::driver_muse::test_c3_empty_files_rejected ... ok
+test tests::driver_contract::test_start_twice_rejected_and_spec_defaults ... ok
+test tests::driver_contract::test_c6_changed_files_lists_new_file_not_log ... ok
+test tests::driver_contract::test_c9_stop_after_finish_safe_and_artifacts_stable ... ok
+test tests::accept_verify_from_disk_true_false_and_empty ... ok
+test tests::driver_contract::test_c8_unowned_changes_visible ... ok
+test tests::driver_contract::test_c4_heartbeat_shape_and_before_start ... ok
+test tests::driver_contract::test_c7_acceptance_from_disk_true_and_false ... ok
+test tests::driver_muse::test_missing_binary_refused_before_spawning ... ok
+test tests::driver_muse::test_prompt_carries_work_not_signature ... ok
+test tests::driver_muse::test_prompt_file_lives_outside_workdir_and_is_cleaned ... ok
+test tests::driver_muse::test_c4_heartbeat_shape_and_before_start ... ok
+test tests::driver_muse::test_runner_refuses_unsigned_spec_with_exit_2 ... ok
+test tests::driver_stall::test_demo_env_sets_one_minute_window ... ok
+test tests::driver_stall::test_demo_window_fires_at_61s_and_quiet_at_30s ... ok
+test tests::driver_stall::test_drill_exists_with_all_phases ... ok
+test tests::driver_stall::test_eval_exists ... ok
+test tests::driver_stall::test_no_em_dash_in_new_files ... ok
+test tests::driver_stall::test_spec_records_drill ... ok
+test tests::driver_stall::test_tick_leaves_both_driver_jobs_claimed ... ok
+test tests::driver_stall::test_wedged_driver_no_presence_stall ... ok
+test tests::driver_stall::test_wedged_driver_progress_stall ... ok
+test tests::driver_stall::test_wedged_worker_same_alert ... ok
+test tests::driver_supervision::test_drill_exists_with_all_phases ... ok
+test tests::driver_supervision::test_driver_presence_stall ... ok
+test tests::driver_supervision::test_eval_exists ... ok
+test tests::driver_supervision::test_no_em_dash_in_new_files ... ok
+test tests::driver_supervision::test_present_driver_no_alert_and_fresh_no_alert ... ok
+test tests::driver_supervision::test_slice_values ... ok
+test tests::driver_supervision::test_spec_records_slice_and_values ... ok
+test tests::driver_supervision::test_tick_leaves_driver_job_claimed ... ok
+test tests::hmac_sha256_matches_python_vectors ... ok
+test tests::json_parse_and_render_spec ... ok
+test tests::sha256_known_vectors ... ok
+test tests::test_thresholds_from_env_fallback_rules ... ok
+test tests::uplink::test_backoff_sequence ... ok
+test tests::uplink::test_record_failure_and_success ... ok
+test tests::uplink::test_tick_connected_intake_signed_and_unsigned ... ok
+test tests::uplink::test_tick_crew_mode_unsigned_refused_stays_pending ... ok
+test tests::uplink::test_tick_disconnected_queues_and_duplicates ... ok
+test tests::uplink::test_tick_drain_invalid_dropped_not_requeued ... ok
+test tests::uplink::test_tick_duplicate_seen_and_input_untouched ... ok
+test tests::uplink::test_tick_rejects_invalid_in_either_mode ... ok
+test tests::uplink::test_validate_order_reasons ... ok
+test tests::worker_loop::test_caps_normalization_and_matching ... ok
+test tests::worker_loop::test_dispatched_chain_flows_through_worker_loop ... ok
+test tests::worker_loop::test_parse_announcement_cases ... ok
+test tests::worker_loop::test_skipped_blocked_crash_and_error_paths ... ok
+test tests::worker_loop::test_truncation_rules_500_200_400 ... ok
+test tests::worker_loop::test_undelivered_dispatched_job_stays_open ... ok
+test tests::worker_loop::test_worker_heartbeat_renews_dispatched_claim ... ok
+test tests::worker_units_and_slice::test_build_scripts_carry_template_but_never_auto_enable ... ok
+test tests::worker_units_and_slice::test_env_files_required_and_optional ... ok
+test tests::worker_units_and_slice::test_exec_runs_mos_worker_without_dm_secret ... ok
+test tests::worker_units_and_slice::test_instance_name_is_the_nick ... ok
+test tests::worker_units_and_slice::test_no_em_dash_in_worker_unit ... ok
+test tests::worker_units_and_slice::test_no_em_dash_in_workers_slice_files ... ok
+test tests::worker_units_and_slice::test_readme_section_names_both_owed_items ... ok
+test tests::worker_units_and_slice::test_service_identity_slice_restart ... ok
+test tests::worker_units_and_slice::test_spec_records_template_as_landed ... ok
+test tests::worker_units_and_slice::test_template_exists_and_unit_ordering ... ok
+test tests::worker_units_and_slice::test_workers_drill_exists_with_host_gate ... ok
+test tests::worker_units_and_slice::test_workers_eval_note_exists ... ok
+test tests::worker_units_and_slice::test_workers_slice_values ... ok
+test tests::worker_units_and_slice::test_workers_spec_records_values ... ok
+test tests::driver_muse::test_c7_acceptance_from_disk_true_and_false ... ok
+test tests::driver_heartbeat_bridge::test_driver_heartbeat_shape ... ok
+test tests::driver_muse::test_runner_prints_artifacts_json ... ok
+test tests::driver_muse::test_c8_unowned_changes_visible ... ok
+test tests::driver_muse::test_c6_changed_files_lists_new_file_not_log ... ok
+test tests::driver_muse::test_c9_stop_after_finish_safe_and_artifacts_stable ... ok
+test tests::driver_muse::test_child_output_streamed_into_heartbeats ... ok
+test tests::driver_contract::test_c5_stop_kills_sleeping_child ... ok
+test tests::driver_muse::test_c5_stop_kills_sleeping_child ... ok
+
+test result: ok. 96 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-5d032fdd4268cfe5)
+
+running 11 tests
+test disconnected_orders_queue_and_the_backoff_doubles ... ok
+test announcements_only_emit_for_critical_and_flatten_newlines ... ok
+test maximum_input_note_is_cut_to_the_limit_on_char_boundaries ... ok
+test duplicate_uplink_order_is_reported_and_the_state_does_not_grow ... ok
+test crew_mode_without_a_key_refuses_intake_but_keeps_the_order ... ok
+test announcement_parser_requires_a_digit_id_and_a_trailing_req_clause ... ok
+test lease_expiry_boundary_requeues_and_open_jobs_are_untouched ... ok
+test duplicate_ini_keys_take_the_last_value_and_multi_keeps_all ... ok
+test out_of_order_pending_drains_before_new_orders ... ok
+test empty_input_accept_text_verifies_true_with_one_note ... ok
+test prompt_carries_the_work_but_never_the_signature ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-b94618f0ec4a13e3)
+
+running 15 tests
+test new_refuses_a_missing_workdir ... ok
+test parse_accept_refuses_every_bad_line_shape ... ok
+test validate_spec_names_every_missing_field ... ok
+test validate_spec_refuses_unparseable_accept_lines ... ok
+test validate_spec_refuses_unsigned_and_blank_signature ... ok
+test every_operation_before_start_is_not_started ... ok
+test run_driver_maps_bad_json_and_missing_fields_to_errors ... ok
+test start_refuses_an_empty_command_without_a_child ... ok
+test verify_accept_reports_a_parse_failure_as_one_result ... ok
+test muse_refuses_a_binary_that_is_not_on_path ... ok
+test start_refuses_an_unsigned_spec_before_spawning ... ok
+test start_refuses_a_command_that_cannot_spawn ... ok
+test a_second_start_is_refused_even_after_the_child_exited ... ok
+test wait_child_reports_a_signal_as_a_negative_code ... ok
+test wait_child_times_out_when_asked_to ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-11386e8d4954c532)
+
+running 9 tests
+test empty_state_is_the_default_state ... ok
+test json_escape_covers_quotes_backslashes_and_controls ... ok
+test apply_heartbeat_truncates_toward_zero_like_python_int ... ok
+test parse_json_reads_nested_values_and_preserves_number_spelling ... ok
+test sha256_matches_the_fips_vectors ... ok
+test a_snapshot_never_yields_both_stall_kinds_for_one_job ... ok
+test hmac_sha256_matches_rfc_4231_case_one ... ok
+test artifacts_split_owned_from_unowned_changes_and_ignore_the_log ... ok
+test stopped_run_wins_over_the_exit_code_in_the_artifacts_status ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/section13_worker.rs (target/release/deps/section13_worker-3933a0dda8e58709)
+
+running 2 tests
+test worker_empty_payload ... ok
+test worker_result_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_worker
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:15Z

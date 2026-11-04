@@ -1,6 +1,6 @@
 # `agenthost` — Layer 4, service 20
 
-**Status: RUNS** — reached by `tests/t59_agenthost` (48 checks), `tests/t97_agent_surface` (quota, channel, lifecycle, the down line) and `tests/t104_agenthost_r11` (capacity, all refusals, handle reuse), all exit 0 in the native host corpus on 2026-11-02. Not booted on the kernel.
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/agenthost/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — reached by `tests/t59_agenthost` (48 checks), `tests/t97_agent_surface` (quota, channel, lifecycle, the down line) and `tests/t104_agenthost_r11` (capacity, all refusals, handle reuse), all exit 0 in the native host corpus on 2026-11-02. Not booted on the kernel.
 
 ## What it does
 

@@ -1,0 +1,937 @@
+INFO : Framebuffer info: FrameBufferInfo { byte_len: 2764800, width: 1280, height: 720, pixel_format: Bgr, bytes_per_pixel: 3, stride: 1280 }
+INFO : 4th Stage
+INFO : BiosInfo { stage_4: Region { start: 130000, len: 24cc8 }, kernel: Region { start: 1000000, len: 10bbd88 }, ramdisk: Region { start: 20bc000, len: 0 }, config_file: Region { start: 20bc000, len: 0 }, last_used_addr: 20bbfff, framebuffer: BiosFramebufferInfo { region: Region { start: fd000000, len: 2a3000 }, width: 500, height: 2d0, bytes_per_pixel: 3, stride: 500, pixel_format: Bgr }, memory_map_addr: 12fdc, memory_map_len: 7 }
+INFO : BIOS boot
+INFO : Elf file loaded at Pointer {
+    addr: 0x0000000001000000,
+    metadata: 17546632,
+}
+INFO : virtual_address_offset: 0x0
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(4), offset: 0, virtual_addr: 200000, physical_addr: 200000, file_size: cb616c, mem_size: cb616c, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(5), offset: cb6170, virtual_addr: eb7170, physical_addr: eb7170, file_size: 4d07c, mem_size: 4d07c, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: d031f0, virtual_addr: f051f0, physical_addr: f051f0, file_size: 20, mem_size: e10, align: 1000 })
+INFO : Mapping bss section
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: d03210, virtual_addr: f06210, physical_addr: f06210, file_size: c40, mem_size: 87c38, align: 1000 })
+INFO : Mapping bss section
+INFO : Entry point at: 0xed0860
+INFO : Creating GDT at PhysAddr(0x2167000)
+INFO : Map framebuffer
+INFO : Map physical memory
+INFO : Allocate bootinfo
+INFO : Create Memory Map
+INFO : Create bootinfo
+INFO : Jumping to kernel entry point at VirtAddr(0xed0860)
+KF-03 framebuffer: 1280x720 stride 1280 bpp 3 (screen live)
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+K3 timer: 10 ticks after 501967 spins
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                      h552AXXs         
+                                                                    h552AAAA2      HH3MMMh5XXsX        
+                                                                  ShMHSMAAAA225  H3hHGSMMh2XXXX        
+                                                                  BG#@9i A225553HhMHSHHM  :XXXXX       
+                                                                 @S9@@B     53M3MMSHHH     XXXXX       
+                                                                 @9@@@:     MMMMGMMHG     2XXXAX       
+                                                                 @@@@@@  MMMhMMHMHGS##&  :AXXAA        
+                                                                  @@@@GMM53MMHMM GS9&@@@hAXAAAA        
+                                                                  @@@@&MMHHHMM      @@@@&522AA         
+                                                                    @@9B#MM            @SM3            
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                         META OS 0.1                                   
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                       irr                             
+                                                                      Sriri                            
+                                                                      rirrii         2ir               
+                                                                      5rrri;;       hiii               
+                                                                      @rrrri;;     3i;i                
+                                                                      Arrrr;;;i    i;ii                
+                                                                      Arrrrs;iii Xi;;i                 
+                                                                       Srrrssiiihi;;i;                 
+                                                                       rrssssssriiii;                  
+                                                                        Xssssssriiii                   
+                                                                         ssssssrrr                     
+                                                                           ;ssss                       
+                                                                                                       
+                                                                                                       
+                                                         META OS 0.1                                   
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                      @GSM3            
+                                                                                   &@@@@M5522          
+                                                                        @@#hMMM  9B&@@@@&522A22        
+                                                                      @@@@@H333SS##9&@@@h2222A2        
+                                                                     &&9&@@MMGGGSG#9i     222222       
+                                                                     BS#9   MHHHGSsM3     222222       
+                                                                    9GMG: hhMMMHHGMh3h    222222       
+                                                                    Gh3h53hhhMM  MhHh333  222222       
+                                                                    h355533hh;     HHMh352AAA222       
+                                                                    33555533         3h352AAA2A        
+                                                                     5555;             355222          
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                         META OS 0.1                                   
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                      rrri                             
+                                                                     Srrri;                            
+                                                                     @rrri;;        iii                
+                                                                     Srrrs;;i       2ii                
+                                                                     Arrrs;iii     3iii                
+                                                                     ;Xsrssiiii    i;ii                
+                                                                      hsrsssiiii  2i;i                 
+                                                                       5sssssiirr;iii;                 
+                                                                       XsssssXX2ii;ii                  
+                                                                        XssssXssiiii                   
+                                                                         sssXXssrir                    
+                                                                           sXXsrr                      
+                                                                                                       
+                                                                                                       
+                                                         META OS 0.1                                   
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                     99#H525           
+                                                                                  ##B@@@H322AA         
+                                                                        @@SH5h2 HGG##&@@@h2AAAA        
+                                                                      @@@@@M35hMHHHG#B&  2AAAAAA       
+                                                                     &@9@@@SHhhhMMHG      AAAAAA       
+                                                                     @#H#i  hhhhhM:h:      AAAAAA      
+                                                                     9HGr 5333hhhHMh3M:    AAAAAA      
+                                                                     Hhh5553333  MHGMh3h5  AAAAAr      
+                                                                     h3225553s     MGHh355AAAAAA       
+                                                                     3525555         hMh352AAAAA       
+                                                                      552;             335222A         
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                         META OS 0.1                                   
+mem region 0: 0x0-0x9fc00 usable
+mem region 1: 0x9fc00-0xa0000 other
+mem region 2: 0xf0000-0x100000 other
+mem region 3: 0x100000-0x1000000 usable
+mem region 4: 0x1000000-0x20bc000 reserved
+mem region 5: 0x20bc000-0x2576000 reserved
+mem region 6: 0x2576000-0x1ffe0000 usable
+mem region 7: 0x1ffe0000-0x20000000 other
+mem region 8: 0xfffc0000-0x100000000 other
+mem region 9: 0xfd00000000-0x10000000000 other
+mem map: 10 regions, usable 501799K reserved 21976K other 12583361K
+mem frames: 125449 usable total
+mem allocator: 125449 covered frames, 125449 free
+mem probe page ok, unmapped
+mem heap: 512K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 511K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2532336 bytes magic=0x464c457f type=Some(2) entry=Some(105553116266496)
+user hello: entry 0x600000000000 head [50, 48, bf, bd, 00, 00, 00, 00, 60, 00, 00, 48, b8, 70, 00, 00]
+HELLO FROM USERSPACE
+user exit code 0
+A
+B
+user sleeper: 2802224 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
+user sleeper: entry 0x610000000010 head [48, 83, ec, 18, 48, bf, c3, 41, 01, 00, 00, 61, 00, 00, 48, b8]
+sleeper: sleeping 5 ticks
+A
+B
+user crasher: 2543904 bytes magic=0x464c457f type=Some(2) entry=Some(107752139522320)
+user crasher: entry 0x620000000110 head [50, 48, bf, 41, 06, 00, 00, 00, 62, 00, 00, 48, b8, f0, 01, 00]
+crasher: about to read zero
+INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+A
+B
+sleeper: woke, sleep returned 0
+user exit code 0
+KF-10 desktop: shell window live
+user readkey: 2804424 bytes magic=0x464c457f type=Some(2) entry=Some(108851651149840)
+user readkey: entry 0x630000000010 head [48, 83, ec, 38, 48, bf, 53, 44, 01, 00, 00, 63, 00, 00, 48, b8]
+readkey: polling syscall 5
+readkey: empty
+user demand: 2546984 bytes magic=0x464c457f type=Some(2) entry=Some(109951162777856)
+user demand: entry 0x640000000100 head [48, 83, ec, 38, 48, bf, 9b, 07, 00, 00, 00, 64, 00, 00, 48, b8]
+demand: touching promised page
+INT user demand-fault addr 0x0000700000000000: page mapped, retry
+demand: zero-fill confirmed
+demand: writeback OK, touching outside region
+INT user page-fault addr 0x0000700000100000 err 0x0000000000000004: task killed
+C awake
+readkey: empty
+readkey: empty
+readkey progress 100
+readkey progress 200
+readkey progress 300
+readkey progress 400
+readkey progress 500
+readkey progress 600
+readkey progress 700
+readkey progress 800
+readkey progress 900
+readkey progress 1000
+readkey progress 1100
+readkey progress 1200
+readkey progress 1300
+readkey progress 1400
+readkey progress 1500
+readkey progress 1600
+readkey progress 1700
+readkey progress 1800
+readkey progress 1900
+readkey progress 2000
+readkey progress 2100
+readkey progress 2200
+readkey progress 2300
+readkey progress 2400
+readkey progress 2500
+readkey progress 2600
+readkey progress 2700
+readkey progress 2800
+readkey progress 2900
+readkey progress 3000
+readkey progress 3100
+readkey progress 3200
+readkey progress 3300
+readkey progress 3400
+readkey progress 3500
+readkey progress 3600
+readkey progress 3700
+readkey progress 3800
+readkey progress 3900
+readkey progress 4000
+readkey progress 4100
+readkey progress 4200
+readkey progress 4300
+readkey progress 4400
+readkey progress 4500
+readkey progress 4600
+readkey progress 4700
+readkey progress 4800
+readkey progress 4900
+readkey progress 5000
+readkey progress 5100
+readkey progress 5200
+readkey progress 5300
+readkey progress 5400
+readkey progress 5500
+readkey progress 5600
+readkey progress 5700
+readkey progress 5800
+readkey progress 5900
+readkey progress 6000
+readkey progress 6100
+readkey progress 6200
+readkey progress 6300
+readkey progress 6400
+readkey progress 6500
+readkey progress 6600
+readkey progress 6700
+readkey progress 6800
+readkey progress 6900
+readkey progress 7000
+readkey progress 7100
+readkey progress 7200
+readkey progress 7300
+readkey progress 7400
+readkey progress 7500
+readkey progress 7600
+readkey progress 7700
+readkey progress 7800
+readkey progress 7900
+readkey progress 8000
+readkey progress 8100
+readkey progress 8200
+readkey progress 8300
+readkey progress 8400
+readkey progress 8500
+readkey progress 8600
+readkey progress 8700
+readkey progress 8800
+readkey progress 8900
+readkey progress 9000
+readkey progress 9100
+readkey progress 9200
+readkey progress 9300
+readkey progress 9400
+readkey progress 9500
+readkey progress 9600
+readkey progress 9700
+readkey progress 9800
+readkey progress 9900
+readkey progress 10000
+readkey progress 10100
+readkey progress 10200
+readkey progress 10300
+readkey progress 10400
+readkey progress 10500
+readkey progress 10600
+readkey progress 10700
+readkey progress 10800
+readkey progress 10900
+readkey progress 11000
+readkey progress 11100
+readkey progress 11200
+readkey progress 11300
+readkey progress 11400
+readkey progress 11500
+readkey progress 11600
+readkey progress 11700
+readkey progress 11800
+readkey progress 11900
+readkey progress 12000
+readkey progress 12100
+readkey progress 12200
+readkey progress 12300
+readkey progress 12400
+readkey progress 12500
+readkey progress 12600
+readkey progress 12700
+readkey progress 12800
+readkey progress 12900
+readkey progress 13000
+readkey progress 13100
+readkey progress 13200
+readkey progress 13300
+readkey progress 13400
+readkey progress 13500
+readkey progress 13600
+readkey progress 13700
+readkey progress 13800
+readkey progress 13900
+readkey progress 14000
+readkey progress 14100
+readkey progress 14200
+readkey progress 14300
+readkey progress 14400
+readkey progress 14500
+readkey progress 14600
+readkey progress 14700
+readkey progress 14800
+readkey progress 14900
+readkey progress 15000
+readkey progress 15100
+readkey progress 15200
+readkey progress 15300
+readkey progress 15400
+readkey progress 15500
+readkey progress 15600
+readkey progress 15700
+readkey progress 15800
+readkey progress 15900
+readkey progress 16000
+readkey progress 16100
+readkey progress 16200
+readkey progress 16300
+readkey progress 16400
+readkey progress 16500
+readkey progress 16600
+readkey progress 16700
+readkey progress 16800
+readkey progress 16900
+readkey progress 17000
+readkey progress 17100
+readkey progress 17200
+readkey progress 17300
+readkey progress 17400
+readkey progress 17500
+readkey progress 17600
+readkey progress 17700
+readkey progress 17800
+readkey progress 17900
+readkey progress 18000
+readkey progress 18100
+readkey progress 18200
+readkey progress 18300
+readkey progress 18400
+readkey progress 18500
+readkey progress 18600
+readkey progress 18700
+readkey progress 18800
+readkey progress 18900
+readkey progress 19000
+readkey progress 19100
+readkey progress 19200
+readkey progress 19300
+readkey progress 19400
+readkey progress 19500
+readkey progress 19600
+readkey progress 19700
+readkey progress 19800
+readkey progress 19900
+readkey progress 20000
+readkey progress 20100
+readkey progress 20200
+readkey progress 20300
+readkey progress 20400
+readkey progress 20500
+readkey progress 20600
+readkey progress 20700
+readkey progress 20800
+readkey progress 20900
+readkey progress 21000
+readkey progress 21100
+readkey progress 21200
+readkey progress 21300
+readkey progress 21400
+readkey progress 21500
+readkey progress 21600
+readkey progress 21700
+readkey progress 21800
+readkey progress 21900
+readkey progress 22000
+readkey progress 22100
+readkey progress 22200
+readkey progress 22300
+readkey progress 22400
+readkey progress 22500
+readkey progress 22600
+readkey progress 22700
+readkey progress 22800
+readkey progress 22900
+readkey progress 23000
+readkey progress 23100
+readkey progress 23200
+readkey progress 23300
+readkey progress 23400
+readkey progress 23500
+readkey progress 23600
+readkey progress 23700
+readkey progress 23800
+readkey progress 23900
+readkey progress 24000
+readkey progress 24100
+readkey progress 24200
+readkey progress 24300
+readkey progress 24400
+readkey progress 24500
+readkey progress 24600
+readkey progress 24700
+readkey progress 24800
+readkey progress 24900
+readkey progress 25000
+readkey progress 25100
+readkey progress 25200
+readkey progress 25300
+readkey progress 25400
+readkey progress 25500
+readkey progress 25600
+readkey progress 25700
+readkey progress 25800
+readkey progress 25900
+readkey progress 26000
+readkey progress 26100
+readkey progress 26200
+readkey progress 26300
+readkey progress 26400
+readkey progress 26500
+readkey progress 26600
+readkey progress 26700
+readkey progress 26800
+readkey progress 26900
+readkey progress 27000
+readkey progress 27100
+readkey progress 27200
+readkey progress 27300
+readkey progress 27400
+readkey progress 27500
+readkey progress 27600
+readkey progress 27700
+readkey progress 27800
+readkey progress 27900
+readkey progress 28000
+readkey progress 28100
+readkey progress 28200
+readkey progress 28300
+readkey progress 28400
+readkey progress 28500
+readkey progress 28600
+readkey progress 28700
+readkey progress 28800
+readkey progress 28900
+readkey progress 29000
+readkey progress 29100
+readkey progress 29200
+readkey progress 29300
+readkey progress 29400
+readkey progress 29500
+readkey progress 29600
+readkey progress 29700
+readkey progress 29800
+readkey progress 29900
+readkey progress 30000
+readkey progress 30100
+readkey progress 30200
+readkey progress 30300
+readkey progress 30400
+readkey progress 30500
+readkey progress 30600
+readkey progress 30700
+readkey progress 30800
+readkey progress 30900
+readkey progress 31000
+readkey progress 31100
+readkey progress 31200
+readkey progress 31300
+readkey progress 31400
+readkey progress 31500
+readkey progress 31600
+readkey progress 31700
+readkey progress 31800
+readkey progress 31900
+readkey progress 32000
+readkey progress 32100
+readkey progress 32200
+readkey progress 32300
+readkey progress 32400
+readkey progress 32500
+readkey progress 32600
+readkey progress 32700
+readkey progress 32800
+readkey progress 32900
+readkey progress 33000
+readkey progress 33100
+readkey progress 33200
+readkey progress 33300
+readkey progress 33400
+readkey progress 33500
+readkey progress 33600
+readkey progress 33700
+readkey progress 33800
+readkey progress 33900
+readkey progress 34000
+readkey progress 34100
+readkey progress 34200
+readkey progress 34300
+readkey progress 34400
+readkey progress 34500
+readkey progress 34600
+readkey progress 34700
+readkey progress 34800
+readkey progress 34900
+readkey progress 35000
+readkey progress 35100
+readkey progress 35200
+readkey progress 35300
+readkey progress 35400
+readkey progress 35500
+readkey progress 35600
+readkey progress 35700
+readkey progress 35800
+readkey progress 35900
+readkey progress 36000
+readkey progress 36100
+readkey progress 36200
+readkey progress 36300
+readkey progress 36400
+readkey progress 36500
+readkey progress 36600
+readkey progress 36700
+readkey progress 36800
+readkey progress 36900
+readkey progress 37000
+readkey progress 37100
+readkey progress 37200
+readkey progress 37300
+readkey progress 37400
+readkey progress 37500
+readkey progress 37600
+readkey progress 37700
+readkey progress 37800
+readkey progress 37900
+readkey progress 38000
+readkey progress 38100
+readkey progress 38200
+readkey progress 38300
+readkey progress 38400
+readkey progress 38500
+readkey progress 38600
+readkey progress 38700
+readkey progress 38800
+readkey progress 38900
+readkey progress 39000
+readkey progress 39100
+readkey progress 39200
+readkey progress 39300
+readkey progress 39400
+readkey progress 39500
+readkey progress 39600
+readkey progress 39700
+readkey progress 39800
+readkey progress 39900
+readkey progress 40000
+readkey progress 40100
+readkey progress 40200
+readkey progress 40300
+readkey progress 40400
+readkey progress 40500
+readkey progress 40600
+readkey progress 40700
+readkey progress 40800
+readkey progress 40900
+readkey progress 41000
+readkey progress 41100
+readkey progress 41200
+readkey progress 41300
+readkey progress 41400
+readkey progress 41500
+readkey progress 41600
+readkey progress 41700
+readkey progress 41800
+readkey progress 41900
+readkey progress 42000
+readkey progress 42100
+readkey progress 42200
+readkey progress 42300
+readkey progress 42400
+readkey progress 42500
+readkey progress 42600
+readkey progress 42700
+readkey progress 42800
+readkey progress 42900
+readkey progress 43000
+readkey progress 43100
+readkey progress 43200
+readkey progress 43300
+readkey progress 43400
+readkey progress 43500
+readkey progress 43600
+readkey progress 43700
+readkey progress 43800
+readkey progress 43900
+readkey progress 44000
+readkey progress 44100
+readkey progress 44200
+readkey progress 44300
+readkey progress 44400
+readkey progress 44500
+readkey progress 44600
+readkey progress 44700
+readkey progress 44800
+readkey progress 44900
+readkey progress 45000
+readkey progress 45100
+readkey progress 45200
+readkey progress 45300
+readkey progress 45400
+readkey progress 45500
+readkey progress 45600
+readkey progress 45700
+readkey progress 45800
+readkey progress 45900
+readkey progress 46000
+readkey progress 46100
+readkey progress 46200
+readkey progress 46300
+readkey progress 46400
+readkey progress 46500
+readkey progress 46600
+readkey progress 46700
+readkey progress 46800
+readkey progress 46900
+readkey progress 47000
+readkey progress 47100
+readkey progress 47200
+readkey progress 47300
+readkey progress 47400
+readkey progress 47500
+readkey progress 47600
+readkey progress 47700
+readkey progress 47800
+readkey progress 47900
+readkey progress 48000
+readkey progress 48100
+readkey progress 48200
+readkey progress 48300
+readkey progress 48400
+readkey progress 48500
+readkey progress 48600
+readkey progress 48700
+readkey progress 48800
+readkey progress 48900
+readkey progress 49000
+readkey progress 49100
+readkey progress 49200
+readkey progress 49300
+readkey progress 49400
+readkey progress 49500
+readkey progress 49600
+readkey progress 49700
+readkey progress 49800
+readkey progress 49900
+readkey progress 50000
+readkey progress 50100
+readkey progress 50200
+readkey progress 50300
+readkey progress 50400
+readkey progress 50500
+readkey progress 50600
+readkey progress 50700
+readkey progress 50800
+readkey progress 50900
+readkey progress 51000
+readkey progress 51100
+readkey progress 51200
+readkey progress 51300
+readkey progress 51400
+readkey progress 51500
+readkey progress 51600
+readkey progress 51700
+readkey progress 51800
+readkey progress 51900
+readkey progress 52000
+readkey progress 52100
+readkey progress 52200
+readkey progress 52300
+readkey progress 52400
+readkey progress 52500
+readkey progress 52600
+readkey progress 52700
+readkey progress 52800
+readkey progress 52900
+readkey progress 53000
+readkey progress 53100
+readkey progress 53200
+readkey progress 53300
+readkey progress 53400
+readkey progress 53500
+readkey progress 53600
+readkey progress 53700
+readkey progress 53800
+readkey progress 53900
+readkey progress 54000
+readkey progress 54100
+readkey progress 54200
+readkey progress 54300
+readkey progress 54400
+readkey progress 54500
+readkey progress 54600
+readkey progress 54700
+readkey progress 54800
+readkey progress 54900
+readkey progress 55000
+readkey progress 55100
+readkey progress 55200
+readkey progress 55300
+readkey progress 55400
+readkey progress 55500
+readkey progress 55600
+readkey progress 55700
+readkey progress 55800
+readkey progress 55900
+readkey progress 56000
+readkey progress 56100
+readkey progress 56200
+readkey progress 56300
+readkey progress 56400
+readkey progress 56500
+readkey progress 56600
+readkey progress 56700
+readkey progress 56800
+readkey progress 56900
+readkey progress 57000
+readkey progress 57100
+readkey progress 57200
+readkey progress 57300
+readkey progress 57400
+readkey progress 57500
+readkey progress 57600
+readkey progress 57700
+readkey progress 57800
+readkey progress 57900
+readkey progress 58000
+readkey progress 58100
+readkey progress 58200
+readkey progress 58300
+readkey progress 58400
+readkey progress 58500
+readkey progress 58600
+readkey progress 58700
+readkey progress 58800
+readkey progress 58900
+readkey progress 59000
+readkey progress 59100
+readkey progress 59200
+readkey progress 59300
+readkey progress 59400
+readkey progress 59500
+readkey progress 59600
+readkey progress 59700
+readkey progress 59800
+readkey progress 59900
+readkey progress 60000
+readkey progress 60100
+readkey progress 60200
+readkey progress 60300
+readkey progress 60400
+readkey progress 60500
+readkey progress 60600
+readkey progress 60700
+readkey progress 60800
+readkey progress 60900
+readkey progress 61000
+readkey progress 61100
+readkey progress 61200
+readkey progress 61300
+readkey progress 61400
+readkey progress 61500
+readkey progress 61600
+readkey progress 61700
+readkey progress 61800
+readkey progress 61900
+readkey progress 62000
+readkey progress 62100
+readkey progress 62200
+readkey progress 62300
+readkey progress 62400
+readkey progress 62500
+readkey progress 62600
+readkey progress 62700
+readkey progress 62800
+readkey progress 62900
+readkey progress 63000
+readkey progress 63100
+readkey progress 63200
+readkey progress 63300
+readkey progress 63400
+readkey progress 63500
+readkey progress 63600
+readkey progress 63700
+readkey progress 63800
+readkey progress 63900
+readkey progress 64000
+readkey progress 64100
+readkey progress 64200
+readkey progress 64300
+readkey progress 64400
+readkey progress 64500
+readkey progress 64600
+readkey progress 64700
+readkey progress 64800
+readkey progress 64900
+readkey progress 65000
+readkey progress 65100
+readkey progress 65200
+readkey progress 65300
+readkey progress 65400
+readkey progress 65500
+readkey progress 65600
+readkey progress 65700
+readkey progress 65800
+readkey progress 65900
+readkey progress 66000
+readkey progress 66100
+readkey progress 66200
+readkey progress 66300
+readkey progress 66400
+readkey progress 66500
+readkey progress 66600
+readkey progress 66700
+readkey progress 66800
+readkey progress 66900
+readkey progress 67000
+readkey progress 67100
+readkey progress 67200
+readkey progress 67300
+readkey progress 67400
+readkey progress 67500
+readkey progress 67600
+readkey progress 67700
+readkey progress 67800
+readkey progress 67900
+readkey progress 68000
+readkey progress 68100
+readkey progress 68200
+readkey progress 68300
+readkey progress 68400
+readkey progress 68500
+readkey progress 68600
+readkey progress 68700
+readkey progress 68800
+readkey progress 68900
+readkey progress 69000
+readkey progress 69100
+readkey progress 69200
+readkey progress 69300
+readkey progress 69400
+readkey progress 69500
+readkey progress 69600
+readkey progress 69700
+readkey progress 69800
+readkey progress 69900
+readkey progress 70000
+readkey progress 70100
+readkey progress 70200
+readkey progress 70300
+readkey progress 70400
+readkey progress 70500
+readkey progress 70600
+readkey progress 70700
+readkey progress 70800
+readkey progress 70900
+readkey progress 71000
+readkey progress 71100
+readkey progress 71200
+readkey progress 71300
+readkey progress 71400
+readkey progress 71500
+readkey progress 71600
+readkey progress 71700
+readkey progress 71800
+readkey progress 71900
+readkey progress 72000
+readkey progress 72100
+readkey progress 72200
+readkey progress 72300
+readkey progress 72400
+readkey progress 72500
+readkey progress 72600
+readkey progress 72700
+readkey progress 72800
+readkey progress 72900
+readkey progress 73000
+readkey progress 73100
+readkey progress 73200
+readkey progress 73300
+readkey progress 73400
+readkey progress 73500
+readkey progress 73600
+readkey progress 73700
+K3 keyboard: first scancode 0x0000000000000023
+readkey got 35
+readkey got 163
+hreadkey progress 73800
+readkey progress 73900
+readkey got 18
+readkey got 146
+ereadkey progress 74000
+readkey progress 74100
+lreadkey got 38
+readkey got 166
+readkey progress 74200
+readkey progress 74300
+preadkey got 25
+readkey got 153
+readkey progress 74400
+readkey progress 74500
+readkey progress 74600
+readkey got 28
+readkey: enter seen, done got=9
+user exit code 0
+
+commands: status help uptime mem ps
+status
+tasks 9 ticks 2048 heap_free 223K
+STATUS tasks=9 ticks=2048 heap_free_kb=223

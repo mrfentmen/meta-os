@@ -1,6 +1,6 @@
 # `session` — Layer 4, service 25
 
-**Status: RUNS** — reached by `tests/t77_gaps` (73 checks), `tests/t84_session_deep` (106 checks)
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/session/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — reached by `tests/t77_gaps` (73 checks), `tests/t84_session_deep` (106 checks)
 and `tests/t129_session_r11` in the native host corpus (`run_native.sh`). Layer 4, service 25.
 
 ## What it does

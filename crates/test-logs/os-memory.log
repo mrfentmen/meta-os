@@ -1,0 +1,118 @@
+=== TEST os-memory 2026-11-04T19:24:00Z ===
+   Compiling os-memory v0.1.0 (/Users/test/Desktop/meta-os/crates/os-memory)
+    Finished `release` profile [optimized] target(s) in 1.05s
+     Running unittests src/lib.rs (target/release/deps/os_memory-e14ee89c00f364da)
+
+running 37 tests
+test tests::test_depth_hand_stated_record_wins_unchanged ... ok
+test tests::test_depth_single_category_record_reads_other_categories_none_reported ... ok
+test tests::test_depth_memory_down_record_carries_no_item_beside_it ... ok
+test tests::test_depth_default_stamp_is_an_int_when_now_is_not_given ... ok
+test tests::test_depth_non_dict_snapshot_gets_no_record ... ok
+test tests::test_depth_fills_all_three_categories_with_one_stamp ... ok
+test tests::test_depth_caller_snapshot_is_never_mutated ... ok
+test tests::test_depth_snapshot_with_nothing_usable_gets_no_record ... ok
+test tests::test_depth_filled_record_renders_memory_depth_lines ... ok
+test tests::test_depth_malformed_entries_skipped_never_guessed ... ok
+test tests::test_format_brief_time_dst_boundaries ... ok
+test tests::test_format_brief_time_known_values ... ok
+test tests::test_os078_bake_build_live_stages_root ... ok
+test tests::test_os078_bake_build_image_bakes_root_and_enables_unit ... ok
+test tests::test_os078_bake_hook_enables_unit_and_chowns_root ... ok
+test tests::test_os078_agent_validation_refuses_slash ... ok
+test tests::test_os078_bake_docs_record_first_light_without_em_dash ... ok
+test tests::test_os078_bake_packer_bakes_root_and_enables_unit ... ok
+test tests::test_os078_bake_target_wants_unit ... ok
+test tests::test_os078_bake_unit_shape ... ok
+test tests::test_os078_key_validation_refuses_escape ... ok
+test tests::test_os078_cli_write_list_history_and_shared ... ok
+test tests::test_os078_cli_write_author_and_version_flags ... ok
+test tests::test_os078_missing_key_and_bad_version_raise_never_guess ... ok
+test tests::test_os078_ensure_root_creates_namespaces_idempotently ... ok
+test tests::test_os078_corrupt_journal_line_raises ... ok
+test tests::test_os078_identical_rewrite_is_a_noop ... ok
+test tests::test_os078_cli_read_back_and_ensure_and_escape ... ok
+test tests::test_os078_mount_paths_name_own_and_shared ... ok
+test tests::test_os078_list_keys_sorted_and_shared_separate ... ok
+test tests::test_os078_shared_identical_rewrite_is_a_noop ... ok
+test tests::test_os078_write_and_read_round_trip ... ok
+test tests::test_os078_wrong_shaped_entry_text_raises ... ok
+test tests::test_os078_versions_increment_and_versioned_read ... ok
+test tests::test_os078_shared_namespace_versions_independently ... ok
+test tests::test_os078_bake_build_scripts_bash_syntax_clean ... ok
+test tests::test_os078_bake_memory_root_sweeps_clean_and_secret_value_flagged ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/allocation_accounting.rs (target/release/deps/allocation_accounting-4bc27b1440e10cfc)
+
+running 2 tests
+test zero_release_is_a_no_op ... ok
+test release_heavy_sequence_stops_at_zero ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-ed88b07c5b9ef563)
+
+running 9 tests
+test b039_duplicate_json_keys_keep_the_first_like_python_dict_order ... ok
+test b039_a_blank_journal_line_is_skipped_not_refused ... ok
+test b039_empty_input_empty_text_is_a_real_version_and_a_noop_after ... ok
+test b039_extra_journal_fields_round_trip_through_the_typed_entry ... ok
+test b039_unicode_agent_nick_is_alphanumeric_and_accepted ... ok
+test b039_duplicate_input_identical_write_appends_nothing ... ok
+test b039_agent_and_shared_namespaces_do_not_leak_into_each_other ... ok
+test b039_out_of_order_input_reads_journal_order_not_version_order ... ok
+test b039_maximum_input_large_body_and_long_key_round_trip ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-0f113f683827c01d)
+
+running 10 tests
+test b038_shared_key_refusal_leaves_no_shared_directory ... ok
+test b038_agent_refusals_keep_the_python_order_and_messages ... ok
+test b038_key_refusals_keep_the_python_order_and_messages ... ok
+test b038_a_valid_cli_error_never_writes_to_stdout ... ok
+test b038_ensure_root_refuses_when_the_root_is_a_file ... ok
+test b038_cli_refusals_are_exit_2_with_the_documented_prefix ... ok
+test b038_unreadable_journal_refuses_with_the_io_reason ... ok
+test b038_missing_key_and_bad_versions_refuse_with_exact_text ... ok
+test b038_write_reads_before_appending_so_a_bad_journal_blocks_writes ... ok
+test b038_corrupt_journal_refuses_and_names_the_line ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-c95a2ff0dbc6fd43)
+
+running 11 tests
+test gap_json_leading_zero_is_accepted_by_this_parser ... ok
+test gap_json_lists_and_empty_containers_round_trip ... ok
+test gap_json_big_integer_falls_back_to_float_like_the_port_says ... ok
+test gap_json_strings_decode_short_escapes_and_surrogate_pairs ... ok
+test gap_json_writer_escapes_non_ascii_and_control_characters ... ok
+test gap_json_objects_keep_order_and_get_returns_the_first_duplicate ... ok
+test gap_json_writer_formats_floats_like_json_dumps ... ok
+test gap_json_parses_every_scalar_shape ... ok
+test gap_json_parser_refuses_empty_trailing_and_unterminated_input ... ok
+test gap_json_render_then_parse_keeps_unicode_text ... ok
+test gap_json_writer_preserves_insertion_order_while_sorted_sorts ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13.rs (target/release/deps/section13-23c43684a0f9e2d4)
+
+running 3 tests
+test alloc_zero ... ok
+test double_free_refused ... ok
+test usage_accounting ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_memory
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:02Z

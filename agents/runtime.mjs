@@ -11,6 +11,69 @@ import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 
+// B1 — every run leaves its full output on disk, timestamped and redacted.
+// A secret must never land in a run log: any env value whose NAME looks like
+// a key (KEY, TOKEN, SECRET, PASSWORD, PRIVATE, BEARER, SESSION, COOKIE,
+// AUTH) is replaced, plus well-known token shapes (sk-…, ghp_…, xoxb-…,
+// Bearer …). The replacement is by value, so even a child that echoes its own
+// environment cannot leak the key into stdout.log. Nothing here truncates:
+// the whole stream is written, because a teaser that hides the failure is a lie.
+const SECRET_NAME_RE = /(key|token|secret|password|passwd|private|bearer|session|cookie|auth)/i;
+const SECRET_SHAPES = [
+  /sk-[A-Za-z0-9\-_]{8,}/g,
+  /gh[pousr]_[A-Za-z0-9]{8,}/g,
+  /xox[bpas]-[A-Za-z0-9\-]{8,}/g,
+  /Bearer\s+[A-Za-z0-9\-._~+/=]{8,}/g,
+];
+
+export function redactSecrets(text) {
+  let out = String(text == null ? "" : text);
+  for (const [name, value] of Object.entries(process.env)) {
+    if (typeof value !== "string" || value.length < 8) continue;
+    if (!SECRET_NAME_RE.test(name)) continue;
+    if (!out.includes(value)) continue;
+    out = out.split(value).join("[REDACTED]");
+  }
+  for (const re of SECRET_SHAPES) {
+    re.lastIndex = 0;
+    out = out.replace(re, "[REDACTED]");
+  }
+  return out;
+}
+
+// One timestamped line per line: chunks are split on newlines and the partial
+// tail is held until it completes or the run ends, so no line is stamped twice
+// and none loses its time.
+export function makeLineWriter(file) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  // The file exists from spawn, even when the stream stays silent: an absent
+  // log must never read as a lost one.
+  fs.appendFileSync(file, "");
+  let tail = "";
+  const append = (text) => fs.appendFileSync(file, text);
+  const stampOf = (at) => (at instanceof Date ? at : new Date(at)).toISOString();
+  return {
+    write(chunk, at = new Date()) {
+      const parts = (tail + String(chunk)).split("\n");
+      tail = parts.pop();
+      const stamp = stampOf(at);
+      for (const line of parts) append(stamp + " " + redactSecrets(line) + "\n");
+    },
+    end(at = new Date()) {
+      if (tail !== "") {
+        append(stampOf(at) + " " + redactSecrets(tail) + "\n");
+        tail = "";
+      }
+    },
+  };
+}
+
+export function writeRunMeta(runDir, meta) {
+  const file = path.join(runDir, "meta.json");
+  fs.writeFileSync(file, JSON.stringify({ ...meta }, null, 2));
+  return file;
+}
+
 export function loadRegistry(file) {
   const raw = JSON.parse(fs.readFileSync(file, "utf8"));
   if (!Array.isArray(raw.agents)) throw new Error("registry: 'agents' must be an array");
@@ -191,11 +254,23 @@ function noteMemory(memory, entry, ledger, runId) {
   }
 }
 
-export function spawnAgent(agent, { root, job = {} } = {}) {
+export function spawnAgent(agent, { root, job = {}, repoRoot } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
   fs.mkdirSync(runDir, { recursive: true });
   const ledger = new Ledger(path.join(runDir, "ledger.jsonl"));
+  // Two directories, two jobs. `root` is the relay state (runs, memory,
+  // ledgers — writable, per user). `repoRoot` is the payload the commands
+  // live in (read-only in the image). A `repo:` script path resolves against
+  // the payload, never the state: resolving it against the state made every
+  // staged command (agents/watchman.mjs included) a spawn-error ENOENT.
+  // Callers that keep one tree (drills, tests) pass only `root` and the
+  // payload defaults to it, so their behavior does not change.
+  const codeBase = repoRoot || root;
+  // The run clock starts here, before any gate, so even a refused run can say
+  // when it was considered and how long the decision took.
+  const startTime = new Date();
+  const startEpochMs = Date.now();
   // The assembled brief lands BEFORE the agent starts (spec S4):
   // it opens its eyes already briefed.
   const brief = {
@@ -219,6 +294,21 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     ledger.add(runId, "budget-receipt", receipt);
     fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
     ledger.add(runId, "refused", { reason: gate.reason });
+    // A refused run never spawns, but it still leaves a loud record: the log
+    // names the reason and the meta file carries the timing, so a budget
+    // refusal never reads as a silent board.
+    writeRunMeta(runDir, {
+      run: runId, agent: agent.name, startTime: startTime.toISOString(),
+      startEpochMs, endTime: new Date().toISOString(), endEpochMs: Date.now(),
+      durationMs: Date.now() - startEpochMs,
+      exitCode: null, signal: null, refused: gate.reason,
+      estimateUsd: gate.estimate, capUsd: gate.cap,
+    });
+    const log = makeLineWriter(path.join(runDir, "stdout.log"));
+    log.write("run refused before spawn: " + gate.reason +
+      " (estimate " + gate.estimate + ", cap " + gate.cap + ")\n");
+    log.end();
+    makeLineWriter(path.join(runDir, "stderr.log")).end();
     return {
       agent, runId, runDir, ledger, child: null, stopped: gate.reason,
       done: Promise.resolve({ code: null, signal: null, refused: true }),
@@ -236,6 +326,18 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     ledger.add(runId, "memory-receipt", receipt);
     fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
     ledger.add(runId, "refused", { reason: "memory-cap" });
+    writeRunMeta(runDir, {
+      run: runId, agent: agent.name, startTime: startTime.toISOString(),
+      startEpochMs, endTime: new Date().toISOString(), endEpochMs: Date.now(),
+      durationMs: Date.now() - startEpochMs,
+      exitCode: null, signal: null, refused: "memory-cap",
+      usedBytes, capBytes,
+    });
+    const log = makeLineWriter(path.join(runDir, "stdout.log"));
+    log.write("run refused before spawn: memory-cap " +
+      "(used " + usedBytes + " bytes, cap " + capBytes + " bytes)\n");
+    log.end();
+    makeLineWriter(path.join(runDir, "stderr.log")).end();
     return {
       agent, runId, runDir, ledger, child: null, stopped: "memory-cap", memory,
       done: Promise.resolve({ code: null, signal: null, refused: true }),
@@ -252,18 +354,55 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     return refuseMemory(error.usage ?? usedNow.bytes, memory.cap);
   }
 
-  const command = resolveCommand(agent.command, root);
+  const command = resolveCommand(agent.command, codeBase);
   ledger.add(runId, "spawn", { command, lane: brief.lane });
+  // B1 — the run's own files. stdout.log and stderr.log carry one timestamped,
+  // redacted line per line and are NEVER truncated; output.log stays as the
+  // raw combined stream (redacted, not truncated) so anything reading the old
+  // name keeps working; meta.json carries start/end time, duration and exit.
+  writeRunMeta(runDir, {
+    run: runId, agent: agent.name, startTime: startTime.toISOString(),
+    startEpochMs, endTime: null, endEpochMs: null, durationMs: null,
+    exitCode: null, signal: null, error: null,
+  });
+  const stdoutLog = makeLineWriter(path.join(runDir, "stdout.log"));
+  const stderrLog = makeLineWriter(path.join(runDir, "stderr.log"));
   const child = spawn(command[0], command.slice(1), {
     cwd: agent.cwd || runDir, stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, AGENT_RUN: runId, AGENT_NAME: agent.name },
   });
   const out = fs.createWriteStream(path.join(runDir, "output.log"));
-  child.stdout.pipe(out); child.stderr.pipe(out);
+  const feed = (writer) => (chunk) => {
+    const text = chunk.toString("utf8");
+    writer.write(text);
+    out.write(redactSecrets(text));
+  };
+  if (child.stdout) child.stdout.on("data", feed(stdoutLog));
+  if (child.stderr) child.stderr.on("data", feed(stderrLog));
   const handle = { agent, runId, runDir, ledger, child, stopped: null, exited: false, memory };
   handle.done = new Promise((resolve) => {
     child.on("exit", (code, signal) => {
       handle.exited = true;
+      const endTime = new Date();
+      const endEpochMs = Date.now();
+      const durationMs = endEpochMs - startEpochMs;
+      const failed = signal !== null || (code !== null && code !== 0);
+      // B8 — a failure is loud in the log itself: a nonzero exit or a signal
+      // gets a final line naming it, so a run that died quiet still says why.
+      // The watchman result and the console row show the same line.
+      if (failed) {
+        stdoutLog.write("run failed: exit " + code + " signal " + signal +
+          " after " + durationMs + "ms\n", endTime);
+      } else {
+        stdoutLog.write("run finished: exit 0 in " + durationMs + "ms\n", endTime);
+      }
+      stdoutLog.end(endTime); stderrLog.end(endTime);
+      try { out.end(); } catch { /* the stream may already be gone */ }
+      writeRunMeta(runDir, {
+        run: runId, agent: agent.name, startTime: startTime.toISOString(),
+        startEpochMs, endTime: endTime.toISOString(), endEpochMs, durationMs,
+        exitCode: code, signal: signal || null, error: null,
+      });
       ledger.add(runId, "exit", { code, signal, stopped: handle.stopped });
       noteMemory(memory, {
         event: "exit", run: runId, code, signal, stopped: handle.stopped,
@@ -279,8 +418,24 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     // marked failed in its own ledger and the promise settles.
     child.on("error", (err) => {
       handle.exited = true;    // never became a process: there is nothing left to stop
-      ledger.add(runId, "spawn-error", { message: String(err && err.message || err), stopped: handle.stopped });
-      resolve({ code: null, signal: null, error: String(err && err.message || err) });
+      const endTime = new Date();
+      const endEpochMs = Date.now();
+      const message = String(err && err.message || err);
+      // A spawn that never starts must still leave the loud record: the log
+      // names the missing binary or directory, the meta file carries it, and
+      // the promise settles — no hang, no silence.
+      stderrLog.write("spawn-error: " + message + "\n", endTime);
+      stdoutLog.write("run failed to start: " + message + " (no process was created)\n", endTime);
+      stdoutLog.end(endTime); stderrLog.end(endTime);
+      try { out.end(); } catch { /* the stream may already be gone */ }
+      writeRunMeta(runDir, {
+        run: runId, agent: agent.name, startTime: startTime.toISOString(),
+        startEpochMs, endTime: endTime.toISOString(), endEpochMs,
+        durationMs: endEpochMs - startEpochMs,
+        exitCode: null, signal: null, error: redactSecrets(message),
+      });
+      ledger.add(runId, "spawn-error", { message, stopped: handle.stopped });
+      resolve({ code: null, signal: null, error: message });
     });
   });
   // Budget: wall-clock cap stops the run (spec S9).
@@ -346,7 +501,10 @@ export async function killAgent(handle, reason, graceMs = 800) {
 // untouched -- the brief is what a baton hand-off reads, so a reconciliation that rewrote it
 // would be the runtime editing the agent's orders. Idempotent: a run already marked is left
 // alone, so a second restart does not stack marks.
-const TERMINAL = new Set(["exit", "spawn-error"]);
+// A refused run is terminal too: no child will ever write an exit line for
+// it, and a recovery pass that marked it orphaned would claim work was lost
+// that was never started. "refused" joins "exit" and "spawn-error" here.
+const TERMINAL = new Set(["exit", "spawn-error", "refused"]);
 
 export function reconcileRuns(root) {
   const runsDir = path.join(root, "runs");

@@ -1,0 +1,6 @@
+$ lobster memory.lobster (1st)
+first run: writing note
+RC=0
+$ lobster memory.lobster (2nd)
+second run: note reads back: remember: K6 booted before breakfast
+RC=0

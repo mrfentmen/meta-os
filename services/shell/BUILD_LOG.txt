@@ -1,0 +1,206 @@
+# BUILD_LOG — services/shell (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_shell.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import shell.shell;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_shell.goose
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/shell.c --standalone services/.run_shell.goose
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/shell.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_shell
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t66_shell.c --standalone services/.run_t66_shell.goose  (from services/tests/t66_shell.goose)
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+  codegen t66_shell: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t66_shell.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t66_shell
+  cc t66_shell: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t66_shell  (host run, 2s cap)
+t66 shell
+ok   two args
+ok   arg 0
+ok   arg 1
+ok   double quotes keep the space
+ok   single quotes are literal
+ok   backslash space is one arg
+ok   double-quote \t is a tab
+ok   unknown escape keeps both chars
+ok   unterminated single quote is a syntax error
+ok   unterminated double quote is a syntax error
+ok   trailing backslash is a syntax error
+ok   too many args refuses
+ok   blank line is zero args
+ok   empty quoted arg is a real arg
+ok   format for the shell
+ok   empty line is ok and silent
+ok   echo
+ok   echo multiple args
+ok   echo quoted
+ok   pwd at start
+ok   help mentions exit
+ok   help lists ls
+ok   unknown command is NOTFOUND
+ok   unknown command names itself
+ok   a pipe is refused, not passed through
+ok   redirection is refused
+ok   mkdir
+ok   ls shows the new directory with a slash
+ok   cd into it
+ok   pwd follows the cd
+ok   create a file by copying echo output is not possible; use cat first
+ok   cd back
+ok   pwd after cd ..
+ok   create /note
+ok   fill /note
+ok   cat prints the file
+ok   cat of a missing file fails
+ok   cp
+ok   cat the copy
+ok   rm
+ok   ls no longer shows the copy
+ok   registered two services
+ok   ps runs
+ok   ps format
+ok   uptime runs
+ok   log reports counters
+ok   audit runs
+ok   time runs
+ok   create a script file
+ok   fill the script
+ok   script runs
+ok   script output
+ok   create a failing script
+ok   fill the failing script
+ok   script stops on error
+ok   script did not run the line after the failure
+ok   script names the failing line
+t66 done  pass=57 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t131_shell_r11.c --standalone services/.run_t131_shell_r11.goose  (from services/tests/t131_shell_r11.goose)
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+  codegen t131_shell_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t131_shell_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t131_shell_r11
+  cc t131_shell_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t131_shell_r11  (host run, 2s cap)
+t131 shell round 11
+ok   format for the shell
+ok   cap 3: a successful command stays successful
+ok   cap 3: output stops exactly at the cap
+ok   cap 0: nothing is written and the command still succeeds
+ok   pipe is E_UNSUPPORTED
+ok   output redirection is E_UNSUPPORTED
+ok   input redirection is E_UNSUPPORTED
+ok   sequencing is E_UNSUPPORTED
+ok   background is E_UNSUPPORTED
+ok   cat without a path is E_INVAL
+ok   cp with one path is E_INVAL
+ok   rm without a path is E_INVAL
+ok   mkdir without a path is E_INVAL
+ok   cat of a missing file is E_NOTFOUND
+ok   cd to a missing directory is E_NOTFOUND
+ok   ls of a missing directory is E_NOTFOUND
+ok   an unknown command is E_NOTFOUND
+ok   an unterminated quote is E_SYNTAX
+ok   a blank line is not an error
+ok   a silent refusal is named: "cat: ..."
+ok   load: 100 echoes accepted
+ok   load: 100 unknown commands refused
+ok   load: 200 commands, every one classified
+LOAD shell ops=200 ok=100 refused=100
+t131 done  pass=23 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/shell/*.goose
+sys_read_key sys_ticks sys_write_console sys_yield 
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_shell + run above)

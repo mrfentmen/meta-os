@@ -1,6 +1,6 @@
 # `bootlog` — Layer 4, service 1
 
-**Status: RUNS.** `tests/t49_bootlog` exercises the record shape and the cap refusal (23 checks,
+**Status: COMPILED.** (Lane B R5, 2026-11-04 — build+run log: services/bootlog/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) `tests/t49_bootlog` exercises the record shape and the cap refusal (23 checks,
 exit 0); `tests/t107_bootlog_r11` adds the boundary and the volume case. Both run on the host
 shim — the service logic runs, nothing has booted, and no claim here rests on the kernel's UART.
 

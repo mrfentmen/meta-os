@@ -1,0 +1,100 @@
+=== TEST queue-core 2026-11-04T19:24:22Z ===
+   Compiling queue-core v0.1.0 (/Users/test/Desktop/meta-os/crates/queue-core)
+    Finished `release` profile [optimized] target(s) in 0.70s
+     Running unittests src/lib.rs (target/release/deps/queue_core-da73cda22a29490e)
+
+running 12 tests
+test tests::base64_round_trip_and_strictness ... ok
+test tests::envelope_non_jpeg_data_url_refused ... ok
+test tests::envelope_tampered_byte_length_refused ... ok
+test tests::envelope_unknown_product_refused ... ok
+test tests::envelope_wrong_kind_refused ... ok
+test tests::envelope_tampered_sha256_refused ... ok
+test tests::envelope_validates ... ok
+test tests::job_store_submit_idempotent_and_round_trip ... ok
+test tests::job_store_result_round_trip ... ok
+test tests::key_layout_matches_python ... ok
+test tests::job_store_claim_renew_release_finish ... ok
+test tests::sha256_known_vectors ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/code100_section4.rs (target/release/deps/code100_section4-c12a7510affbd1b0)
+
+running 2 tests
+test dequeue_removes_only_the_finished_head ... ok
+test interleaved_producers_keep_creation_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-c07b475e5e9483e4)
+
+running 9 tests
+test empty_namespace_keeps_the_same_key_shape ... ok
+test empty_frame_is_a_valid_envelope ... ok
+test claiming_an_unfiled_job_creates_claim_state ... ok
+test duplicate_claim_first_caller_wins ... ok
+test finish_then_claim_is_allowed_and_claim_then_finish_releases ... ok
+test duplicate_submit_is_idempotent_and_indexes_once ... ok
+test product_matching_is_exact_not_case_folded ... ok
+test out_of_order_submit_orders_the_index_by_created_at ... ok
+test maximum_frame_validates ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-ae436a43f8f7d4d1)
+
+running 13 tests
+test base64_rejects_a_quad_with_too_much_padding ... ok
+test base64_accepts_the_empty_input ... ok
+test base64_errors_are_typed_strings ... ok
+test empty_id_is_refused ... ok
+test empty_timestamp_is_refused ... ok
+test byte_length_mismatch_is_refused ... ok
+test empty_product_list_refuses_every_product ... ok
+test non_jpeg_data_url_is_refused ... ok
+test sha256_mismatch_is_refused ... ok
+test undecodable_base64_is_refused ... ok
+test unknown_product_is_refused_with_the_python_wording ... ok
+test wrong_kind_is_refused ... ok
+test wrong_version_is_refused ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-3c048659e94e55a5)
+
+running 8 tests
+test memory_backend_starts_empty ... ok
+test delete_of_a_hash_only_key_counts_zero_but_removes_it ... ok
+test delete_counts_only_live_string_keys ... ok
+test hset_skips_empty_values_and_counts_only_stored_fields ... ok
+test set_body_and_get_round_trip ... ok
+test zrange_orders_by_score_then_member ... ok
+test set_nx_ex_holds_while_the_key_is_live ... ok
+test set_xx_ex_requires_a_live_key ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section12.rs (target/release/deps/section12-0781371a6a247502)
+
+running 9 tests
+test dequeue_empty ... ok
+test dequeue_fifo_within_priority ... ok
+test dequeue_priority_order ... ok
+test deser_wrong_type ... ok
+test envelope_empty_id_refused ... ok
+test envelope_unknown_kind_refused ... ok
+test len_after_mixed ... ok
+test duplicate_id ... ok
+test payload_size_bounds ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests queue_core
+
+running 1 test
+test crates/queue-core/src/lib.rs - PriorityQueue (line 185) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+EXIT=0 2026-11-04T19:24:24Z

@@ -1,0 +1,63 @@
+# BUILD_LOG — services/watchdog (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_watchdog.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import watchdog.metrics;
+#   import watchdog.watchdog;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_watchdog.goose
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/watchdog.c --standalone services/.run_watchdog.goose
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/watchdog.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_watchdog
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t53_watchdog.c --standalone services/.run_t53_watchdog.goose  (from services/tests/t53_watchdog.goose)
+  codegen t53_watchdog: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t53_watchdog.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t53_watchdog
+  cc t53_watchdog: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t53_watchdog  (host run, 2s cap)
+t53 watchdog
+ok   zero handle refused
+ok   negative period refused
+ok   negative grace refused
+ok   negative allowance refused
+ok   watch accepted
+ok   re-arming is refused
+ok   find
+ok   inside the period is fine
+ok   inside grace is fine
+ok   first late check is silent
+ok   past allowance is dead
+ok   dead is reported, not re-escalated
+ok   misses do not inflate on repeated checks
+ok   beat accepted
+ok   after beat: fine and count cleared
+ok   backwards clock is not a miss
+ok   beat before the long silence
+ok   misses count whole periods
+ok   unwatch
+ok   unwatch twice fails
+ok   gone from the table
+ok   watch A
+ok   watch B
+ok   next_dead names one handle
+ok   next_dead advances
+ok   nothing left to escalate
+ok   counts are non-negative
+ok   two watched services are accounted for
+passed 28
+t53 done
+exit: 0
+tests built+run: 1/1
+# --- sys_* externs referenced by services/watchdog/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_watchdog + run above)

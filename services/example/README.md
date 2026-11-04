@@ -6,7 +6,7 @@ with the supervisor by handle, fixed buffers cleared explicitly, records built
 whole and written once, error codes from `common/err`, heartbeat after work, a
 status function that writes into the caller's buffer.
 
-**Status: WRITTEN. Not COMPILED, not RUN.** The checklist at the bottom of
+**Status: COMPILED, not RUN.** (Lane B R5, 2026-11-04 — log: services/example/BUILD_LOG.txt; svc_entry takes BootInfo&, so no host process can honestly run it.) The checklist at the bottom of
 `example.goose` has the last two lines unticked for exactly that reason.
 
 ## What it does
