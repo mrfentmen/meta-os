@@ -1,12 +1,11 @@
 PRETTY_NAME="Meta OS 1.0 (Ribbon)"
 NAME="Meta OS"
-VERSION="1.0"
+VERSION="1.0 (Ribbon)"
 VERSION_ID="1.0"
+VERSION_CODENAME=ribbon
 ID=metaos
-ID_LIKE="ubuntu debian"
-VERSION_CODENAME=noble
-UBUNTU_CODENAME=noble
+ID_LIKE=debian
+LOGO=metaos
 HOME_URL="https://metaos.local"
 SUPPORT_URL="https://metaos.local/support"
-BUG_REPORT_URL="https://metaos.local/bugs"
-LOGO=metaos
+BUG_REPORT_URL="https://metaos.local/issues"

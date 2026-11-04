@@ -1,2 +1,4 @@
 #!/bin/sh
 echo "Meta OS 1.0 (Ribbon)"
+echo "Built on Xubuntu 24.04 (Noble); stamped Meta OS by this image."
+echo "Truth lives in /etc/os-release."

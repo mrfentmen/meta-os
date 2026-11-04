@@ -1,0 +1,294 @@
+# ALLOWLIST.tsv — OS-1/OS-4 contract file (plan/AGENT_OS_INDEX.md s3).
+# Format: path<TAB>pattern<TAB>verdict<TAB>reason
+# verdict is compat, attribution, or generated. Paths are repo-relative.
+# A row suppresses every standalone-word hit of pattern in path.
+# Files with a known identity leak are DELIBERATELY absent, so the
+# checker flags them: calamares/meta-branding.sh (OS-2),
+# dexubuntu/identity/os-release (Pax), desktop-entries/*.desktop (OS-3),
+# face/meta-desktop.sh ubuntu fallback (Buffy). English-word `canonical`
+# rows use verdict attribution with an explicit English-word reason.
+.github/workflows/ci.yml	ubuntu	compat	package, archive, image, or CI name the system needs
+agent-layer/check-keep-mime.sh	canonical	attribution	English word, not Canonical the company (or code identifier)
+agent-layer/check-keep-mime.sh	Xubuntu	attribution	names the base honestly
+agent-layer/desktop-entries/INSTALL-OC1.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+agent-layer/desktop-entries/mimeapps.list	Canonical	attribution	English word, not Canonical the company (or code identifier)
+agent-layer/desktop-entries/mimeapps.list	Xubuntu	attribution	names the base honestly
+agent-layer/desktop-entries/README.md	Xubuntu	attribution	names the base honestly
+agent-layer/install.sh	Ubuntu	compat	supported-distro target statement in tooling
+agent-layer/MANIFEST.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+agent-layer/manifest.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+agent-layer/README.md	Xubuntu	compat	supported-distro target statement in tooling
+agent-layer/RELAY_STATUS.md	ubuntu	attribution	names the base honestly
+agents/sandbox.mjs	ubuntu	compat	package, archive, image, or CI name the system needs
+agents/sandbox.test.mjs	ubuntu	compat	package, archive, image, or CI name the system needs
+BOOT_READINESS.md	Xubuntu	attribution	names the base honestly
+bus.html	canonical	attribution	English word, not Canonical the company (or code identifier)
+bus.html	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/agent-ops/src/snapshot.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/intel/src/b12a_drills/abrun.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-boot/tests/section13_boot.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-budget/src/lib.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-budget/src/lib.rs	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-jobs/src/lib.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-jobs/src/lib.rs	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-jobs/tests/gap_close.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-misc/src/b24/transport.rs	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-misc/src/b26/admin.rs	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-supervisor/src/watchdog.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/os-worker/src/lib.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/parity-tests/src/tests/test_boss_trigger.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/parity-tests/src/tests/test_bus_rename.rs	canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/parity-tests/src/tests/test_bus_rename.rs	Canonical	attribution	English word, not Canonical the company (or code identifier)
+crates/parity-tests/src/tests/test_os_base.rs	ubuntu	attribution	names the base honestly
+crates/parity-tests/src/tests/test_os_livebuild.rs	ubuntu	attribution	names the base honestly
+crates/parity-tests/src/tests/test_os_packer.rs	ubuntu	attribution	names the base honestly
+design/agent-budget-dashboard.html	Canonical	attribution	English word, not Canonical the company (or code identifier)
+design/molecules/README.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+iso-filelist.txt	ubuntu	attribution	names the base honestly
+iso-filelist.txt	xubuntu	attribution	names the base honestly
+iso/apps/README.md	Xubuntu	attribution	names the base honestly
+iso/base/metaos.packages	Xubuntu	attribution	names the base honestly
+iso/base/README.md	Xubuntu	attribution	names the base honestly
+iso/theme/README.md	Xubuntu	attribution	names the base honestly
+iso/tools/tokens_to_xfce.py	Xubuntu	attribution	names the base honestly
+kernel/MAC_QUESTIONS.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+kernel/MAC_QUESTIONS.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+kernel/REVIEW.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+metaos-theme/apply.sh	Xubuntu	attribution	names the base honestly
+metaos-theme/fonts/FONTS.md	Ubuntu	compat	package, archive, image, or CI name the system needs
+metaos-theme/greeter/KEYS.md	canonical	attribution	names upstream Canonical honestly (hashes, sources)
+metaos-theme/greeter/KEYS.md	Xubuntu	attribution	names the base honestly
+metaos-theme/README.md	Ubuntu	attribution	names the base honestly
+metaos-theme/README.md	Xubuntu	attribution	names the base honestly
+OC3-STATUS.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+OC3-STATUS.md	Ubuntu	attribution	names the base honestly
+OC3-STATUS.md	xubuntu	attribution	names the base honestly
+OC3-STATUS.md	Xubuntu	attribution	names the base honestly
+os-build/APP_INVENTORY.md	Ubuntu	attribution	names the base honestly
+os-build/APP_INVENTORY.md	Xubuntu	attribution	names the base honestly
+os-build/BOOT_ON_32GB_MAC.md	Xubuntu	attribution	names the base honestly
+os-build/DEMO.md	ubuntu	attribution	names the base honestly
+os-build/DEMO.md	Ubuntu	attribution	names the base honestly
+os-build/face/APP_MATRIX.md	xubuntu	attribution	names the base honestly
+os-build/face/APP_MATRIX.md	Xubuntu	attribution	names the base honestly
+os-build/face/launcher.py	Ubuntu	attribution	names the base honestly
+os-build/face/launcher.py	Xubuntu	attribution	names the base honestly
+os-build/face/meta-desktop.sh	Xubuntu	attribution	names the base honestly
+os-build/face/notesd.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/face/provision.sh	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/face/provision.sh	ubuntu	attribution	names the base honestly
+os-build/face/provision.sh	Ubuntu	attribution	names the base honestly
+os-build/face/SESSION.md	ubuntu	attribution	names the base honestly
+os-build/face/SESSION.md	Ubuntu	attribution	names the base honestly
+os-build/HACKATHON.md	ubuntu	attribution	names the base honestly
+os-build/HACKATHON.md	Ubuntu	attribution	names the base honestly
+os-build/identity/ALLOWLIST.tsv	canonical	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/ALLOWLIST.tsv	Canonical	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/ALLOWLIST.tsv	ubuntu	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/ALLOWLIST.tsv	Ubuntu	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/ALLOWLIST.tsv	xubuntu	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/ALLOWLIST.tsv	Xubuntu	attribution	the contract file itself: pattern column must name the words to cover them
+os-build/identity/check_strings.sh	canonical	attribution	the checkers own word list and probe strings
+os-build/identity/check_strings.sh	Canonical	attribution	the checkers own word list and probe strings
+os-build/identity/check_strings.sh	ubuntu	attribution	the checkers own word list and probe strings
+os-build/identity/check_strings.sh	Ubuntu	attribution	the checkers own word list and probe strings
+os-build/identity/check_strings.sh	xubuntu	attribution	the checkers own word list and probe strings
+os-build/identity/check_strings.sh	Xubuntu	attribution	the checkers own word list and probe strings
+os-build/identity/debrand.sh	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/identity/debrand.sh	Ubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/debrand.sh	ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/identity/debrand.sh	Xubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/debrand2.sh	ubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/debrand2.sh	Ubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/debrand2.sh	Xubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/rename_user.sh	ubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/rename_user.sh	Ubuntu	attribution	the lane's own tooling: probe strings and OLD/NEW account names
+os-build/identity/STRINGS_INVENTORY.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/identity/STRINGS_INVENTORY.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/identity/STRINGS_INVENTORY.md	ubuntu	attribution	names the base honestly
+os-build/identity/STRINGS_INVENTORY.md	Ubuntu	attribution	names the base honestly
+os-build/identity/STRINGS_INVENTORY.md	xubuntu	attribution	names the base honestly
+os-build/identity/STRINGS_INVENTORY.md	Xubuntu	attribution	names the base honestly
+os-build/INTEGRATION.md	ubuntu	attribution	names the base honestly
+os-build/iso/BASE_FACTS.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/iso/BASE_FACTS.md	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/iso/BASE_FACTS.md	xubuntu	attribution	names the base honestly
+os-build/iso/BASE_FACTS.md	Xubuntu	attribution	names the base honestly
+os-build/iso/build_iso.sh	Ubuntu	attribution	names the base honestly
+os-build/iso/calamares/modules/displaymanager.conf	Xubuntu	attribution	names the base honestly
+os-build/iso/calamares/modules/packages.conf	Xubuntu	compat	package, archive, image, or CI name the system needs
+os-build/iso/calamares/modules/unpackfs.conf	Ubuntu	attribution	names the base honestly
+os-build/iso/calamares/modules/unpackfs.conf	xubuntu	attribution	names the base honestly
+os-build/iso/calamares/modules/users.conf	Ubuntu	attribution	names the base honestly
+os-build/iso/calamares/README.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/iso/calamares/README.md	ubuntu	attribution	documents OS-2 deliberate compat decision (ID_LIKE=ubuntu); the file itself is the decision record
+os-build/iso/calamares/README.md	Ubuntu	compat	documents OS-2 deliberate compat decision; the file itself is the decision record
+os-build/iso/calamares/README.md	Xubuntu	compat	documents OS-2 deliberate compat decision; the file itself is the decision record
+os-build/iso/calamares/settings.conf	canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/iso/calamares/settings.conf	Ubuntu	attribution	names the base honestly
+os-build/iso/finalize-iso-tree.sh	Xubuntu	attribution	names the base honestly
+os-build/iso/INITRD_DIFF.md	Ubuntu	attribution	names the base honestly
+os-build/iso/INITRD_DIFF.md	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/iso/INITRD_DIFF.md	Xubuntu	attribution	names the base honestly
+os-build/iso/LANE_REPORT.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/iso/LANE_REPORT.md	Ubuntu	attribution	names the base honestly
+os-build/iso/LANE_REPORT.md	xubuntu	attribution	names the base honestly
+os-build/iso/LANE_REPORT.md	Xubuntu	attribution	names the base honestly
+os-build/iso/MERGE_NOTES.md	ubuntu	attribution	names the base honestly
+os-build/iso/MERGE_NOTES.md	xubuntu	attribution	names the base honestly
+os-build/iso/PAX_BLOCKERS.md	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-apps/imperium/vendor/maplibre/maplibre-gl.js	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/iso/payload-theme/apply.sh	ubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/apply.sh	Ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/fonts/FONTS.md	ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/fonts/FONTS.md	Ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/greeter/10-metaos-live.conf	ubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/greeter/99_metaos-greeter.gschema.override	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/iso/payload-theme/greeter/99_metaos-greeter.gschema.override	Ubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/greeter/KEYS.md	canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/iso/payload-theme/greeter/KEYS.md	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/gtk/gtk.css	Ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/identity/00-header	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/identity/motd	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/panel/xfce4-panel.xml	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/README.md	ubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/README.md	Ubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/README.md	Xubuntu	attribution	names the base honestly
+os-build/iso/payload-theme/terminal/metaos-terminal-profile.txt	ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/terminal/metaos-terminal-profile.txt	Ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/theme_proof.sh	ubuntu	attribution	the proof scripts own probe strings (it greps for the words to forbid them)
+os-build/iso/payload-theme/theme_proof.sh	Ubuntu	compat	real font or package name (fonts-ubuntu, Ubuntu Mono), not branding
+os-build/iso/payload-theme/theme_proof.sh	xubuntu	attribution	names the base honestly
+os-build/iso/PIPELINE.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/iso/PIPELINE.md	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/iso/PIPELINE.md	xubuntu	attribution	names the base honestly
+os-build/iso/PIPELINE.md	Xubuntu	attribution	names the base honestly
+os-build/iso/provision-all.sh	Ubuntu	attribution	names the base honestly
+os-build/iso/provision.sh	Ubuntu	attribution	names the base honestly
+os-build/iso/README.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/iso/README.md	xubuntu	attribution	names the base honestly
+os-build/iso/README.md	Xubuntu	attribution	names the base honestly
+os-build/iso/repack-iso.sh	Xubuntu	attribution	names the base honestly
+os-build/iso/ROOM1_POST.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/iso/ROOM1_POST.md	xubuntu	attribution	names the base honestly
+os-build/iso/test/test_stages.sh	xubuntu	attribution	names the base honestly
+os-build/iso/test/test_stages.sh	Xubuntu	attribution	names the base honestly
+os-build/iso/tools/check_configs.py	Ubuntu	attribution	names the base honestly
+os-build/iso/tools/check_configs.py	Xubuntu	attribution	names the base honestly
+os-build/iso/tools/check_slideshow.py	Ubuntu	attribution	names the base honestly
+os-build/iso/tools/check_slideshow.py	Xubuntu	attribution	names the base honestly
+os-build/lanes/AGENT_1_REPORT.md	Xubuntu	attribution	names the base honestly
+os-build/lanes/AGENT_4_REPORT.md	ubuntu	attribution	names the base honestly
+os-build/lanes/AGENT_4_REPORT.md	Ubuntu	attribution	names the base honestly
+os-build/lanes/AGENT_STATUS_2026-11-03.md	Ubuntu	attribution	names the base honestly
+os-build/lanes/WAKEUP_AGENTIC.md	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/lanes/WAKEUP_AGENTIC.md	Ubuntu	attribution	names the base honestly
+os-build/lanes/WAKEUP_R3.md	ubuntu	attribution	names the base honestly
+os-build/lanes/WAKEUP_R3.md	Ubuntu	attribution	names the base honestly
+os-build/layer1/pair_audit.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/METAOS_1.0_12H_PLAN.md	Xubuntu	attribution	names the base honestly
+os-build/METAOS_1.0_RELEASE_CHECKLIST.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/METAOS_1.0_RELEASE_CHECKLIST.md	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/cubic-spec.md	Ubuntu	attribution	names the base honestly
+os-build/metaos1-base/cubic-spec.md	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/apply-in-chroot.sh	xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/apply-in-chroot.sh	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/README.md	ubuntu	compat	compatibility field consumed by packaging tools
+os-build/metaos1-base/dexubuntu/README.md	xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/README.md	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/verify-rootfs.sh	xubuntu	attribution	names the base honestly
+os-build/metaos1-base/dexubuntu/verify-rootfs.sh	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/packages.txt	Ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/metaos1-base/packages.txt	Xubuntu	attribution	names the base honestly
+os-build/metaos1-base/README.md	Xubuntu	attribution	names the base honestly
+os-build/MILO_QA_1.0_AUDIT_2026-11-02.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+os-build/MILO_QA_1.0_AUDIT_2026-11-02.md	Xubuntu	attribution	names the base honestly
+os-build/MILO_QA_DEXUBUNTU_VERIFY.md	ubuntu	compat	compatibility field consumed by packaging tools
+os-build/MILO_QA_DEXUBUNTU_VERIFY.md	xubuntu	attribution	names the base honestly
+os-build/MILO_QA_DEXUBUNTU_VERIFY.md	Xubuntu	attribution	names the base honestly
+os-build/MILO_QA_H4_APPLY.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/MILO_QA_H4_APPLY.md	xubuntu	attribution	names the base honestly
+os-build/MILO_QA_H4_REAUDIT.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/MILO_QA_H6_FIRSTLOGIN.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/MILO_QA_MERGE_LAYERS.md	Xubuntu	attribution	names the base honestly
+os-build/MILO_QA_VERIFY_ROUND2.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/MILO_QA_VERIFY_ROUND2.md	xubuntu	attribution	names the base honestly
+os-build/MILO_QA_VERIFY_ROUND2.md	Xubuntu	attribution	names the base honestly
+os-build/OC123_DEMO_4H.md	xubuntu	attribution	names the base honestly
+os-build/OPENCODE_TASKS_100_REPORT.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/OPENCODE1_TASKS_ISO.md	ubuntu	attribution	names the base honestly
+os-build/OPENCODE1_TASKS_ISO.md	Ubuntu	attribution	names the base honestly
+os-build/OPENCODE1_TASKS_ISO.md	Xubuntu	attribution	names the base honestly
+os-build/OPENCODE2_500_STATUS.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/OPENCODE2_500_STATUS.md	Xubuntu	attribution	names the base honestly
+os-build/OPENCODE2_LAND_WALLS.md	Xubuntu	attribution	names the base honestly
+os-build/OPENCODE2_PROOF_LANE.md	Xubuntu	attribution	names the base honestly
+os-build/OPENCODE3_TASKS_500.md	Ubuntu	attribution	names the base honestly
+os-build/PROOF_AGENT_PIPELINE.md	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/records/os-budget.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-jobs-changes.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-jobs-records.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-jobs-surface.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-jobs.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-misc-config.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-misc-gaps.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-supervisor-records.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-worker-gaps.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/records/os-worker.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/research/ecosystem-watch.md	Ubuntu	attribution	names the base honestly
+os-build/STATUS_2026-11-04.md	Ubuntu	attribution	names the base honestly
+os-build/tools/fix_terminal_prompt.sh	ubuntu	compat	must handle the legacy /home/ubuntu path after a rename
+os-build/tools/fix_terminal_prompt.sh	Ubuntu	compat	must handle the legacy /home/ubuntu path after a rename
+os-build/tools/install_agent_runtime.sh	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/tools/set_spark_key.sh	ubuntu	attribution	names the base honestly
+os-build/tools/sync_image.sh	ubuntu	compat	package, archive, image, or CI name the system needs
+os-build/UBUNTU_INVENTORY.md	ubuntu	attribution	names the base honestly
+os-build/UBUNTU_INVENTORY.md	Ubuntu	compat	compatibility field consumed by packaging tools
+os-build/UBUNTU_INVENTORY.md	Xubuntu	attribution	names the base honestly
+os-build/WIRING_PLAN.md	Ubuntu	attribution	names the base honestly
+os-build/WIRING_PLAN.md	xubuntu	attribution	names the base honestly
+os-build/WIRING_PLAN.md	Xubuntu	attribution	names the base honestly
+os/admin.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/docs/DEPLOY_RUNBOOK.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/docs/mos-operations.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/intel/abrun.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/intel/watchdog.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/jobs.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/mos/contract.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/plan/LAYER_PLAN.md	Ubuntu	attribution	names the base honestly
+os/plan/META_OS.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/plan/META_OS.md	Ubuntu	attribution	names the base honestly
+os/poll.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/tests/test_boss_trigger.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/tests/test_os_base.py	ubuntu	attribution	names the base honestly
+os/tests/test_os_livebuild.py	ubuntu	attribution	names the base honestly
+os/tests/test_os_packer.py	ubuntu	attribution	names the base honestly
+os/watch_nick.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/watch.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/custos/runtime/dedup.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/custos/runtime/false_positives.py	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/custos/runtime/patrol.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/breeding.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/export.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/gate/delaney/SOURCES.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/GATEWAY_README.md	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/gateway.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/ladder.py	Canonical	attribution	English word, not Canonical the company (or code identifier)
+os/worlds/science-lab/verify.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+server/queue/queue_service.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+server/queue/receipt_validate.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+services/tests/t116_dns_r11.goose	canonical	attribution	English word, not Canonical the company (or code identifier)
+services/updater/signature.goose	canonical	attribution	English word, not Canonical the company (or code identifier)
+tests/agent-layer/test_mimeapps_proposal.py	canonical	attribution	English word, not Canonical the company (or code identifier)
+vendor/maplibre/maplibre-gl.js	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/identity/IDENTITY_MATRIX.md	ubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/identity/IDENTITY_MATRIX.md	Ubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/identity/IDENTITY_MATRIX.md	Xubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	ubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	Ubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	Xubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/identity/README.md	ubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/README.md	Ubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/README.md	Xubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/test_check_strings.sh	ubuntu	attribution	lane test fixtures must contain the word to prove detection
+os-build/identity/test_check_strings.sh	Ubuntu	attribution	lane test fixtures must contain the word to prove detection
