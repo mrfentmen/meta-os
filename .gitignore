@@ -35,3 +35,19 @@ memory/
 
 # Local bus state (R2-T3): file-backed store defaults outside the tree; never commit it if pointed inside
 bus-data/
+
+# macOS metadata created by Finder, never part of the tree
+.DS_Store
+
+# ISO build output and machine images: rebuilt by os-build/iso/* and os-build/rk007/*
+os-build/iso/output/
+os-build/rk007/image-builder/target/
+os-build/rk007/disk.img
+*.img
+.rk007/
+
+# Linker scripts the userspace build generates next to its Cargo manifest
+os-build/userspace/user/link-*.ld
+
+# Queued jobs are runtime state; the receipts and run records are the evidence
+os-build/handsfree/jobs/*.job.json
