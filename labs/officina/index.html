@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labs — Officina workshop</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: #0a0e14; color: #d9e6f2;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px; line-height: 1.5;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  /* Blueprint grid kept ONLY as a page edge: an 8px strip, never content. */
+  #edge {
+    width: 8px; flex: none;
+    background-color: #0d1f38;
+    background-image:
+      linear-gradient(rgba(140,180,230,0.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(140,180,230,0.35) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+  #shell { display: flex; flex: 1; min-height: 0; }
+  #col { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  header {
+    padding: 10px 16px; border-bottom: 1px solid #22374d;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: none;
+  }
+  header h1 { font-size: 14px; margin: 0; letter-spacing: 0.12em; font-weight: 600; }
+  header .sub { font-size: 11px; color: #8fa9bd; }
+  #backend {
+    font-size: 11px; padding: 3px 10px; border: 1px solid #5a3a2e;
+    background: #231310; color: #f0b0a0; border-radius: 3px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  #backend.live { border-color: #2e5a3a; background: #0f2317; color: #9fd8b4; }
+  #filters { display: flex; gap: 8px; align-items: center; margin-left: auto; font-size: 12px; }
+  select, input[type="text"] {
+    background: #0b1420; color: #d9e6f2; border: 1px solid #2b4258;
+    padding: 4px 8px; font: inherit; font-size: 12px; border-radius: 3px;
+  }
+  button {
+    background: #0f1c2b; color: #d9e6f2; border: 1px solid #2b4258;
+    padding: 4px 12px; cursor: pointer; font: inherit; font-size: 12px; border-radius: 3px;
+  }
+  button:hover { border-color: #4d6f8f; }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible,
+  select:focus-visible, input:focus-visible {
+    outline: 2px solid #7fb8e8; outline-offset: 1px;
+  }
+  main { display: grid; grid-template-columns: 330px 1fr; flex: 1; min-height: 0; }
+  #queue { border-right: 1px solid #22374d; overflow-y: auto; padding: 10px; }
+  #queue h2, #detail h2, #gaps h2 { font-size: 11px; letter-spacing: 0.14em; color: #8fa9bd; margin: 2px 0 8px; font-weight: 600; }
+  .job {
+    display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 8px 10px;
+    background: #0d1622; border: 1px solid #22374d; border-radius: 4px; cursor: pointer;
+  }
+  .job[aria-selected="true"] { border-color: #7fb8e8; background: #10202f; }
+  .job .rid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; }
+  .job .meta { font-size: 11px; color: #8fa9bd; margin-top: 2px; }
+  .pill {
+    display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px;
+    border: 1px solid #2e5a3a; color: #9fd8b4; margin-right: 6px;
+  }
+  .pill.brief { border-color: #5a4a2e; color: #e8c97f; }
+  #detail { overflow-y: auto; padding: 12px 16px; min-width: 0; }
+  #detail[hidden] { display: none; }
+  #detail .rid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 2px 10px; font-size: 12px; margin: 6px 0; }
+  .kv dt { color: #8fa9bd; }
+  .kv dd { margin: 0; overflow-wrap: anywhere; }
+  .src { display: block; font-size: 10.5px; color: #6f8a9f; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 6px 0 10px; }
+  th, td { border: 1px solid #22374d; padding: 4px 8px; text-align: left; }
+  th { color: #8fa9bd; font-weight: 600; background: #0d1622; }
+  td.num, th.num { text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pass { color: #9fd8b4; } .fail { color: #f0a0a0; }
+  .copy { font-size: 10px; padding: 1px 7px; margin-left: 6px; }
+  a { color: #7fb8e8; }
+  #submitbox { border: 1px solid #22374d; background: #0d1622; padding: 10px 12px; margin: 0 0 10px; border-radius: 4px; }
+  #submitbox[hidden] { display: none; }
+  #submitbox label { display: block; font-size: 12px; margin: 6px 0; }
+  #submitbox input[type="text"] { width: 100%; }
+  #submitmsg { font-size: 12px; margin-top: 6px; }
+  #gaps { border-top: 1px solid #22374d; padding: 10px 16px; flex: none; max-height: 30vh; overflow-y: auto; }
+  #gaps[hidden] { display: none; }
+  #empty, #selftest { padding: 24px; overflow-y: auto; }
+  #empty[hidden], #selftest[hidden] { display: none; }
+  pre.fill {
+    background: #0d1622; border: 1px solid #22374d; padding: 10px 12px; font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto;
+  }
+  footer {
+    flex: none; padding: 8px 16px; font-size: 11px; color: #8fa9bd;
+    border-top: 1px solid #22374d; display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  footer .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .st-pass { color: #9fd8b4; } .st-fail { color: #f0a0a0; }
+  @media (max-width: 1100px) { main { grid-template-columns: 270px 1fr; } }
+</style>
+</head>
+<body>
+<div id="shell">
+<div id="edge" aria-hidden="true"></div>
+<div id="col">
+<header>
+  <h1>OFFICINA · WORKSHOP</h1>
+  <span class="sub">recorded runs only — every number names its file</span>
+  <span id="backend" role="status">backend: checking 127.0.0.1:18940…</span>
+  <div id="filters" role="group" aria-label="Job filters">
+    <label>status <select id="f-status" aria-label="Filter by status">
+      <option value="">all</option><option value="proven">proven</option><option value="failed">failed</option>
+    </select></label>
+    <label>agent <select id="f-agent" aria-label="Filter by agent">
+      <option value="">all</option><option value="officina-faber">officina-faber</option>
+    </select></label>
+    <button id="btn-submit" aria-expanded="false">Submit job</button>
+  </div>
+</header>
+<main id="main">
+  <section id="queue" aria-label="Job queue"><h2>JOB QUEUE</h2><div id="jobs"></div></section>
+  <section id="detail" aria-label="Run detail" tabindex="-1" hidden></section>
+  <section id="empty" hidden></section>
+  <section id="selftest" hidden></section>
+</main>
+<section id="gaps" aria-label="Misses and gaps" hidden></section>
+<footer>
+  <span>numbers trace to files under <span class="mono">labs/officina/builds/</span> + <span class="mono">workshop-memory.jsonl</span> (fixture: <span class="mono">labs/officina/runs.json</span> via <span class="mono">make-runs.py</span>)</span>
+  <span>R scores are simulator scores, never measured on a physical sink (honesty record: os/worlds/officina/PACK.md)</span>
+  <a href="?selftest=1">selftest</a>
+  <a href="/agents/registry.json">agent registry</a>
+  <span id="foot-note"></span>
+</footer>
+</div>
+</div>
+<script>
+"use strict";
+const API = "http://127.0.0.1:18940";
+const qs = new URLSearchParams(location.search);
+const EMPTY = qs.get("empty") === "1";
+const SELFTEST = qs.get("selftest") === "1";
+let DATA = null;
+
+async function backendState() {
+  const el = document.getElementById("backend");
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch(API + "/health", { signal: ctl.signal });
+    clearTimeout(t);
+    if (r.ok) {
+      el.textContent = "backend: live on 127.0.0.1:18940";
+      el.classList.add("live");
+      return true;
+    }
+    throw new Error("HTTP " + r.status);
+  } catch (e) {
+    el.textContent = "backend down: job API on 127.0.0.1:18940 not answering — start metaosd.service; the queue below is recorded runs, nothing live";
+    el.classList.remove("live");
+    return false;
+  }
+}
+
+function copyText(btn, text) {
+  const done = () => { btn.textContent = "copied"; setTimeout(() => (btn.textContent = "copy"), 1200); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallback());
+  } else fallback();
+  function fallback() {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) { /* read-only fallback */ }
+    ta.remove(); done();
+  }
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button.copy");
+  if (b) copyText(b, b.dataset.copy || "");
+});
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+function fmtR(v) { return v == null ? "—" : Number(v).toFixed(4); }
+function fmtDur(v) { return v == null ? "—" : Number(v).toFixed(4) + " s"; }
+
+function filters() {
+  return { status: document.getElementById("f-status").value, agent: document.getElementById("f-agent").value };
+}
+function persistFilters() {
+  const f = filters();
+  const q = new URLSearchParams(location.search);
+  if (f.status) q.set("status", f.status); else q.delete("status");
+  if (f.agent) q.set("agent", f.agent); else q.delete("agent");
+  history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : ""));
+}
+function applyFilters() {
+  const f = filters();
+  persistFilters();
+  const jobs = (DATA ? DATA.jobs : []).filter(
+    (j) => (!f.status || j.status === f.status) && (!f.agent || j.agent === f.agent)
+  );
+  const box = document.getElementById("jobs");
+  box.innerHTML = "";
+  if (!jobs.length) {
+    box.innerHTML = "<p>No jobs match these filters. <button id=\"clear-f\">Clear filters</button></p>";
+    const c = document.getElementById("clear-f");
+    if (c) c.onclick = () => {
+      document.getElementById("f-status").value = "";
+      document.getElementById("f-agent").value = "";
+      applyFilters();
+    };
+    return;
+  }
+  for (const j of jobs) {
+    const b = document.createElement("button");
+    b.className = "job";
+    b.setAttribute("aria-selected", String(qs.get("run") === j.id));
+    b.dataset.run = j.id;
+    b.innerHTML =
+      '<span class="rid">' + esc(j.id) + "</span> " +
+      '<span class="pill' + (j.kind === "brief" ? " brief" : "") + '">' + esc(j.status) + "</span>" +
+      '<div class="meta">agent ' + esc(j.agent) + " · started " + esc(j.started_utc) +
+      "<br>duration " + esc(fmtDur(j.duration_s)) + " · result R=" + esc(fmtR(j.result_r)) + " C/W</div>";
+    b.addEventListener("click", () => openRun(j.id, true));
+    b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openRun(j.id, true); } });
+    box.appendChild(b);
+  }
+}
+
+function variantTable(j) {
+  if (!j.variants) return "<p>Per-round grades were not recorded for this brief-only pack (no brief.json decision log). " +
+    '<span class="src">why: builds/' + esc(j.id) + '-pack.json + workshop-memory.jsonl only</span></p>';
+  let h = '<table aria-label="Variant rounds"><thead><tr><th>round</th><th>rule</th><th class="num">H mm</th>' +
+    '<th class="num">R C/W</th><th class="num">margin vs 2.0</th><th>pass/fail</th><th>held-out</th></tr></thead><tbody>';
+  for (const v of j.variants) {
+    const hmm = v.params_before ? v.params_before.fin_height_mm : (j.params ? j.params.fin_height_mm : null);
+    const r = v.r_th_c_per_w == null ? "—" : fmtR(v.r_th_c_per_w);
+    const m = v.margin_vs_bar == null ? "—" : (v.margin_vs_bar >= 0 ? "+" : "") + Number(v.margin_vs_bar).toFixed(4);
+    const pf = v.pass_bar == null ? '<span class="src">ungraded first guess</span>'
+      : (v.pass_bar ? '<span class="pass">pass</span>' : '<span class="fail">fail</span>');
+    const ho = v.heldout_r == null ? "—"
+      : (fmtR(v.heldout_r) + " " + (v.heldout_pass ? '<span class="pass">pass</span>' : '<span class="fail">miss</span>') +
+        (v.heldout_note ? "<br>" + esc(v.heldout_note) : ""));
+    h += "<tr><td>" + v.round + "</td><td>" + esc(v.rule) + "</td>" +
+      '<td class="num">' + esc(hmm == null ? "—" : hmm) + "</td>" +
+      '<td class="num">' + r + "</td>" + '<td class="num">' + m + "</td><td>" + pf + "</td><td>" + ho + "</td></tr>";
+  }
+  return h + '</tbody></table><span class="src">src: builds/' + esc(j.id) + '/brief.json :: brief.decision_log (grades at design conditions; bar 2.0)</span>';
+}
+
+function artifactList(j) {
+  return "<ul>" + j.artifacts.map((a) =>
+    "<li><span class=\"rid\">" + esc(a.path) + "</span> — " + esc(a.label) +
+    ' <button class="copy" data-copy="' + esc(a.path) + '">copy</button></li>'
+  ).join("") + "</ul>";
+}
+
+function openRun(id, focus) {
+  const j = (DATA ? DATA.jobs : []).find((x) => x.id === id);
+  const d = document.getElementById("detail");
+  if (!j) return;
+  const pf = j.result === "pass" ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
+  const inp = j.inputs;
+  let h = "<h2>RUN DETAIL</h2>" +
+    '<p><span class="rid">' + esc(j.id) + "</span> " +
+    '<button class="copy" data-copy="' + esc(j.id) + '">copy</button> ' + pf +
+    ' <button id="close-d">Close (Esc)</button></p>' +
+    '<dl class="kv">' +
+    "<dt>status</dt><dd>" + esc(j.status) + '<span class="src">src: ' + esc(j.memory_src) + " seq " + esc(j.memory_seq) + "</span></dd>" +
+    '<dt>agent</dt><dd><a href="/agents/registry.json">' + esc(j.agent) + "</a>" +
+    '<span class="src">src: ' + esc(j.agent_src) + "</span></dd>" +
+    "<dt>started</dt><dd>" + esc(j.started_utc) + '<span class="src">src: ' + esc(j.started_src) + "</span></dd>" +
+    "<dt>duration</dt><dd>" + esc(fmtDur(j.duration_s)) + '<span class="src">src: ' + esc(j.duration_src) + "</span></dd>" +
+    "<dt>result R</dt><dd>" + esc(fmtR(j.result_r)) + " C/W" + '<span class="src">src: ' + esc(j.result_src) + "</span></dd>" +
+    "<dt>held-out R</dt><dd>" + esc(fmtR(j.heldout_r)) + " C/W" + '<span class="src">src: ' + esc(j.heldout_src) + "</span></dd>" +
+    "<dt>target / margin</dt><dd>" + esc(j.target_r) + " / " + (j.margin >= 0 ? "+" : "") + esc(Number(j.margin).toFixed(4)) +
+    '<span class="src">src: ' + esc(j.target_src) + "; margin = target − result</span></dd>" +
+    "<dt>rounds</dt><dd>" + esc(j.rounds) + '<span class="src">src: ' + esc(j.rounds_src) + "</span></dd>";
+  if (j.conditions) {
+    h += "<dt>grade conditions</dt><dd>h=" + esc(j.conditions.h_w_m2k) + " W/m²K, base " +
+      esc(j.conditions.t_base_c) + "°C, amb " + esc(j.conditions.t_amb_c) + "°C" +
+      '<span class="src">src: ' + esc(j.conditions_src) + "</span></dd>";
+  }
+  h += "<dt>final params</dt><dd>H=" + esc(j.params.fin_height_mm) + " t=" + esc(j.params.fin_thickness_mm) +
+    " N=" + esc(j.params.fin_count) + " base=" + esc(j.params.base_thickness_mm) + " mm" +
+    '<span class="src">src: ' + esc(j.params_src) + "</span></dd>";
+  if (j.render && j.render.present) {
+    h += "<dt>render</dt><dd>" + esc(j.render.file) + " — " + esc(j.render.label) +
+      " (model " + esc(j.render.model) + ", receipt " + esc((j.render.receipt || "")) + ")" +
+      '<span class="src">src: ' + esc(j.render.src) + "</span></dd>";
+  } else if (j.render) {
+    h += "<dt>render</dt><dd>" + esc(j.render.note) + '<span class="src">src: ' + esc(j.render.src) + "</span></dd>";
+  }
+  h += "</dl><h2>INPUTS</h2>";
+  if (inp.requirements) {
+    h += '<dl class="kv"><dt>rough words</dt><dd>' + esc(inp.rough_words) + "</dd>" +
+      "<dt>requirements</dt><dd>" + esc(JSON.stringify(inp.requirements)) + "</dd>" +
+      "<dt>targets</dt><dd>" + esc(JSON.stringify(inp.targets)) + "</dd>" +
+      "<dt>preferences</dt><dd>" + esc(JSON.stringify(inp.preferences)) + "</dd>" +
+      "<dt>unknowns</dt><dd>" + esc(JSON.stringify(inp.unknowns)) + "</dd></dl>" +
+      '<span class="src">src: ' + esc(j.inputs.src) + "</span>";
+  } else {
+    h += "<p>" + esc(inp.rough_words) + "</p><p>" + esc(inp.why) + "</p>";
+  }
+  h += "<h2>VARIANTS (thermal result · margin · pass/fail)</h2>" + variantTable(j);
+  h += "<h2>ARTIFACTS (paths relative to repo root)</h2>" + artifactList(j);
+  d.innerHTML = h;
+  d.hidden = false;
+  document.getElementById("close-d").addEventListener("click", closeDetail);
+  document.querySelectorAll("#jobs .job").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.run === id)));
+  const q = new URLSearchParams(location.search);
+  q.set("run", id);
+  history.replaceState(null, "", location.pathname + "?" + q);
+  if (focus) d.focus();
+}
+function closeDetail() {
+  const d = document.getElementById("detail");
+  d.hidden = true;
+  const q = new URLSearchParams(location.search);
+  q.delete("run");
+  history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : ""));
+  document.querySelectorAll("#jobs .job").forEach((b) => b.setAttribute("aria-selected", "false"));
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const d = document.getElementById("detail");
+    if (!d.hidden) closeDetail();
+    const s = document.getElementById("submitbox");
+    if (s && !s.hidden) { s.hidden = true; document.getElementById("btn-submit").setAttribute("aria-expanded", "false"); }
+  }
+});
+
+function renderGaps() {
+  const g = document.getElementById("gaps");
+  const misses = DATA.misses.filter((m) => m.gap != null);
+  const structural = DATA.misses.filter((m) => m.gap == null);
+  let h = "<h2>MISSES &amp; GAPS — measured Rs above the 2.0 bar (no recorded job failed overall: " +
+    esc(String(DATA.failed_job_count)) + " failed of " + esc(String(DATA.job_count)) + ")</h2>";
+  h += '<table aria-label="Measured gaps"><thead><tr><th>job</th><th>where</th><th class="num">R C/W</th>' +
+    '<th class="num">bar</th><th class="num">gap</th></tr></thead><tbody>';
+  for (const m of misses) {
+    h += "<tr><td>" + esc(m.job) + "</td><td>" + esc(m.where) +
+      '<br><span class="src">src: ' + esc(m.src) + "</span></td>" +
+      '<td class="num">' + fmtR(m.r_th_c_per_w) + '</td><td class="num">' + esc(m.bar) +
+      '</td><td class="num">+' + esc(Number(m.gap).toFixed(4)) + "</td></tr>";
+  }
+  h += "</tbody></table><ul>";
+  for (const m of structural) {
+    h += "<li>" + esc(m.job) + " — " + esc(m.where) + ": " + esc(m.note || "") +
+      '<span class="src">src: ' + esc(m.src) + "</span></li>";
+  }
+  return g.innerHTML = h + "</ul>", (g.hidden = false);
+}
+
+function renderEmpty() {
+  document.getElementById("queue").style.display = "none";
+  document.getElementById("detail").hidden = true;
+  document.getElementById("gaps").hidden = true;
+  const e = document.getElementById("empty");
+  e.hidden = false;
+  e.innerHTML = "<h2>NO RUNS YET</h2><p>This workshop reads recorded runs. None were found " +
+    "(fixture <span class=\"rid\">labs/officina/runs.json</span> holds zero jobs).</p>" +
+    "<p>To fill it, add a run directory under <span class=\"rid\">labs/officina/builds/</span> " +
+    "with the build-001 file set (pack.json, brief.json, bounds.txt, priorart.md, summary.md, " +
+    "memory.txt, independent-check.txt, faber.md), append its outcome to " +
+    "<span class=\"rid\">labs/officina/workshop-memory.jsonl</span>, then regenerate the fixture:</p>" +
+    "<pre class=\"fill\">python3 labs/officina/make-runs.py   # reads builds/ + workshop-memory.jsonl, writes runs.json</pre>" +
+    "<p>Reference shape: <span class=\"rid\">labs/officina/builds/build-001/</span>. " +
+    "Numbers on this page only ever come from those files — nothing is invented here.</p>";
+  document.getElementById("foot-note").textContent = "empty state (?empty=1)";
+}
+
+async function submitJob(agent, rough) {
+  const msg = document.getElementById("submitmsg");
+  const id = "job-" + Date.now().toString(36);
+  msg.textContent = "posting to " + API + "/jobs …";
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(API + "/jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id, agent: agent, input: { rough_words: rough }, "dry-run": false }),
+      signal: ctl.signal,
+    });
+    clearTimeout(t);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const body = await r.json().catch(() => ({}));
+    const accepted = body.id || body.job_id || body.jobId || id;
+    msg.innerHTML = '<span class="st-pass">accepted id ' + esc(accepted) + "</span> " +
+      '<button class="copy" data-copy="' + esc(accepted) + '">copy</button>';
+  } catch (err) {
+    msg.innerHTML = '<span class="st-fail">backend down: job API on 127.0.0.1:18940 not answering (' +
+      esc(err && err.message ? err.message : err) + "). Nothing was queued — no fake id was made. " +
+      "Start metaosd.service, then retry.</span>";
+  }
+}
+
+function ensureSubmitBox() {
+  if (document.getElementById("submitbox")) return;
+  const q = document.getElementById("queue");
+  const box = document.createElement("div");
+  box.id = "submitbox";
+  box.hidden = true;
+  box.innerHTML = "<h2>SUBMIT JOB (T3 job API — real POST only)</h2>" +
+    '<label>agent <input type="text" id="s-agent" value="officina-faber"></label>' +
+    '<label>rough words <input type="text" id="s-words" value="a heatsink for a hot little board, no fan"></label>' +
+    '<button id="s-go">Submit to 127.0.0.1:18940</button><div id="submitmsg" role="status"></div>' +
+    '<p class="src">contract: T3 daemon on 127.0.0.1:18940, POST /jobs {id, agent, input, dry-run} ' +
+    "(plan/AGENT_R2_T3_AGENT.md section B tasks 25-44). " +
+    "The accepted id is shown only on a real 2xx reply; when the backend is down nothing is queued.</p>";
+  q.insertBefore(box, q.firstChild.nextSibling);
+  document.getElementById("s-go").addEventListener("click", () => {
+    submitJob(document.getElementById("s-agent").value.trim(), document.getElementById("s-words").value.trim());
+  });
+}
+
+function runSelftest() {
+  document.getElementById("queue").style.display = "none";
+  document.getElementById("detail").hidden = true;
+  document.getElementById("gaps").hidden = true;
+  const el = document.getElementById("selftest");
+  el.hidden = false;
+  const out = [];
+  const ok = (name, cond, extra) => out.push({ name: name, pass: !!cond, extra: extra || "" });
+  ok("fixture loads with 5 jobs", DATA && DATA.job_count === 5, "job_count=" + (DATA && DATA.job_count));
+  ok("zero failed jobs recorded", DATA && DATA.failed_job_count === 0 && DATA.failed_jobs.length === 0, "");
+  ok("every job has status/agent/started/duration/result", DATA && DATA.jobs.every(
+    (j) => j.status && j.agent && j.started_utc && j.duration_s != null && j.result_r != null), "");
+  ok("every job has ≥1 artifact path", DATA && DATA.jobs.every((j) => j.artifacts && j.artifacts.length > 0), "");
+  ok("margins equal target − result", DATA && DATA.jobs.every(
+    (j) => Math.abs(j.margin - (j.target_r - j.result_r)) < 1e-9), "");
+  ok("build variants carry pass/fail + margin", DATA && DATA.jobs.filter((j) => j.kind === "build").every(
+    (j) => j.variants && j.variants.some((v) => v.pass_bar === true) &&
+      (j.variants.some((v) => v.pass_bar === false) || j.variants.some((v) => v.heldout_pass === false))), "");
+  ok("misses list non-empty, all gaps positive", DATA && DATA.misses.filter((m) => m.gap != null).length > 0 &&
+    DATA.misses.filter((m) => m.gap != null).every((m) => m.gap > 0), "gaps=" + DATA.misses.length);
+  const remoteSrc = Array.from(document.querySelectorAll("script[src],link[href],img[src]"))
+    .map((n) => n.src || n.href).filter((u) => /^https?:\/\//.test(u) && !/^http:\/\/(127\.0\.0\.1|localhost)/.test(u));
+  ok("all script URLs local (no remote fetch)", remoteSrc.length === 0, remoteSrc.slice(0, 2).join(", "));
+  const htmlElse = (() => {
+    const clone = document.documentElement.cloneNode(true);
+    clone.querySelectorAll("script, style").forEach((n) => n.remove());
+    return clone.outerHTML;
+  })();
+  ok("no https:// references in page markup", !/https:\/\//.test(htmlElse), "");
+  ok("page fonts are system stacks only", !/fonts\.css|@font-face|fonts\.googleapis/.test(htmlElse), "");
+  const passed = out.filter((o) => o.pass).length;
+  el.innerHTML = "<h2>SELFTEST " + (passed === out.length ? "PASS" : "FAIL") + " (" + passed + "/" + out.length + ")</h2><ul>" +
+    out.map((o) => '<li class="' + (o.pass ? "st-pass" : "st-fail") + '">' + (o.pass ? "PASS" : "FAIL") +
+      " — " + esc(o.name) + (o.extra ? " (" + esc(o.extra) + ")" : "") + "</li>").join("") + "</ul>" +
+    '<p class="src">fixtures: labs/officina/runs.json (from builds/ + workshop-memory.jsonl via make-runs.py)</p>';
+  return passed === out.length;
+}
+
+async function main() {
+  ensureSubmitBox();
+  document.getElementById("btn-submit").addEventListener("click", () => {
+    const box = document.getElementById("submitbox");
+    box.hidden = !box.hidden;
+    document.getElementById("btn-submit").setAttribute("aria-expanded", String(!box.hidden));
+    if (!box.hidden) document.getElementById("s-words").focus();
+  });
+  document.getElementById("f-status").value = qs.get("status") || "";
+  document.getElementById("f-agent").value = qs.get("agent") || "";
+  document.getElementById("f-status").addEventListener("change", () => { applyFilters(); });
+  document.getElementById("f-agent").addEventListener("change", () => { applyFilters(); });
+  backendState();
+  if (EMPTY) { renderEmpty(); return; }
+  try {
+    const r = await fetch("runs.json", { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    DATA = await r.json();
+  } catch (e) {
+    renderEmpty();
+    document.getElementById("empty").innerHTML += '<p class="st-fail">runs.json could not be loaded (' +
+      esc(e.message) + ").</p>";
+    return;
+  }
+  if (SELFTEST) { const pass = runSelftest(); document.title = pass ? "SELFTEST PASS" : "SELFTEST FAIL"; return; }
+  applyFilters();
+  renderGaps();
+  const run = qs.get("run");
+  if (run) openRun(run, false);
+  else {
+    const first = document.querySelector("#jobs .job");
+    if (first) openRun(first.dataset.run, false);
+  }
+}
+main();
+</script>
+</body>
+</html>

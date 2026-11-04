@@ -1,0 +1,646 @@
+{
+ "generated_by": "labs/officina/make-runs.py (no network, no simulation)",
+ "bar_r": 2.0,
+ "bar_src": "builds/build-*/brief.json :: brief.targets + verification.accept_r_c_per_w",
+ "job_count": 5,
+ "failed_job_count": 0,
+ "failed_jobs": [],
+ "misses": [
+  {
+   "job": "build-001",
+   "where": "round 1 design (improve)",
+   "r_th_c_per_w": 3.213624062116546,
+   "bar": 2.0,
+   "gap": 1.213624062116546,
+   "src": "builds/<id>/brief.json :: brief.decision_log"
+  },
+  {
+   "job": "build-001",
+   "where": "round 2 design (improve)",
+   "r_th_c_per_w": 2.605863297150273,
+   "bar": 2.0,
+   "gap": 0.6058632971502731,
+   "src": "builds/<id>/brief.json :: brief.decision_log"
+  },
+  {
+   "job": "build-001",
+   "where": "round 3 design (improve)",
+   "r_th_c_per_w": 2.114963451847143,
+   "bar": 2.0,
+   "gap": 0.11496345184714318,
+   "src": "builds/<id>/brief.json :: brief.decision_log"
+  },
+  {
+   "job": "build-002",
+   "where": "round 1 held-out gate (repaired same round)",
+   "r_th_c_per_w": 2.1949,
+   "bar": 2.0,
+   "gap": 0.19490000000000007,
+   "src": "builds/build-002/brief.json :: brief.decision_log[1] (held-out R 2.1949 misses bar 2.0000)"
+  },
+  {
+   "job": "build-001",
+   "where": "faber loop (structural gap, as recorded 2026-11-02)",
+   "r_th_c_per_w": null,
+   "bar": null,
+   "gap": null,
+   "note": "no faber loop existed in the tree at build time, so the pack stands on the 2a held-out gate + 2c bounds check instead",
+   "src": "builds/build-001/faber.md (+ build-002/faber.md, same note)"
+  }
+ ],
+ "jobs": [
+  {
+   "id": "build-001",
+   "kind": "build",
+   "status": "proven",
+   "result": "pass",
+   "agent": "officina-faber",
+   "agent_src": "agents/registry.json :: officina-faber (command runs design_loop.py, the recorded runs' program)",
+   "started_utc": "2026-11-02T16:11:23.686327+00:00",
+   "started_src": "builds/build-001/pack.json :: generated_utc (pack emit; queue timestamps predate the job board)",
+   "duration_s": 0.0062,
+   "duration_src": "builds/build-timings.json :: 2a_s+2b_s+2c_s (offline code only, no image time)",
+   "result_r": 1.7210411106861345,
+   "result_src": "builds/build-001/brief.json :: verification.fresh_r_th_c_per_w",
+   "heldout_r": 1.1847867647554302,
+   "heldout_src": "builds/build-001/brief.json :: verification.heldout_r_th_c_per_w",
+   "target_r": 2.0,
+   "target_src": "builds/build-001/brief.json :: brief.targets[0] + verification.accept_r_c_per_w",
+   "margin": 0.2789588893138655,
+   "rounds": 4,
+   "rounds_src": "builds/build-001/brief.json :: rounds_used",
+   "conditions": {
+    "h_w_m2k": 10.0,
+    "t_base_c": 80.0,
+    "t_amb_c": 25.0
+   },
+   "conditions_src": "builds/build-001/brief.json :: final_grade.conditions",
+   "inputs": {
+    "rough_words": "a chunky little heatsink for a toasty router board, keep it small, no fan",
+    "requirements": [
+     {
+      "kind": "passive_cooling",
+      "value": true,
+      "source": "stated"
+     }
+    ],
+    "targets": [
+     {
+      "kind": "target_r_c_per_w",
+      "value": 2.0,
+      "source": "workshop-default"
+     }
+    ],
+    "preferences": [
+     {
+      "kind": "compact",
+      "value": true,
+      "source": "stated",
+      "note": "not graded: the thermal simulator has no size score beyond the volume rule"
+     }
+    ],
+    "unknowns": [
+     {
+      "slot": "power_w",
+      "note": "not stated in the rough words"
+     },
+     {
+      "slot": "footprint_mm",
+      "note": "not stated in the rough words"
+     },
+     {
+      "slot": "target_r",
+      "note": "no target stated; workshop default applied, see targets"
+     }
+    ],
+    "src": "builds/build-001/brief.json :: brief"
+   },
+   "params": {
+    "fin_height_mm": 39.0625,
+    "fin_thickness_mm": 1.5,
+    "fin_count": 15,
+    "base_thickness_mm": 4.0
+   },
+   "params_src": "builds/build-001/brief.json :: final_params",
+   "variants": [
+    {
+     "round": 0,
+     "rule": "intake",
+     "decision": "workshop first guess {'fin_height_mm': 20.0, 'fin_thickness_mm': 1.5, 'fin_count': 15, 'base_thickness_mm': 4.0}",
+     "params_before": null,
+     "r_th_c_per_w": null,
+     "margin_vs_bar": null,
+     "pass_bar": null,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "round": 1,
+     "rule": "improve",
+     "decision": "fin_height_mm 20.0 -> 25.0",
+     "params_before": {
+      "fin_height_mm": 20.0,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 3.213624062116546,
+     "margin_vs_bar": -1.213624062116546,
+     "pass_bar": false,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "round": 2,
+     "rule": "improve",
+     "decision": "fin_height_mm 25.0 -> 31.25",
+     "params_before": {
+      "fin_height_mm": 25.0,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 2.605863297150273,
+     "margin_vs_bar": -0.6058632971502731,
+     "pass_bar": false,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "round": 3,
+     "rule": "improve",
+     "decision": "fin_height_mm 31.25 -> 39.0625",
+     "params_before": {
+      "fin_height_mm": 31.25,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 2.114963451847143,
+     "margin_vs_bar": -0.11496345184714318,
+     "pass_bar": false,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "round": 4,
+     "rule": "accept",
+     "decision": "freeze brief; design accepted",
+     "params_before": {
+      "fin_height_mm": 39.0625,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 1.7210411106861345,
+     "margin_vs_bar": 0.2789588893138655,
+     "pass_bar": true,
+     "src": "builds/<id>/brief.json :: brief.decision_log",
+     "heldout_r": 1.1847867647554302,
+     "heldout_pass": true,
+     "heldout_src": "builds/<id>/brief.json :: verification.heldout_r_th_c_per_w"
+    }
+   ],
+   "misses": [
+    {
+     "job": "build-001",
+     "where": "round 1 design (improve)",
+     "r_th_c_per_w": 3.213624062116546,
+     "bar": 2.0,
+     "gap": 1.213624062116546,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "job": "build-001",
+     "where": "round 2 design (improve)",
+     "r_th_c_per_w": 2.605863297150273,
+     "bar": 2.0,
+     "gap": 0.6058632971502731,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "job": "build-001",
+     "where": "round 3 design (improve)",
+     "r_th_c_per_w": 2.114963451847143,
+     "bar": 2.0,
+     "gap": 0.11496345184714318,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    }
+   ],
+   "artifacts": [
+    {
+     "label": "blueprint pack",
+     "path": "builds/build-001/pack.json"
+    },
+    {
+     "label": "structured brief + decision log",
+     "path": "builds/build-001/brief.json"
+    },
+    {
+     "label": "rough words",
+     "path": "builds/build-001/brief.txt"
+    },
+    {
+     "label": "bounds check",
+     "path": "builds/build-001/bounds.txt"
+    },
+    {
+     "label": "prior-art note",
+     "path": "builds/build-001/priorart.md"
+    },
+    {
+     "label": "run summary",
+     "path": "builds/build-001/summary.md"
+    },
+    {
+     "label": "memory pointer",
+     "path": "builds/build-001/memory.txt"
+    },
+    {
+     "label": "independent re-read check",
+     "path": "builds/build-001/independent-check.txt"
+    },
+    {
+     "label": "faber gap note",
+     "path": "builds/build-001/faber.md"
+    },
+    {
+     "label": "concept render (GENERATED, not a photo)",
+     "path": "builds/build-001/render-GENERATED.webp"
+    },
+    {
+     "label": "render receipt",
+     "path": "builds/build-001/render-receipt.jsonl"
+    }
+   ],
+   "render": {
+    "present": true,
+    "file": "builds/build-001/render-GENERATED.webp",
+    "receipt": "builds/build-001/render-receipt.jsonl",
+    "model": "muse-image-1.0",
+    "label": "GENERATED concept render - a concept, never a measurement or photo",
+    "src": "builds/build-001/pack.json :: concept_render"
+   },
+   "memory_seq": 4,
+   "memory_src": "labs/officina/workshop-memory.jsonl",
+   "bounds_ok": true,
+   "bounds_src": "builds/build-001/bounds.txt + independent-check.txt"
+  },
+  {
+   "id": "build-002",
+   "kind": "build",
+   "status": "proven",
+   "result": "pass",
+   "agent": "officina-faber",
+   "agent_src": "agents/registry.json :: officina-faber (command runs design_loop.py, the recorded runs' program)",
+   "started_utc": "2026-11-02T16:11:23.691341+00:00",
+   "started_src": "builds/build-002/pack.json :: generated_utc (pack emit; queue timestamps predate the job board)",
+   "duration_s": 0.0034999999999999996,
+   "duration_src": "builds/build-timings.json :: 2a_s+2b_s+2c_s (offline code only, no image time)",
+   "result_r": 1.0622964103232113,
+   "result_src": "builds/build-002/brief.json :: verification.fresh_r_th_c_per_w",
+   "heldout_r": 1.7825100390741493,
+   "heldout_src": "builds/build-002/brief.json :: verification.heldout_r_th_c_per_w",
+   "target_r": 2.0,
+   "target_src": "builds/build-002/brief.json :: brief.targets[0] + verification.accept_r_c_per_w",
+   "margin": 0.9377035896767887,
+   "rounds": 2,
+   "rounds_src": "builds/build-002/brief.json :: rounds_used",
+   "conditions": {
+    "h_w_m2k": 25.0,
+    "t_base_c": 80.0,
+    "t_amb_c": 25.0
+   },
+   "conditions_src": "builds/build-002/brief.json :: final_grade.conditions",
+   "inputs": {
+    "rough_words": "a heatsink for a hot garage power supply, fan is fine, cheap",
+    "requirements": [
+     {
+      "kind": "forced_airflow",
+      "value": true,
+      "source": "stated"
+     }
+    ],
+    "targets": [
+     {
+      "kind": "target_r_c_per_w",
+      "value": 2.0,
+      "source": "workshop-default"
+     }
+    ],
+    "preferences": [
+     {
+      "kind": "low_cost",
+      "value": true,
+      "source": "stated",
+      "note": "not graded: the thermal simulator has no cost model"
+     }
+    ],
+    "unknowns": [
+     {
+      "slot": "power_w",
+      "note": "not stated in the rough words"
+     },
+     {
+      "slot": "footprint_mm",
+      "note": "not stated in the rough words"
+     },
+     {
+      "slot": "target_r",
+      "note": "no target stated; workshop default applied, see targets"
+     }
+    ],
+    "src": "builds/build-002/brief.json :: brief"
+   },
+   "params": {
+    "fin_height_mm": 25.0,
+    "fin_thickness_mm": 1.5,
+    "fin_count": 15,
+    "base_thickness_mm": 4.0
+   },
+   "params_src": "builds/build-002/brief.json :: final_params",
+   "variants": [
+    {
+     "round": 0,
+     "rule": "intake",
+     "decision": "workshop first guess {'fin_height_mm': 20.0, 'fin_thickness_mm': 1.5, 'fin_count': 15, 'base_thickness_mm': 4.0}",
+     "params_before": null,
+     "r_th_c_per_w": null,
+     "margin_vs_bar": null,
+     "pass_bar": null,
+     "src": "builds/<id>/brief.json :: brief.decision_log"
+    },
+    {
+     "round": 1,
+     "rule": "held-out bar repair",
+     "decision": "fin_height_mm 20.0 -> 25.0",
+     "params_before": {
+      "fin_height_mm": 20.0,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 1.3011904331456228,
+     "margin_vs_bar": 0.6988095668543772,
+     "pass_bar": true,
+     "src": "builds/<id>/brief.json :: brief.decision_log",
+     "heldout_r": 2.1949,
+     "heldout_pass": false,
+     "heldout_note": "held-out gate missed bar; repaired same round",
+     "heldout_src": "builds/build-002/brief.json :: brief.decision_log[1]"
+    },
+    {
+     "round": 2,
+     "rule": "accept",
+     "decision": "freeze brief; design accepted",
+     "params_before": {
+      "fin_height_mm": 25.0,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+     },
+     "r_th_c_per_w": 1.0622964103232113,
+     "margin_vs_bar": 0.9377035896767887,
+     "pass_bar": true,
+     "src": "builds/<id>/brief.json :: brief.decision_log",
+     "heldout_r": 1.7825100390741493,
+     "heldout_pass": true,
+     "heldout_src": "builds/<id>/brief.json :: verification.heldout_r_th_c_per_w"
+    }
+   ],
+   "misses": [
+    {
+     "job": "build-002",
+     "where": "round 1 held-out gate (repaired same round)",
+     "r_th_c_per_w": 2.1949,
+     "bar": 2.0,
+     "gap": 0.19490000000000007,
+     "src": "builds/build-002/brief.json :: brief.decision_log[1] (held-out R 2.1949 misses bar 2.0000)"
+    }
+   ],
+   "artifacts": [
+    {
+     "label": "blueprint pack",
+     "path": "builds/build-002/pack.json"
+    },
+    {
+     "label": "structured brief + decision log",
+     "path": "builds/build-002/brief.json"
+    },
+    {
+     "label": "rough words",
+     "path": "builds/build-002/brief.txt"
+    },
+    {
+     "label": "bounds check",
+     "path": "builds/build-002/bounds.txt"
+    },
+    {
+     "label": "prior-art note",
+     "path": "builds/build-002/priorart.md"
+    },
+    {
+     "label": "run summary",
+     "path": "builds/build-002/summary.md"
+    },
+    {
+     "label": "memory pointer",
+     "path": "builds/build-002/memory.txt"
+    },
+    {
+     "label": "independent re-read check",
+     "path": "builds/build-002/independent-check.txt"
+    },
+    {
+     "label": "faber gap note",
+     "path": "builds/build-002/faber.md"
+    }
+   ],
+   "render": {
+    "present": false,
+    "note": "no concept render generated for this pack",
+    "src": "builds/build-002/pack.json :: concept_render"
+   },
+   "memory_seq": 5,
+   "memory_src": "labs/officina/workshop-memory.jsonl",
+   "bounds_ok": true,
+   "bounds_src": "builds/build-002/bounds.txt + independent-check.txt"
+  },
+  {
+   "id": "brief-a",
+   "kind": "brief",
+   "status": "proven",
+   "result": "pass",
+   "agent": "officina-faber",
+   "agent_src": "agents/registry.json :: officina-faber (command runs design_loop.py, the recorded runs' program)",
+   "started_utc": "2026-11-02T16:10:09.583948+00:00",
+   "started_src": "builds/brief-a-pack.json :: generated_utc (pack emit; queue timestamps predate the job board)",
+   "duration_s": 0.0069,
+   "duration_src": "builds/gen-timings.json :: note_s+pack_s (offline code only)",
+   "result_r": 1.7210411106861345,
+   "result_src": "builds/brief-a-pack.json :: provenance.final_r_th_c_per_w",
+   "heldout_r": 1.1847867647554302,
+   "heldout_src": "workshop-memory.jsonl :: heldout_r_th_c_per_w",
+   "target_r": 2.0,
+   "target_src": "builds/brief-a-pack.json :: provenance + targets (workshop bar 2.0)",
+   "margin": 0.2789588893138655,
+   "rounds": 4,
+   "rounds_src": "builds/brief-a-pack.json :: provenance.rounds_used",
+   "conditions": null,
+   "conditions_src": "not recorded for brief-only packs (no brief.json grade conditions)",
+   "inputs": {
+    "rough_words": "a heatsink for a toasty little board, about 50mm square, no fan, keep it compact, under 2 degrees per watt",
+    "requirements": null,
+    "targets": null,
+    "preferences": null,
+    "unknowns": null,
+    "why": "brief-only pack: no brief.json was kept, only pack.json + memory entry"
+   },
+   "params": {
+    "base_thickness_mm": 4.0,
+    "fin_count": 15,
+    "fin_height_mm": 39.0625,
+    "fin_thickness_mm": 1.5
+   },
+   "params_src": "workshop-memory.jsonl :: final_params",
+   "variants": null,
+   "variants_why": "no per-round grades recorded for brief-only packs (no brief.json decision_log)",
+   "misses": [],
+   "artifacts": [
+    {
+     "label": "blueprint pack",
+     "path": "builds/brief-a-pack.json"
+    },
+    {
+     "label": "prior-art note",
+     "path": "builds/brief-a-priorart.md"
+    }
+   ],
+   "render": {
+    "present": false,
+    "note": "no concept render generated for this pack",
+    "src": "builds/brief-a-pack.json :: concept_render"
+   },
+   "memory_seq": 1,
+   "memory_src": "labs/officina/workshop-memory.jsonl",
+   "bounds_ok": true,
+   "bounds_src": "workshop-memory.jsonl :: pack_check_ok"
+  },
+  {
+   "id": "brief-b",
+   "kind": "brief",
+   "status": "proven",
+   "result": "pass",
+   "agent": "officina-faber",
+   "agent_src": "agents/registry.json :: officina-faber (command runs design_loop.py, the recorded runs' program)",
+   "started_utc": "2026-11-02T16:10:09.591312+00:00",
+   "started_src": "builds/brief-b-pack.json :: generated_utc (pack emit; queue timestamps predate the job board)",
+   "duration_s": 0.0055,
+   "duration_src": "builds/gen-timings.json :: note_s+pack_s (offline code only)",
+   "result_r": 1.7210411106861345,
+   "result_src": "builds/brief-b-pack.json :: provenance.final_r_th_c_per_w",
+   "heldout_r": 1.1847867647554302,
+   "heldout_src": "workshop-memory.jsonl :: heldout_r_th_c_per_w",
+   "target_r": 2.0,
+   "target_src": "builds/brief-b-pack.json :: provenance + targets (workshop bar 2.0)",
+   "margin": 0.2789588893138655,
+   "rounds": 4,
+   "rounds_src": "builds/brief-b-pack.json :: provenance.rounds_used",
+   "conditions": null,
+   "conditions_src": "not recorded for brief-only packs (no brief.json grade conditions)",
+   "inputs": {
+    "rough_words": "a mounting bracket to hold a 50mm square heatsink for a hot little board, no fan, needs to stay cool under 2 degrees per watt",
+    "requirements": null,
+    "targets": null,
+    "preferences": null,
+    "unknowns": null,
+    "why": "brief-only pack: no brief.json was kept, only pack.json + memory entry"
+   },
+   "params": {
+    "base_thickness_mm": 4.0,
+    "fin_count": 15,
+    "fin_height_mm": 39.0625,
+    "fin_thickness_mm": 1.5
+   },
+   "params_src": "workshop-memory.jsonl :: final_params",
+   "variants": null,
+   "variants_why": "no per-round grades recorded for brief-only packs (no brief.json decision_log)",
+   "misses": [],
+   "artifacts": [
+    {
+     "label": "blueprint pack",
+     "path": "builds/brief-b-pack.json"
+    },
+    {
+     "label": "prior-art note",
+     "path": "builds/brief-b-priorart.md"
+    }
+   ],
+   "render": {
+    "present": false,
+    "note": "no concept render generated for this pack",
+    "src": "builds/brief-b-pack.json :: concept_render"
+   },
+   "memory_seq": 2,
+   "memory_src": "labs/officina/workshop-memory.jsonl",
+   "bounds_ok": true,
+   "bounds_src": "workshop-memory.jsonl :: pack_check_ok"
+  },
+  {
+   "id": "brief-c",
+   "kind": "brief",
+   "status": "proven",
+   "result": "pass",
+   "agent": "officina-faber",
+   "agent_src": "agents/registry.json :: officina-faber (command runs design_loop.py, the recorded runs' program)",
+   "started_utc": "2026-11-02T16:10:09.594921+00:00",
+   "started_src": "builds/brief-c-pack.json :: generated_utc (pack emit; queue timestamps predate the job board)",
+   "duration_s": 0.003,
+   "duration_src": "builds/gen-timings.json :: note_s+pack_s (offline code only)",
+   "result_r": 1.891486126958238,
+   "result_src": "builds/brief-c-pack.json :: provenance.final_r_th_c_per_w",
+   "heldout_r": 1.2954087807870003,
+   "heldout_src": "workshop-memory.jsonl :: heldout_r_th_c_per_w",
+   "target_r": 2.0,
+   "target_src": "builds/brief-c-pack.json :: provenance + targets (workshop bar 2.0)",
+   "margin": 0.10851387304176208,
+   "rounds": 6,
+   "rounds_src": "builds/brief-c-pack.json :: provenance.rounds_used",
+   "conditions": null,
+   "conditions_src": "not recorded for brief-only packs (no brief.json grade conditions)",
+   "inputs": {
+    "rough_words": "a heatsink for a cramped enclosure, no taller than 25mm, about 50mm square, no fan, under 2 degrees per watt",
+    "requirements": null,
+    "targets": null,
+    "preferences": null,
+    "unknowns": null,
+    "why": "brief-only pack: no brief.json was kept, only pack.json + memory entry"
+   },
+   "params": {
+    "base_thickness_mm": 4.0,
+    "fin_count": 21,
+    "fin_height_mm": 25.0,
+    "fin_thickness_mm": 1.2000000000000002
+   },
+   "params_src": "workshop-memory.jsonl :: final_params",
+   "variants": null,
+   "variants_why": "no per-round grades recorded for brief-only packs (no brief.json decision_log)",
+   "misses": [],
+   "artifacts": [
+    {
+     "label": "blueprint pack",
+     "path": "builds/brief-c-pack.json"
+    },
+    {
+     "label": "prior-art note",
+     "path": "builds/brief-c-priorart.md"
+    }
+   ],
+   "render": {
+    "present": false,
+    "note": "no concept render generated for this pack",
+    "src": "builds/brief-c-pack.json :: concept_render"
+   },
+   "memory_seq": 3,
+   "memory_src": "labs/officina/workshop-memory.jsonl",
+   "bounds_ok": true,
+   "bounds_src": "workshop-memory.jsonl :: pack_check_ok"
+  }
+ ]
+}

@@ -32,6 +32,9 @@ th{color:#999;font-weight:600}
 .row .meta{color:#888;font-size:12px}
 details{font-size:12px;color:#bbb}summary{cursor:pointer;color:#7cc4ff}
 input.filter{width:100%;padding:6px;background:#222;color:#eee;border:1px solid #444;margin:6px 0;box-sizing:border-box}
+select.filter{width:100%;padding:6px;background:#222;color:#eee;border:1px solid #444;margin:6px 0;box-sizing:border-box}
+#reload{padding:6px 12px;background:#222;color:#eee;border:1px solid #444;margin:6px 0;cursor:pointer}
+#freshness{font-size:13px;margin:8px 0;padding:8px 10px;border:1px solid #333;background:#000}
 .note{font-size:12px;color:#888}
 footer{margin-top:16px;font-size:12px;color:#888;border-top:1px solid #333;padding-top:8px}
 h1,h2,h3{font-weight:600}
@@ -42,12 +45,24 @@ h1,h2,h3{font-weight:600}
 <h1>Aegis — security findings on record</h1>
 <p class="sub">A read-only dashboard over the Aegis engine's recorded findings. It does not scan, probe, or fix anything; it only shows what the engine already wrote to disk.</p>
 <div id="sources" aria-live="polite">Loading data sources…</div>
+<div id="freshness" aria-live="polite">Freshness: checking…</div>
+<button id="reload" type="button">Reload data from disk (re-reads the four data files, no rebuild)</button>
 <div id="failures" role="alert"></div>
 
 <div class="panels">
 <section class="panel" aria-labelledby="h-find"><h2 id="h-find">Findings (newest first)</h2>
 <div class="counts" id="find-counts">Loading…</div>
 <input class="filter" id="find-filter" type="search" placeholder="Filter findings by text…" aria-label="Filter findings by text">
+<select class="filter" id="find-sev" aria-label="Filter findings by severity">
+<option value="">All severities</option>
+<option value="critical">critical</option>
+<option value="high">high</option>
+<option value="medium">medium</option>
+<option value="low">low</option>
+<option value="info">info</option>
+<option value="unknown">unknown (unrecognised value on record)</option>
+</select>
+<p class="note" id="find-shown"></p>
 <div class="fail" id="find-fail"></div>
 <div class="scrollbox" id="find-list" aria-live="polite"></div>
 <p class="note" id="find-foot"></p>
@@ -57,7 +72,7 @@ h1,h2,h3{font-weight:600}
 <div class="counts" id="kev-counts">Loading…</div>
 <div class="fail" id="kev-fail"></div>
 <div class="scrollbox" id="kev-list" aria-live="polite"></div>
-<p class="note">KEV means: the US catalog of vulnerabilities that are <em>known</em> to be exploited in the wild right now. A match here would mean one of our findings names a vulnerability attackers are already using. Sorted: matches first, then the catalog snapshot facts.</p>
+<p class="note">KEV means: the US catalog of vulnerabilities that are <em>known</em> to be exploited in the wild right now. A match here would mean one of our findings names a vulnerability attackers are already using. Sorted: matches first, then the catalog snapshot facts. Every row links to data/KEV.json, the file behind this panel.</p>
 </section>
 
 <section class="panel" aria-labelledby="h-live"><h2 id="h-live">Liveness probes</h2>
@@ -98,28 +113,49 @@ function parseJsonl(text){var recs=[],bad=0,lines=text.split("\n");
   for(var i=0;i<lines.length;i++){var ln=lines[i];if(!ln.trim())continue;
     try{recs.push(JSON.parse(ln));}catch(e){bad++;}}
   return {recs:recs,malformed:bad};}
-function get(url){return fetch(url).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});}
+function get(url){return fetch(url,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});}
+/* File mtimes for the last-updated line: HEAD is a read, same as GET, and
+   python http.server answers Last-Modified. Null when the server stays silent. */
+function headMtime(url){return fetch(url,{method:"HEAD",cache:"no-store"}).then(function(r){
+  var lm=r.headers.get("Last-Modified");if(!lm)return null;
+  var ms=Date.parse(lm);return isNaN(ms)?null:ms;}).catch(function(){return null;});}
+/* Stale rule (task 76): data older than ten minutes is stale. Pure so the
+   proof harness can call it: window.__aegisStale(newestMs, nowMs). */
+var STALE_MS=10*60*1000;
+function isStale(newestMs,nowMs){return !(newestMs>0)||(nowMs-newestMs)>STALE_MS;}
+window.__aegisStale=isStale;
+function srcLink(href,text){var a=document.createElement("a");a.href=href;a.textContent=text;
+  a.style.color="#7cc4ff";return a;}
 
 /* ---- shared source line ---- */
 var srcEl=document.getElementById("sources");
+document.getElementById("reload").addEventListener("click",function(){window.location.reload();});
 
 /* ---- findings ---- */
 var allFindings=[],findingsPresent=false;
-function renderFindings(filter){
+function renderFindings(filter,sev){
   var box=document.getElementById("find-list");box.textContent="";
   var q=(filter||"").toLowerCase();
+  var sv=sev||"";
   var shown=allFindings.filter(function(f){
+    if(sv){var s=f.severity||"unknown";var known=["info","low","medium","high","critical"];
+      var v=(known.indexOf(s)>=0)?s:"unknown";if(v!==sv)return false;}
     if(!q)return true;
     return ((f.title||"")+" "+(f.evidence||"")+" "+(f.target||"")+" "+(f.source||"")).toLowerCase().indexOf(q)>=0;});
+  var shownEl=document.getElementById("find-shown");
+  shownEl.textContent="Showing "+shown.length+" of "+allFindings.length+" findings"+
+    (sv?" with severity "+sv:"")+(q?" matching filter":"")+".";
   var CAP=500, capped=shown.length>CAP;
   shown.slice(0,CAP).forEach(function(f){
     var d=document.createElement("div");d.className="row";
     d.appendChild(sevBadge(f.severity));
     var t=document.createElement("div");t.textContent=f.title||"(no title recorded)";d.appendChild(t);
     var m=document.createElement("div");m.className="meta";
-    m.textContent=fmt(f.ts)+" | target: "+(f.target||"—")+" | run: "+(f.run||"—");d.appendChild(m);
+    m.textContent=fmt(f.ts)+" | target: "+(f.target||"—")+" | run: ";d.appendChild(m);
+    var rl=document.createElement("a");rl.href="data/runs.jsonl";rl.textContent=(f.run||"—");rl.style.color="#7cc4ff";
+    rl.title="Source record: the run line in data/runs.jsonl";m.appendChild(rl);
     var s=document.createElement("div");s.className="meta";
-    s.textContent="produced by: "+(f.source||"—");d.appendChild(s);
+    s.textContent="produced by: "+(f.source||"—")+" | record: ";s.appendChild(srcLink("data/findings.jsonl","data/findings.jsonl"));d.appendChild(s);
     var ev=String(f.evidence||"");
     if(ev.length>220){var det=document.createElement("details");var sum=document.createElement("summary");
       sum.textContent="Evidence ("+ev.length+" chars) — show all";
@@ -134,7 +170,8 @@ function renderFindings(filter){
   if(capped){var n=document.createElement("p");n.className="note";
     n.textContent="Showing first 500 of "+shown.length+" matching rows. Narrow the filter to see the rest.";box.appendChild(n);}
 }
-document.getElementById("find-filter").addEventListener("input",function(e){try{renderFindings(e.target.value);}catch(err){}});
+document.getElementById("find-filter").addEventListener("input",function(e){try{renderFindings(e.target.value,document.getElementById("find-sev").value);}catch(err){}});
+document.getElementById("find-sev").addEventListener("change",function(e){try{renderFindings(document.getElementById("find-filter").value,e.target.value);}catch(err){}});
 
 /* ---- load ---- */
 var counts={};
@@ -184,7 +221,8 @@ Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {
         var c=document.createElement("div");c.textContent=String((r.cves||[]).join(", ")||r.cve||"(no CVE)");
         d.appendChild(c);var m=document.createElement("div");m.className="meta";
         m.textContent="KEV: "+(r.kev===true?"YES — exploited in the wild":r.kev===false?"no":"unchecked")+" | finding: "+(r.title||r.finding||"—");
-        d.appendChild(m);kb.appendChild(d);});
+        d.appendChild(m);var ks=document.createElement("div");ks.className="meta";
+        ks.textContent="record: ";ks.appendChild(srcLink("data/KEV.json","data/KEV.json"));d.appendChild(ks);kb.appendChild(d);});
     }}catch(e){fail("kev-fail","KEV panel error on "+PORT+": "+e.message);}
 
   /* liveness */
@@ -207,7 +245,8 @@ Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {
         var b=document.createElement("div");b.textContent=(r.id||r.ref||"(no target)")+" ["+(r.type||"?")+"]";d.appendChild(b);
         var m=document.createElement("div");m.className="meta";
         m.textContent=(r.detail||"no detail")+" | "+(r.method||"no method")+" | checked: "+(r.checkedAt?fmt(r.checkedAt):"no timestamp recorded");
-        d.appendChild(m);lb.appendChild(d);});
+        d.appendChild(m);var ls=document.createElement("div");ls.className="meta";
+        ls.textContent="record: ";ls.appendChild(srcLink("data/LIVENESS.json","data/LIVENESS.json"));d.appendChild(ls);lb.appendChild(d);});
     }}catch(e){fail("live-fail","liveness panel error on "+PORT+": "+e.message);}
 
   /* runs */
@@ -232,22 +271,38 @@ Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {
         var b=document.createElement("div");b.textContent=(r.run||"(no run id)")+" — "+(ev||"(no event)");d.appendChild(b);
         var m=document.createElement("div");m.className="meta";
         m.textContent=fmt(r.ts)+" | "+("queries" in r?r.queries+" queries, ":"")+("findings" in r?r.findings+" findings, ":"")+("manifests" in r?r.manifests+" manifests":"")+("command" in r?String(r.command):"");
-        d.appendChild(m);rb.appendChild(d);});
+        d.appendChild(m);var us=document.createElement("div");us.className="meta";
+        us.textContent="record: ";us.appendChild(srcLink("data/runs.jsonl","data/runs.jsonl"));d.appendChild(us);rb.appendChild(d);});
     }}catch(e){fail("run-fail","runs panel error on "+PORT+": "+e.message);}
 
-  /* source line */
-  var newest="unknown";
+  /* source line + last-updated + stale warning (task 76) */
+  var newest="unknown",newestMs=0;
   try{var ts=[];(allFindings||[]).forEach(function(f){if(f.ts)ts.push(f.ts);});
     if(byName["data/KEV.json"]){var k2=JSON.parse(byName["data/KEV.json"]);if(k2.at)ts.push(k2.at);}
     if(byName["data/LIVENESS.json"]){var l2=JSON.parse(byName["data/LIVENESS.json"]);if(l2.at)ts.push(l2.at);}
     if(byName["data/runs.jsonl"]){parseJsonl(byName["data/runs.jsonl"]).recs.forEach(function(r){if(r.ts)ts.push(r.ts);});}
-    ts.sort();if(ts.length)newest=fmt(ts[ts.length-1]);}catch(e){}
-  srcEl.textContent="Data sources (same-origin, port "+PORT+"): "+
-    "data/findings.jsonl ("+(counts.findings!=null?counts.findings+" records":"missing")+"), "+
-    "data/KEV.json ("+(counts.kevRows!=null?counts.kevRows+" matched rows":"missing")+"), "+
-    "data/LIVENESS.json ("+(counts.liveness!=null?counts.liveness+" probes":"missing")+"), "+
-    "data/runs.jsonl ("+(counts.runs!=null?counts.runs+" lines":"missing")+")"+
-    " | newest record: "+newest+".";
+    ts.sort();if(ts.length){newest=fmt(ts[ts.length-1]);newestMs=Date.parse(ts[ts.length-1]);if(isNaN(newestMs))newestMs=0;}}catch(e){}
+  var stale=isStale(newestMs,Date.now());
+  var fr=document.getElementById("freshness");
+  fr.textContent="Last updated (newest record across data files): "+newest+
+    (newestMs?". This data is "+(stale?"STALE — older than ten minutes, re-run the engine; nothing here refreshes itself.":"fresh (under ten minutes old).")
+    :" — no timestamps on record, so freshness is unknown; treat as stale.");
+  fr.style.color=stale?"#ff9a9a":"#7dd87d";
+  /* File mtimes (HEAD Last-Modified): the newest record may be old while a
+     file was just rewritten, so both are shown. Refreshes from disk on every
+     load with cache:no-store — no rebuild needed (task 75). */
+  Promise.allSettled(FILES.map(function(f){return headMtime(f).then(function(m){return {f:f,m:m};});}))
+  .then(function(mrs){
+    var mt={};mrs.forEach(function(r){if(r.status==="fulfilled")mt[r.value.f]=r.value.m;});
+    function withMtime(name,label){var m=mt[name];
+      return name+" ("+label+(m?", file mtime "+fmt(new Date(m).toISOString()):", file mtime unknown")+ ")";}
+    srcEl.textContent="Data sources (same-origin, port "+PORT+", re-read from disk on every load, no rebuild): "+
+      withMtime("data/findings.jsonl",(counts.findings!=null?counts.findings+" records":"missing"))+", "+
+      withMtime("data/KEV.json",(counts.kevRows!=null?counts.kevRows+" matched rows":"missing"))+", "+
+      withMtime("data/LIVENESS.json",(counts.liveness!=null?counts.liveness+" probes":"missing"))+", "+
+      withMtime("data/runs.jsonl",(counts.runs!=null?counts.runs+" lines":"missing"))+
+      " | newest record: "+newest+".";
+  });
 });
 })();
 </script>

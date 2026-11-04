@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/vendor/fonts/fonts.css">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #06090f; color: #d7e5f2; font-family: "Spline Sans", ui-sans-serif, system-ui, sans-serif; }
+  header { padding: 16px; border-bottom: 1px solid #1c2b3d; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.12em; }
+  header p { font-size: 12px; color: #8fa9bd; margin: 6px 0 0; max-width: 44rem; }
+  #modes { display: flex; gap: 8px; padding: 12px 16px 0; }
+  #modes a { text-decoration: none; background: #0f1c2b; color: #d7e5f2; border: 1px solid #2b4258; padding: 6px 14px; font-size: 13px; }
+  #modes a[aria-current="true"] { background: #1d4d33; border-color: #3f9e63; }
+  main { padding: 16px; max-width: 52rem; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 20px; }
+  .card { border: 1px solid #2b4258; background: #0b1420; padding: 12px 14px; }
+  .card h2 { font-size: 14px; margin: 0 0 6px; }
+  .card p { font-size: 12px; color: #c9d8e2; margin: 0 0 10px; }
+  .card a.go { display: inline-block; background: #1d4d33; border: 1px solid #3f9e63; color: #d7e5f2; padding: 5px 12px; font-size: 12px; text-decoration: none; }
+  table { border-collapse: collapse; font-size: 12px; margin: 8px 0 16px; width: 100%; }
+  th, td { border: 1px solid #2b4258; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #0b1420; }
+  h2.sect { font-size: 13px; letter-spacing: 0.08em; margin: 20px 0 6px; }
+  p.note, li { font-size: 12px; color: #c9d8e2; }
+  footer { padding: 10px 16px; font-size: 11px; color: #8fa9bd; border-top: 1px solid #1c2b3d; }
+  footer a { color: #7fb8e8; }
+  code { font-family: "Spline Sans Mono", ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SCIENCE LAB</h1>
+  <p>Two modes, one lab. The molecule bench shows embedded PubChem structures in 3D;
+     the reproduction-cycle report shows what the lab claims to have reproduced &mdash; and at what recorded level.</p>
+</header>
+<nav id="modes" aria-label="Science Lab modes">
+  <a id="mode-bench" href="molecules/" aria-current="true">Molecule bench (default)</a>
+  <a id="mode-cycles" href="science-lab-review/" aria-current="false">Reproduction cycles</a>
+</nav>
+<main>
+  <div class="cards">
+    <section class="card" aria-labelledby="c-bench">
+      <h2 id="c-bench">Molecule bench</h2>
+      <p>Interactive 3D viewer over 11 embedded PubChem structures (offline JSON).
+         Rotate, zoom, measure, filter by element. Default mode.</p>
+      <a class="go" href="molecules/">Open bench</a>
+    </section>
+    <section class="card" aria-labelledby="c-cycles">
+      <h2 id="c-cycles">Reproduction cycles</h2>
+      <p>Detail view over <code>labs/cycles/</code>: per-cycle verdicts, recorded claim levels,
+         and source-file links. Nothing displayed above its recorded level.</p>
+      <a class="go" href="science-lab-review/">Open cycle report</a>
+    </section>
+  </div>
+  <h2 class="sect">WHAT EACH MODE OWNS</h2>
+  <table>
+    <tr><th>Question</th><th>Molecule bench owns it</th><th>Cycle report owns it</th></tr>
+    <tr><td>What does this molecule look like?</td><td>Yes &mdash; 3D structure, element filter, atom/bond counts</td><td>No</td></tr>
+    <tr><td>Where did a structure come from?</td><td>Yes &mdash; PubChem CID provenance per compound</td><td>No</td></tr>
+    <tr><td>Did a computation reproduce?</td><td>No</td><td>Yes &mdash; verdict (MATCH/DIFFER) per cycle</td></tr>
+    <tr><td>How strong is a claim?</td><td>No</td><td>Yes &mdash; recorded ladder level, never upgraded</td></tr>
+    <tr><td>Can I audit it?</td><td>Structures validate client-side</td><td>Yes &mdash; every claim links its source files</td></tr>
+  </table>
+  <p class="note">Neither mode invents data: the bench renders only validated embedded JSON
+     (or a live PubChem fetch the user asks for), and the cycle report renders only
+     recorded ledger/score values. Offline, both keep working from the embedded copies.</p>
+</main>
+<footer><a href="molecules/">Bench</a> · <a href="science-lab-review/">Cycles</a></footer>
+<script>
+"use strict";
+// Default mode is the molecule bench. ?mode=cycles preselects the cycle tab;
+// anything else (or no param) leaves the bench marked current.
+try {
+  var mode = new URLSearchParams(location.search).get("mode");
+  var cycles = (mode === "cycles");
+  document.getElementById("mode-bench").setAttribute("aria-current", String(!cycles));
+  document.getElementById("mode-cycles").setAttribute("aria-current", String(cycles));
+} catch (e) { /* static fallback: markup already marks bench current */ }
+</script>
+</body>
+</html>
