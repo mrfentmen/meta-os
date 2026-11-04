@@ -7,8 +7,8 @@
 <title>Ignis: Fire watch</title>
 <style>
   /* Ignis is the wall-first division. Large frames own the screen, the map is
-     a small inset that starts closed, and the session reads as a timeline down
-     the left rather than as a table.
+     a permanent band under the wall that loads cameras into the wall slots,
+     and the session reads as a timeline down the left rather than as a table.
 
      Its voice is warm and editorial: serif body text, ember accent, 2 px
      edges, letterspaced mono only for machine facts. It shares behaviour with
@@ -138,7 +138,7 @@
   /* The stage is the wall plus a fixed strip. min-height:0 on every grid child
      is what stops a 16:9 snapshot from forcing its row taller than the window
      and pushing the strip off screen. */
-  .stage { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 84px; }
+  .stage { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 284px 84px; }
   .wall {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
@@ -201,40 +201,61 @@
   .hot button.flag { border-color: var(--flag); }
   .hot .empty { font-size: 11px; color: var(--dimmer); }
 
-  /* map inset: closed by default, opens on demand */
-  .inset {
-    position: absolute; right: 14px; bottom: 92px; width: 268px; height: 196px;
-    border: 1px solid var(--line-strong); background: #0b0705; display: none;
+  /* Map band: a permanent section under the wall, not an inset. The wall is
+     the incident; the map is how you change it. Selecting a pin loads that
+     camera into the armed wall slot and arms the next slot. */
+  .mapband {
+    display: grid; grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0; min-height: 0; border-top: 1px solid var(--line);
+    background: #0b0705;
   }
-  .inset.open { display: block; }
-  .inset canvas { width: 100%; height: 100%; display: block; }
-  .inset .close {
-    position: absolute; top: 2px; right: 4px; color: var(--dim); font-size: 13px;
-    line-height: 1; padding: 2px 4px;
+  .mapband-head {
+    display: flex; align-items: center; gap: 12px; padding: 5px 10px;
+    border-bottom: 1px solid var(--line); background: rgba(18, 11, 8, 0.94);
+    min-width: 0;
   }
-  /* The map toggle lives in the strip, not over a frame: a control floating on
-     top of a snapshot hides the one line that says what the snapshot is. */
-  .map-toggle {
-    margin-left: auto; flex: none;
-    padding: 4px 10px; border: 1px solid var(--line-strong);
-    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--dim); background: rgba(18, 11, 8, 0.9);
+  .slots-picker { display: flex; align-items: center; gap: 0; flex: none; }
+  .slots-picker .label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dimmer); margin-right: 7px;
   }
-  .map-toggle:hover { border-color: var(--accent); color: var(--text); }
-
-  /* map modes ride inside the inset so no control floats over a frame */
-  .inset-modes {
-    position: absolute; left: 4px; top: 4px; display: flex; gap: 0;
-    background: rgba(18, 11, 8, 0.88); border: 1px solid var(--line-strong);
-    border-radius: 2px; overflow: hidden;
+  .slots-picker button {
+    width: 22px; height: 20px; border: 1px solid var(--line-strong); border-left: 0;
+    font-family: var(--mono); font-size: 10px; color: var(--dim); background: none;
   }
-  .inset-modes button {
+  .slots-picker button:first-of-type { border-left: 1px solid var(--line-strong); }
+  .slots-picker button:hover { color: var(--text); }
+  .slots-picker button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1a0d06; }
+  .map-hint {
+    font-family: var(--mono); font-size: 9.5px; color: var(--dim);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  .map-hint strong { color: var(--text); font-weight: 600; }
+  .mapband-modes {
+    margin-left: auto; flex: none; display: flex; gap: 0;
+    border: 1px solid var(--line-strong); border-radius: 2px; overflow: hidden;
+  }
+  .mapband-modes button {
     padding: 2px 6px; font-family: ui-monospace, monospace; font-size: 8.5px;
     letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
     border-left: 1px solid var(--line);
   }
-  .inset-modes button:first-child { border-left: 0; }
-  .inset-modes button[aria-pressed="true"] { background: rgba(217, 96, 43, 0.3); color: #fff; }
+  .mapband-modes button:first-child { border-left: 0; }
+  .mapband-modes button[aria-pressed="true"] { background: rgba(217, 96, 43, 0.3); color: #fff; }
+  .mapband canvas { width: 100%; height: 100%; display: block; min-height: 0; }
+
+  /* Slots carry their number so the map's "load into slot 2" is visible. */
+  .slot .slot-no {
+    flex: none; width: 17px; height: 17px; display: grid; place-items: center;
+    border: 1px solid var(--line-strong); font-family: var(--mono);
+    font-size: 9px; color: var(--dim); background: none;
+  }
+  .slot.armed .slot-no {
+    background: var(--accent); border-color: var(--accent); color: #1a0d06;
+  }
+  .slot.armed { box-shadow: inset 0 0 0 1px var(--accent); }
+  .slot.flagged.armed { box-shadow: inset 3px 0 0 var(--flag), inset 0 0 0 1px var(--accent); }
+  .slot.watched.armed { box-shadow: inset 3px 0 0 var(--accent), inset 0 0 0 1px var(--accent); }
 
   /* ---- operations drawer: a right-hand gallery plate ---- */
   .ops {
@@ -335,7 +356,8 @@
 
   @media (max-width: 1040px) {
     main { grid-template-columns: 210px 1fr; }
-    .inset { width: 220px; height: 160px; }
+    .stage { grid-template-rows: minmax(0, 1fr) 220px 84px; }
+    .map-hint { display: none; }
     .ops { grid-template-columns: 100px 1fr; }
   }
 </style>
@@ -367,23 +389,29 @@
 
   <section class="stage">
     <div id="wall" class="wall"></div>
+    <section class="mapband" aria-label="Camera map and wall slots">
+      <div class="mapband-head">
+        <div class="slots-picker" role="group" aria-label="Wall slot to load the next camera into">
+          <span class="label">Load into</span>
+          <button type="button" data-slot="0" aria-pressed="true">1</button>
+          <button type="button" data-slot="1" aria-pressed="false">2</button>
+          <button type="button" data-slot="2" aria-pressed="false">3</button>
+          <button type="button" data-slot="3" aria-pressed="false">4</button>
+        </div>
+        <p id="map-hint" class="map-hint">Click a camera on the map to load it into <strong>slot 1</strong>.</p>
+        <div class="mapband-modes" role="group" aria-label="Map mode and layers">
+          <button type="button" data-mode="city" aria-pressed="true">City</button>
+          <button type="button" data-mode="tactical" aria-pressed="false">Tactical</button>
+          <button type="button" data-mode="incident" aria-pressed="false">Incident</button>
+          <button type="button" data-mode="focus" aria-pressed="false">Focus</button>
+          <button type="button" id="fires-toggle" aria-pressed="false">Fires</button>
+        </div>
+      </div>
+      <canvas id="map" aria-label="Camera map"></canvas>
+    </section>
     <div class="strip">
       <span class="label">Hot frames</span>
       <div id="hot" class="hot"><span class="empty">Nothing assessed yet.</span></div>
-      <button id="map-toggle" class="map-toggle" type="button">Map</button>
-    </div>
-    <div id="inset" class="inset">
-      <canvas id="map" aria-label="Camera map"></canvas>
-      <div class="inset-modes" role="group" aria-label="Map mode and layers">
-        <button type="button" data-mode="city" aria-pressed="true">City</button>
-        <button type="button" data-mode="tactical" aria-pressed="false">Tactical</button>
-        <button type="button" data-mode="incident" aria-pressed="false">Incident</button>
-        <button type="button" data-mode="focus" aria-pressed="false">Focus</button>
-        <button type="button" id="fires-toggle" aria-pressed="false">Fires</button>
-      </div>
-      <button id="map-close" class="close" type="button" aria-label="Close map">
-        <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
-      </button>
     </div>
   </section>
 </main>
@@ -403,34 +431,112 @@ const $ = (id) => document.getElementById(id);
 const map = LocalMap($("map"), {
   accent: division.accent,
   center: { lat: 40.73, lon: -73.95 },
-  zoom: 10.6,
+  zoom: 9.9,
+  // Selecting a pin is a view change, not an assessment: it loads the camera
+  // into the armed wall slot and arms the next one. No model call, no spend.
   onSelect: (id) => {
+    if (!store.byId.has(id)) return;
+    loadIntoSlot(armed, id);
     store.setSelected(id);
-    const target = slots().find((c) => c.id === id);
-    if (target) store.assess(id);
+    armed = (armed + 1) % SLOTS;
+    store.emit();
   },
 });
 
 const SLOTS = 4;
+const WALL_KEY = "metaos.trio.ignis.wall";
+
+// One camera per slot, chosen from the map. Positions are fixed so slot 3 stays
+// slot 3 across reloads; an empty position is backfilled from watch/recent/all.
+function readPicks() {
+  let list = [];
+  try {
+    const raw = window.localStorage.getItem(WALL_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) list = parsed;
+  } catch (e) {
+    // No store, or bad JSON: fall back to the watch/recent fill.
+  }
+  return Array.from({ length: SLOTS }, (_, i) =>
+    typeof list[i] === "string" ? list[i] : null
+  );
+}
+let picks = readPicks();
+let armed = 0;
+
+function savePicks() {
+  try {
+    window.localStorage.setItem(WALL_KEY, JSON.stringify(picks));
+  } catch (e) {
+    // A full or unavailable store only costs the choice on reload.
+  }
+}
+
+function loadIntoSlot(index, id) {
+  const i = Math.max(0, Math.min(SLOTS - 1, index));
+  // Freeze what the wall already shows before the first pick, so loading slot 1
+  // cannot shuffle the other three into new slots as the fallback refills.
+  const current = slots();
+  picks = picks.map((v, slot) => v || (current[slot] ? current[slot].id : null));
+  // A camera appears once: if it already sits in another slot, clear that one.
+  picks = picks.map((v) => (v === id ? null : v));
+  picks[i] = id;
+  savePicks();
+}
+
+function armSlot(index) {
+  armed = Math.max(0, Math.min(SLOTS - 1, index));
+  paintArmed();
+}
 
 function slots() {
-  const out = [];
+  const out = new Array(SLOTS).fill(null);
+  const used = new Set();
+  for (let i = 0; i < SLOTS; i += 1) {
+    const cam = picks[i] ? store.byId.get(picks[i]) : null;
+    if (cam && !used.has(cam.id)) {
+      out[i] = cam;
+      used.add(cam.id);
+    }
+  }
+  const pool = [];
   for (const id of store.watch) {
     const cam = store.byId.get(id);
-    if (cam) out.push(cam);
-    if (out.length === SLOTS) return out;
+    if (cam) pool.push(cam);
   }
-  for (const cam of store.recent(6)) {
-    if (out.includes(cam)) continue;
-    out.push(cam);
-    if (out.length === SLOTS) return out;
-  }
-  for (const cam of store.cameras) {
-    if (out.includes(cam)) continue;
-    out.push(cam);
-    if (out.length === SLOTS) return out;
+  for (const cam of store.recent(6)) pool.push(cam);
+  for (const cam of store.cameras) pool.push(cam);
+  for (const cam of pool) {
+    const free = out.indexOf(null);
+    if (free === -1) break;
+    if (used.has(cam.id)) continue;
+    out[free] = cam;
+    used.add(cam.id);
   }
   return out;
+}
+
+// Repaint only the armed marker and the hint: rebuilding the wall on every
+// click would restart all four snapshots for no reason.
+function paintArmed() {
+  const cams = slots();
+  for (const node of document.querySelectorAll("#wall .slot")) {
+    const i = Number(node.dataset.slot);
+    node.classList.toggle("armed", i === armed);
+    node.setAttribute("aria-current", i === armed ? "true" : "false");
+  }
+  for (const b of document.querySelectorAll(".slots-picker [data-slot]")) {
+    b.setAttribute("aria-pressed", Number(b.dataset.slot) === armed ? "true" : "false");
+  }
+  const hint = $("map-hint");
+  if (hint) {
+    const fill = cams[armed];
+    hint.replaceChildren(
+      document.createTextNode(fill ? "Click a camera to replace " : "Click a camera to load it into "),
+      el("strong", { text: "slot " + (armed + 1) }),
+      document.createTextNode(fill ? " — now " + fill.name + "." : ".")
+    );
+  }
 }
 
 function stamp(at) {
@@ -444,9 +550,29 @@ function renderWall() {
     ...Array.from({ length: SLOTS }, (_, i) => {
       const cam = cams[i];
       const node = el("div", { class: "slot" });
+      node.dataset.slot = String(i);
+      node.title = "Slot " + (i + 1) + " — click the frame to arm it for the map";
+      node.addEventListener("click", (event) => {
+        if (event.target.closest("button")) return;
+        armSlot(i);
+      });
+      const slotNo = () => {
+        const b = el("button", { class: "slot-no", type: "button", text: String(i + 1) });
+        b.title = "Load the next map pick into slot " + (i + 1);
+        b.setAttribute("aria-label", "Arm wall slot " + (i + 1) + " for the map");
+        b.addEventListener("click", (event) => {
+          event.stopPropagation();
+          armSlot(i);
+        });
+        return b;
+      };
       if (!cam) {
         node.append(
-          el("div", { class: "slot-empty", text: "No camera in this slot. Watch one from the timeline or open the map." })
+          el("div", { class: "slot-empty", text: "No camera in this slot. Pick one on the map below, or watch one from the timeline." }),
+          el("div", { class: "slot-bar" }, [
+            slotNo(),
+            el("span", { class: "slot-name", text: "Empty slot" }),
+          ])
         );
         return node;
       }
@@ -491,6 +617,7 @@ function renderWall() {
 
       node.append(
         el("div", { class: "slot-bar" }, [
+          slotNo(),
           el("span", { class: "slot-name", text: cam.name, title: cam.name + " · " + cam.area }),
           ...(sourceTag(cam) ? [el("span", { class: "src-tag", text: sourceTag(cam), title: "Frame grabbed through ffmpeg, not the NYCTMC list" })] : []),
           el("div", { class: "slot-actions" }, [watchBtn, assessBtn]),
@@ -555,9 +682,10 @@ function render() {
     selected: store.selected,
     hotspots: store.hotspots,
   });
-  for (const b of document.querySelectorAll(".inset-modes [data-mode]")) {
+  for (const b of document.querySelectorAll(".mapband-modes [data-mode]")) {
     b.setAttribute("aria-pressed", b.dataset.mode === store.mapMode ? "true" : "false");
   }
+  paintArmed();
   $("fires-toggle").setAttribute("aria-pressed", store.hotspots.length > 0 ? "true" : "false");
   $("fires-toggle").title = store.firesError || "Active-fire hotspots from the local server";
   const src = $("source");
@@ -595,8 +723,11 @@ $("fires-toggle").addEventListener("click", async () => {
     store.emit();
   }
 });
-for (const b of document.querySelectorAll(".inset-modes [data-mode]")) {
+for (const b of document.querySelectorAll(".mapband-modes [data-mode]")) {
   b.addEventListener("click", () => store.setMapMode(b.dataset.mode));
+}
+for (const b of document.querySelectorAll(".slots-picker [data-slot]")) {
+  b.addEventListener("click", () => armSlot(Number(b.dataset.slot)));
 }
 
 const ops = createOps({ store, division, mount: $("ops-mount"), variant: "ignis" });
@@ -606,16 +737,6 @@ $("ops-open").addEventListener("click", () => ops.toggle("wall"));
 const agent = createAgent({ store, division, mount: $("agent") });
 
 $("assess-watched").addEventListener("click", () => store.assessWatched());
-
-$("map-toggle").addEventListener("click", () => {
-  $("inset").classList.add("open");
-  $("map-toggle").style.display = "none";
-  map.draw();
-});
-$("map-close").addEventListener("click", () => {
-  $("inset").classList.remove("open");
-  $("map-toggle").style.display = "";
-});
 
 store.subscribe(render);
 setInterval(() => {
