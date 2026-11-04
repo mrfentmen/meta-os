@@ -1,3 +1,6 @@
+ +==========================+
+ |  M E T A   O S           |
+ +==========================+
 Meta OS 1.0 (Ribbon)
-Built on a Debian/Xubuntu 24.04 base. The base is not rewritten.
+Base system left as installed; only the branding is Meta's.
 Identity lives in /etc/os-release — read it, don't trust banners.

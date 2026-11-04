@@ -1,4 +1,7 @@
 #!/bin/sh
+echo " +==========================+"
+echo " |  M E T A   O S           |"
+echo " +==========================+"
 echo "Meta OS 1.0 (Ribbon)"
-echo "Built on Xubuntu 24.04 (Noble); stamped Meta OS by this image."
+echo "Base system left as installed; only the branding is Meta's."
 echo "Truth lives in /etc/os-release."
