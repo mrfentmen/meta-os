@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
 <title>Vigiles: Police console</title>
 <style>
   /* Vigiles is the map-first division. Everything else floats over the map,
@@ -391,7 +392,7 @@
       <button type="button" data-mode="focus" aria-pressed="false">AI Focus</button>
       <button type="button" id="fires-toggle" aria-pressed="false">Fires</button>
     </div>
-    <p class="map-note">Positions are the camera's own coordinates. No street basemap is drawn: the map library's style file is a remote request, and this machine runs offline.</p>
+    <p class="map-note">Positions are each camera's own coordinates. The street basemap is CARTO over OpenStreetMap when this machine has a route out; with no network the app draws the shipped borough outline instead.</p>
 
     <aside id="inspector" class="inspector" aria-label="Camera inspector" aria-hidden="true">
       <div class="insp-head">
@@ -424,20 +425,25 @@
 <div id="ops-mount"></div>
 
 <script src="../js/logo-background.js"></script>
+<script src="/vendor/maplibre/maplibre-gl.js"></script>
 <script type="module">
 import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS, backendLabel } from "./core.js";
 import { createOps } from "./ops.js";
 import { createAgent } from "./agent.js";
+import { Map3D } from "./map3d.js";
 
 const division = DIVISIONS.police;
 const store = createStore("police");
 const $ = (id) => document.getElementById(id);
 
 const canvas = $("map");
-const map = LocalMap(canvas, {
+// The pitched MapLibre map when this machine can draw it, the flat canvas map
+// when it cannot. Same interface either way, so nothing below has to know.
+const mapOpts = {
   accent: division.accent,
   onSelect: (id) => store.setSelected(id),
-});
+};
+const map = Map3D(canvas, mapOpts) || LocalMap(canvas, mapOpts);
 
 let listSig = "";
 

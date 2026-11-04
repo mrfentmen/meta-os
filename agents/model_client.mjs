@@ -13,7 +13,8 @@
 // failure with a named reason, never as an empty success.
 
 export const DEFAULT_ENDPOINT = "https://api.meta.ai/v1/chat/completions";
-export const DEFAULT_MODEL = "muse-spark-1.3";
+// Contributor tier by default (cheaper, same endpoint); METAOS_MODEL overrides.
+export const DEFAULT_MODEL = "muse-spark-1.3-contributor";
 
 export class ModelUnavailable extends Error {
   constructor(message) {
@@ -75,7 +76,13 @@ export async function chat(messages, opts = {}) {
   const body = {
     model: opts.model || cfg.model,
     messages,
-    max_tokens: opts.maxTokens || 900,
+    // 4000, not 900: muse-spark-1.3 is a reasoning model and bills its
+    // internal reasoning against completion tokens. Measured against the live
+    // endpoint on 2026-11-04: a one-sentence question burned 380-400 reasoning
+    // tokens, so a 900-token cap returned content:null / finish_reason:length
+    // and the loop reported "model returned no content" on a perfectly good
+    // key. 4000 leaves room for the reasoning plus a real answer.
+    max_tokens: opts.maxTokens || 4000,
     temperature: opts.temperature ?? 0,
   };
   if (opts.jsonMode) body.response_format = { type: "json_object" };

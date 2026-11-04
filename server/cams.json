@@ -1,4 +1,77 @@
 {
-  "_readme": "RTSP/ONVIF cameras served as JPEG stills through ffmpeg. Copy this file or point METAOS_IPCAMS at your own. Credentials go in ${ENV_VAR} form and must be set in the server environment, never written here.",
-  "cameras": []
+  "_comment": [
+    "Labelled network cameras for the Meta Trio camera rail.",
+    "",
+    "These are real NYCTMC (NYC DOT) traffic cameras: each `input` is the camera",
+    "vendor's own JPEG endpoint (Axis Q60xx/Q56xx units, per the EXIF the",
+    "upstream sends), fetched through the ffmpeg snapshot proxy in ipcam.mjs so",
+    "every page gets the same contract - a name, a position, and an image URL.",
+    "No credentials are stored here and none are needed; the public endpoints",
+    "are unauthenticated. Verified live with curl: six HTTP 200 image/jpeg",
+    "responses, 8-24 KB, 352x240, on 2026-11-04.",
+    "",
+    "One camera per borough plus a second Manhattan feed, so the rail reads as a",
+    "city and not as one grid. `id` is what appears in /api/ipcam/<id>/snapshot,",
+    "so it is a slug, not the vendor UUID; rename one and the URL changes.",
+    "",
+    "If a camera is offline the proxy answers 502 with the upstream reason and",
+    "the page keeps the tile with its label - a missing feed must never blank",
+    "the rail."
+  ],
+  "cameras": [
+    {
+      "id": "fdr-111st",
+      "name": "FDR Dr @ 111 St",
+      "area": "Manhattan",
+      "input": "https://webcams.nyctmc.org/api/cameras/16de4b9a-83fe-4d11-91cd-d775cc1e559c/image",
+      "latitude": 40.798685,
+      "longitude": -73.929148,
+      "enabled": true
+    },
+    {
+      "id": "7ave-43st",
+      "name": "7 Ave @ 43 St",
+      "area": "Manhattan",
+      "input": "https://webcams.nyctmc.org/api/cameras/45cb119b-0e4a-442e-9410-b810ab8c255d/image",
+      "latitude": 40.757953,
+      "longitude": -73.98549,
+      "enabled": true
+    },
+    {
+      "id": "bqe-pearl",
+      "name": "BQE @ Pearl St",
+      "area": "Brooklyn",
+      "input": "https://webcams.nyctmc.org/api/cameras/3576217a-82e8-4f2a-854f-3de97ef37362/image",
+      "latitude": 40.701,
+      "longitude": -73.998,
+      "enabled": true
+    },
+    {
+      "id": "qbb-crescent",
+      "name": "QBB @ Crescent St",
+      "area": "Queens",
+      "input": "https://webcams.nyctmc.org/api/cameras/1b3248f9-f26e-4f36-943f-b7a7731595fb/image",
+      "latitude": 40.7487,
+      "longitude": -73.9376,
+      "enabled": true
+    },
+    {
+      "id": "bruckner-whiteplains",
+      "name": "Bruckner Blvd @ White Plains Rd",
+      "area": "Bronx",
+      "input": "https://webcams.nyctmc.org/api/cameras/0951f345-28ef-447c-af7f-1cb4e0e16aa8/image",
+      "latitude": 40.8236,
+      "longitude": -73.8592,
+      "enabled": true
+    },
+    {
+      "id": "sie-hylan",
+      "name": "Staten Island Expy @ Hylan Blvd",
+      "area": "Staten Island",
+      "input": "https://webcams.nyctmc.org/api/cameras/0b7a91d5-e33e-42b3-a05a-951be0ab1663/image",
+      "latitude": 40.5886,
+      "longitude": -74.1245,
+      "enabled": true
+    }
+  ]
 }

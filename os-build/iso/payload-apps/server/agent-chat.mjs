@@ -15,7 +15,8 @@ import { ModelError, modelConfig } from "./model.mjs";
 import { checkBudget, recordBudgetCall } from "./budget.mjs";
 
 export const AGENT_ENDPOINT = "https://api.meta.ai/v1/chat/completions";
-export const AGENT_MODEL = "muse-spark-1.3";
+// Contributor tier by default (cheaper); METAOS_AGENT_MODEL overrides it.
+export const AGENT_MODEL = process.env.METAOS_AGENT_MODEL || "muse-spark-1.3-contributor";
 export const MAX_QUESTION_CHARS = 2000;
 
 const SYSTEM_PROMPT = [

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
 <title>Medicus: EMS triage</title>
 <style>
   /* Medicus is the board-first division. No dark console, no wall grid, no
@@ -70,7 +71,10 @@
     --ok: #2f6b4f;
   }
   body {
-    display: grid; grid-template-rows: 64px 1fr 232px 30px; height: 100vh;
+    /* The band carries the camera layer, and at 232px a pitched map was a thin
+       slice of harbour. 300px leaves the lanes their room and gives the map a
+       frame the city can actually sit in. */
+    display: grid; grid-template-rows: 64px 1fr 300px 30px; height: 100vh;
     background: #f4f1e8;
   }
 
@@ -451,10 +455,12 @@
 <div id="ops-mount"></div>
 
 <script src="../js/logo-background.js"></script>
+<script src="/vendor/maplibre/maplibre-gl.js"></script>
 <script type="module">
 import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS, MAX_WATCHED } from "./core.js";
 import { createOps } from "./ops.js";
 import { createAgent } from "./agent.js";
+import { Map3D } from "./map3d.js";
 
 const division = DIVISIONS.ems;
 const store = createStore("ems");
@@ -638,18 +644,28 @@ $("assess-all").addEventListener("click", async () => {
   else toast("Assessed " + res.results.length + " watched cameras.");
 });
 
-// Camera layer. Same canvas map as Vigiles and Ignis, so Medicus can see
-// where the watched cameras are instead of only reading their names.
-const medMap = LocalMap($("med-map"), {
+// Camera layer. Same map as Vigiles and Ignis, so Medicus can see where the
+// watched cameras are instead of only reading their names. The paper page
+// takes the light basemap; the two dark consoles take the ink one.
+const medMapOpts = {
   accent: "#35E0A1",
-  zoom: 10.3,
+  // The band is short and wide, so the city has to be closer than a full-page
+  // map needs: at 10.3 the frame held Newark and Yonkers and the cameras were
+  // a dusting of dots with no streets around them.
+  center: { lat: 40.742, lon: -73.977 },
+  zoom: 12.0,
+  // The band is only 216px tall; a 55 degree tilt there is mostly sky, so the
+  // sheet tilts less than the two dark consoles do.
+  pitch: 45,
+  palette: "light",
   onSelect: (id) => {
     const cam = store.byId.get(id);
     if (!cam) return;
     medMap.set({ selected: id });
     toast(cam.name + " · " + cam.area + (store.watch.has(id) ? " · watched" : " · press the card to watch"));
   },
-});
+};
+const medMap = Map3D($("med-map"), medMapOpts) || LocalMap($("med-map"), medMapOpts);
 
 function drawMap() {
   $("legend-watched").textContent = String(store.watch.size);

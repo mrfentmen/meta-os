@@ -47,7 +47,9 @@ export class ModelError extends Error {
 // test-phase green light). Hardcoded, not guessed: the endpoint and the
 // model id are the ones that answered the real smoke call.
 export const SPARK_ENDPOINT = "https://api.meta.ai/v1/chat/completions";
-export const SPARK_MODEL = "muse-spark-1.3";
+// Contributor tier by default: same endpoint, same key, cheaper per call.
+// SPARK_MODEL overrides it (e.g. "muse-spark-1.3") without a code change.
+export const SPARK_MODEL = process.env.SPARK_MODEL || "muse-spark-1.3-contributor";
 
 // Per-product prompt profiles, derived from the shared product config
 // (js/products.js) so the server and the clients can never drift on

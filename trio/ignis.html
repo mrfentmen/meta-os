@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
 <title>Ignis: Fire watch</title>
 <style>
   /* Ignis is the wall-first division. Large frames own the screen, the map is
@@ -143,7 +144,10 @@
   /* The stage is the wall plus a fixed strip. min-height:0 on every grid child
      is what stops a 16:9 snapshot from forcing its row taller than the window
      and pushing the strip off screen. */
-  .stage { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 284px 84px; }
+  /* 340px, not 284: at 284 the pitched map was a letterbox strip, and a tilted
+     map only reads as three dimensional when there is enough height for the
+     street grid to converge on screen. */
+  .stage { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 340px 84px; }
   .wall {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
@@ -366,7 +370,7 @@
 
   @media (max-width: 1040px) {
     main { grid-template-columns: 210px 1fr; }
-    .stage { grid-template-rows: minmax(0, 1fr) 220px 84px; }
+    .stage { grid-template-rows: minmax(0, 1fr) 280px 84px; }
     .map-hint { display: none; }
     .ops { grid-template-columns: 100px 1fr; }
   }
@@ -429,19 +433,25 @@
 <div id="ops-mount"></div>
 
 <script src="../js/logo-background.js"></script>
+<script src="/vendor/maplibre/maplibre-gl.js"></script>
 <script type="module">
 import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS } from "./core.js";
 import { createOps } from "./ops.js";
 import { createAgent } from "./agent.js";
+import { Map3D } from "./map3d.js";
 
 const division = DIVISIONS.fire;
 const store = createStore("fire");
 const $ = (id) => document.getElementById(id);
 
-const map = LocalMap($("map"), {
+const mapOpts = {
   accent: division.accent,
-  center: { lat: 40.73, lon: -73.95 },
-  zoom: 9.9,
+  center: { lat: 40.742, lon: -73.977 },
+  // The band is short and very wide, so a low zoom plus a steep pitch reads as
+  // a distant map of half of New Jersey. Closer in, with a shallower tilt,
+  // keeps the five boroughs in frame with their streets legible.
+  zoom: 12.35,
+  pitch: 48,
   // Selecting a pin is a view change, not an assessment: it loads the camera
   // into the armed wall slot and arms the next one. No model call, no spend.
   onSelect: (id) => {
@@ -451,7 +461,11 @@ const map = LocalMap($("map"), {
     armed = (armed + 1) % SLOTS;
     store.emit();
   },
-});
+};
+
+// Pitched MapLibre map where the machine can draw it, flat canvas map where it
+// cannot; both expose set/focus so the render loop below is unchanged.
+const map = Map3D($("map"), mapOpts) || LocalMap($("map"), mapOpts);
 
 const SLOTS = 4;
 const WALL_KEY = "metaos.trio.ignis.wall";
