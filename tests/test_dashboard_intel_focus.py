@@ -19,7 +19,10 @@ import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUS = os.path.join(REPO, "bus.html")
-INDEX = os.path.join(REPO, "index.html")
+# The dashboard page is bus.html. index.html was a second copy of it
+# (DSH-026) and then became an app hub that nothing linked to; it was
+# deleted 2026-11-04, so these tests read the one page that ships.
+INDEX = os.path.join(REPO, "bus.html")
 SPEC = os.path.join(REPO, "docs", "DASHBOARD_SPEC.md")
 DEMO = os.path.join(REPO, "plan", "DEMO.md")
 
@@ -141,8 +144,6 @@ class DashboardIntelFocusTest(unittest.TestCase):
     def setUpClass(cls):
         with open(BUS, encoding="utf-8") as f:
             cls.bus = f.read()
-        with open(INDEX, encoding="utf-8") as f:
-            cls.index = f.read()
         cls.intel = _intel_module(cls.bus)
         cls.demo = _run_node(cls.intel, {"search": "?demo=1"})
         cls.normal = _run_node(cls.intel, {"search": ""})
@@ -150,8 +151,13 @@ class DashboardIntelFocusTest(unittest.TestCase):
     def test_bus_and_index_identical(self):
         # DSH-026 invariant: checks on bus.html cover index.html
         # only if the two files are the same file.
-        self.assertEqual(self.bus, self.index,
-                         "bus.html and index.html differ")
+        # One dashboard page, not two copies. index.html was the duplicate of
+        # this file (DSH-026), then an app hub nothing linked to; it was deleted
+        # 2026-11-04. The invariant these tests were protecting is now the
+        # absence of the second file, not byte equality with it.
+        self.assertFalse(os.path.exists(os.path.join(REPO, "index.html")),
+                         "index.html must not exist; bus.html is the dashboard")
+
 
     def test_i_toggles_focus_on_and_off_in_demo_mode(self):
         self.assertTrue(self.demo["handlerRegistered"])

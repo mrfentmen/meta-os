@@ -32,7 +32,10 @@ import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUS = os.path.join(REPO, "bus.html")
-INDEX = os.path.join(REPO, "index.html")
+# The dashboard page is bus.html. index.html was a second copy of it
+# (DSH-026) and then became an app hub that nothing linked to; it was
+# deleted 2026-11-04, so these tests read the one page that ships.
+INDEX = os.path.join(REPO, "bus.html")
 
 HEX_RE = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 # The six palette values the audit found in the intel module, each

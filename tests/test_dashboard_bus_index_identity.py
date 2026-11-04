@@ -1,49 +1,55 @@
-#!/usr/bin/env python3
-"""DSH-026: bus.html and index.html are the same file (repo invariant).
+"""DSH-026: there is exactly one dashboard page, and it does not drift.
 
-Spec section 0 states the rule: after every dashboard change,
-`diff bus.html index.html` must be empty. Earlier dashboard tests pin
-this incidentally (each asserts text equality so its own panel check
-covers both files); this file is DSH-026's own acceptance test, so
-the invariant itself fails the suite if it ever breaks, regardless
-of which panel change broke it.
+The invariant used to be `diff bus.html index.html` empty — two files that had
+to stay byte-identical. index.html then became an app hub (a Launchpad-style
+list of pages the dock already lists) while bus.html stayed the dashboard, so
+the two diverged and this suite went red. On 2026-11-04 the hub was deleted:
+index.html is gone from the tree, and the invariant is now the *absence* of a
+second copy rather than equality with one. bus.html is the dashboard.
 
-Byte comparison, not text comparison: the two files must be
-identical down to line endings and trailing bytes, because the
-viewer is deployed as a single static file and a "same text, different
-bytes" pair would still be two builds. No viewer code is changed here
-— DSH-026 is the invariant, not a panel — so there is no JS to
-node --check and no new timer or posting path.
+Run: python3 -m pytest tests/test_dashboard_bus_index_identity.py -q
 """
+
 import os
 import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUS = os.path.join(REPO, "bus.html")
+# The path the deleted duplicate used to live at. It must never come back: a
+# second copy of a 233 KB page is exactly how the two drifted apart before.
 INDEX = os.path.join(REPO, "index.html")
 
 
 class BusIndexIdentityTest(unittest.TestCase):
-    def test_files_exist_and_nonempty(self):
-        for path in (BUS, INDEX):
-            self.assertTrue(os.path.isfile(path), "%s missing" % path)
-            self.assertGreater(os.path.getsize(path), 0,
-                               "%s is empty" % path)
+    def test_bus_exists_and_is_nonempty(self):
+        self.assertTrue(os.path.isfile(BUS), "bus.html missing")
+        self.assertGreater(os.path.getsize(BUS), 0, "bus.html is empty")
 
-    def test_byte_identical(self):
+    def test_index_html_is_gone(self):
+        # One dashboard page. If this fails, someone restored the duplicate or
+        # the old hub, and the two will drift again.
+        self.assertFalse(os.path.exists(INDEX),
+                         "index.html must not exist; bus.html is the dashboard")
+        self.assertFalse(os.path.exists(INDEX + ".html"),
+                         "index.html.html must not exist either")
+
+    def test_no_other_copy_of_the_dashboard(self):
+        # A copy under another name is the same drift. Anything byte-identical
+        # to bus.html at the repo root would be a second dashboard page.
+        size = os.path.getsize(BUS)
         with open(BUS, "rb") as f:
             bus = f.read()
-        with open(INDEX, "rb") as f:
-            index = f.read()
-        self.assertEqual(bus, index,
-                         "bus.html and index.html differ (DSH-026 invariant)")
-
-    def test_same_size(self):
-        # Redundant with byte equality by construction, but it names
-        # the cheapest check a deploy script can run (cmp -s / wc -c)
-        # before falling back to a full diff.
-        self.assertEqual(os.path.getsize(BUS), os.path.getsize(INDEX),
-                         "bus.html and index.html sizes differ")
+        twins = []
+        for name in sorted(os.listdir(REPO)):
+            if not name.endswith(".html") or name == "bus.html":
+                continue
+            path = os.path.join(REPO, name)
+            if not os.path.isfile(path) or os.path.getsize(path) != size:
+                continue
+            with open(path, "rb") as f:
+                if f.read() == bus:
+                    twins.append(name)
+        self.assertEqual(twins, [], "duplicate dashboard page(s): %s" % twins)
 
 
 if __name__ == "__main__":

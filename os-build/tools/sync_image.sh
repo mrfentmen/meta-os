@@ -103,7 +103,8 @@ echo "--- what the image now has ---"
 show "dock tiles (repo: $(grep -cE '^[[:space:]]*add_app ' /repo/os-build/face/meta-desktop.sh))" count_tiles
 show "dock icons (repo: $(find /repo/os-build/iso/payload-theme/icons/metaos -maxdepth 1 -name '*.png' | wc -l | tr -d ' '))" count_icons
 show "site aegis/index.html" has /mnt/img/opt/face-site/aegis/index.html
-show "site bus.html" has /mnt/img/opt/face-site/bus.html
+show "site surfaces.html" has /mnt/img/opt/face-site/surfaces.html
+show "site js/site-chat.js" has /mnt/img/opt/face-site/js/site-chat.js
 show "vendor/three.min.js" has /mnt/img/opt/face-site/vendor/three.min.js
 show "face notesd.py" has /mnt/img/opt/face/notesd.py
 show "bin meta-notes" has /mnt/img/usr/local/bin/meta-notes

@@ -3,33 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boards — Imperium app</title>
+<title>Boards — Meta OS</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="/vendor/fonts/fonts.css">
 <style>
-  .boards-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
-  .boards-nav a { color: inherit; }
-  .board-section { margin: 2rem 0; }
-  .board-section:target { outline: 2px solid #0a84ff; outline-offset: 6px; }
-  .board-section:target h2::after { content: " — here"; font-size: 12px; color: #0a84ff; }
-  .empty-state { font-style: italic; }
-  #site-status { font-size: 13px; padding: 8px 12px; border: 1px solid #444; background: #111; }
-  #site-status { overflow-wrap: anywhere; }
+  /* This page used to inherit styles.css's `main { display:grid; 1fr 1fr }`,
+     which is the console's two-column layout: fifteen board sections in a
+     twenty-four-column grid, so every card was a narrow strip and the left
+     half of the window sat empty. Boards stack in one readable column. */
+  main { display: block; max-width: 1080px; margin: 0 auto; padding: 0 24px 140px; }
+  /* The bar itself stays full-bleed and sticky (styles.css: body > .topbar);
+     only its contents line up with the board column. Constraining the bar to
+     1080px left a strip of page either side that scrolled uncovered. */
+  .topbar .brand { width: 100%; max-width: 1080px; margin: 0 auto; }
+  .boards-nav {
+    position: sticky; top: 58px; z-index: 7;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 14px 0 12px; margin: 0 0 4px;
+    background: #14161a;
+  }
+  .boards-nav a {
+    padding: 4px 10px; border: 1px solid var(--panel-border); border-radius: 999px;
+    color: var(--muted); font-size: 12.5px; text-decoration: none; white-space: nowrap;
+  }
+  .boards-nav a:hover, .boards-nav a:focus-visible { color: var(--text); border-color: var(--accent); }
+  .board-section {
+    margin: 12px 0; padding: 16px 18px;
+    /* Opaque, not the shared translucent --panel: the ASCII loop runs behind
+       this page and glyphs showed through the body text. */
+    background: #171a1f; border: 1px solid var(--panel-border); border-radius: 10px;
+    scroll-margin-top: 110px;
+  }
+  .board-section h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+  .board-section > p { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
+  .board-section:target { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .board-section:target h2::after { content: " — here"; font-size: 11px; color: var(--accent); font-family: var(--mono); }
+  .empty-state { font-style: normal; color: var(--muted); font-size: 13px; border-left: 2px solid var(--panel-border); padding-left: 10px; margin: 6px 0; }
+  #site-status {
+    font: 12px/1.5 var(--mono); padding: 8px 12px; margin: 8px 0 4px;
+    border: 1px solid var(--panel-border); border-radius: 8px;
+    background: var(--input-bg); color: var(--muted); overflow-wrap: anywhere;
+  }
   .board-section div, .board-section p, .board-section li { overflow-wrap: anywhere; }
-  .fetch-fail { color: #ff9a9a; font-size: 13px; }
-  .lab-list { list-style: none; padding: 0; }
-  .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; }
+  .fetch-fail { color: var(--err); font-size: 13px; }
+  .lab-list { list-style: none; padding: 0; margin: 0; }
+  .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; border-bottom: 1px solid var(--panel-border); }
   .lab-hypothesis { flex: 2; }
-  .lab-level, .lab-status { flex: 1; }
+  .lab-level, .lab-status { flex: 1; font-family: var(--mono); font-size: 12.5px; }
 </style>
 </head>
 <body>
+<canvas id="logo-background" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="brand">
-    <h1>Meta Imperium</h1>
+    <h1>Meta OS</h1>
     <p class="product-badge">Boards</p>
-    <a class="logo-studio-link" href="imperium/">Back to Imperium console</a>
+    <a class="logo-studio-link" href="trio/vigiles.html">Vigiles</a>
+    <a class="logo-studio-link" href="trio/ignis.html">Ignis</a>
+    <a class="logo-studio-link" href="trio/medicus.html">Medicus</a>
   </div>
 </header>
 <main>
@@ -126,33 +158,47 @@
     failures.push(line);
     return `<p class="fetch-fail" role="alert">${line}</p>`;
   }
+  // Boards whose source file is not shipped at all (they print their own empty
+  // state). Counted in the status line so "all data loaded" is never claimed
+  // over a board that has nothing to load.
+  const noSource = ["Lab board", "Gate status"];
   function summarize() {
     const el = document.getElementById("site-status");
-    el.textContent = failures.length === 0
-      ? "All board data loaded from face-site on " + PORT + "."
-      : failures.length + " data source(s) unreachable on " + PORT + " — each board below names its own. " + failures.join(" ");
+    const missing = noSource.length
+      ? ` ${noSource.length} board(s) have no source file in this build (${noSource.join(", ")}).`
+      : "";
+    el.textContent = (failures.length === 0
+      ? "Loaded every board source that ships, from face-site on " + PORT + "."
+      : failures.length + " live source(s) unavailable — each board below says so. " + failures.join(" ")) + missing;
   }
   // Lab records.
+  // os/lab/records.json is not part of this tree (the lab's own records live
+  // under os/worlds/science-lab/). A board whose source file does not ship is
+  // a stated empty board, not a red error: this page shipped that way and read
+  // as broken.
   try {
     const res = await fetch("os/lab/records.json");
     if (!res.ok) throw new Error("HTTP " + res.status);
     document.getElementById("lab-content").innerHTML = labBoard(await res.json());
   } catch (e) {
     document.getElementById("lab-content").innerHTML =
-      failLine("lab records", "os/lab/records.json answered " + e.message + " — is face-site serving it?") + labBoard([]);
+      `<p class="empty-state">No lab records in this build — os/lab/records.json is not shipped. The Science Lab app reads os/worlds/science-lab/ instead.</p>` +
+      labBoard([]);
   }
   // Hortus: no run JSONLs exist in this repo yet; the honest empty state
   // is the correct render, stated in the section text above.
   document.getElementById("hortus-content").innerHTML =
     hortusChart([]) + hortusChampion(null);
-  // Gate manifest.
+  // Gate manifest: gates/delaney/manifest.json is not in this tree either, so
+  // the board prints its empty state instead of an unreachable-source line.
   try {
     const res = await fetch("gates/delaney/manifest.json");
     if (!res.ok) throw new Error("HTTP " + res.status);
     document.getElementById("gate-content").innerHTML = gateStatusPage(await res.json());
   } catch (e) {
     document.getElementById("gate-content").innerHTML =
-      failLine("gate manifest", "gates/delaney/manifest.json answered " + e.message + " — is face-site serving it?") + gateStatusPage(null);
+      `<p class="empty-state">No gate manifest in this build — gates/delaney/manifest.json is not shipped, so no gate state is shown rather than a guessed one.</p>` +
+      gateStatusPage(null);
   }
   // Crew records feed the four incident boards. One fetch, four honest
   // panels; a dead backend names itself in each panel it starves.
@@ -177,15 +223,15 @@
       ? receiptView(withReceipt)
       : `<p class="empty-state">No dispatch receipt in the live crew records.</p>`;
   } catch (e) {
-    const line = (panel) => failLine("crew records for " + panel, "/api/crew/status answered " + e.message + " — no crew backend is served here");
-    document.getElementById("evidence-content").innerHTML =
-      line("evidence") + `<p class="empty-state">Crew records unavailable.</p>`;
-    document.getElementById("bolo-content").innerHTML =
-      line("BOLO") + `<p class="empty-state">Crew records unavailable.</p>`;
-    document.getElementById("timeline-content").innerHTML =
-      line("timeline") + `<p class="empty-state">Crew records unavailable.</p>`;
-    document.getElementById("receipt-content").innerHTML =
-      line("receipt") + `<p class="empty-state">Crew records unavailable.</p>`;
+    // One explanation for the four incident boards, in the page's own voice.
+    // /api/crew/status belongs to the Trio backend on 8080; this page is the
+    // static boards site on 18934, so on the image it is always a 404 here.
+    const note = `/api/crew/status answered ${e.message}. These boards follow the Trio backend on port 8080; this page is served statically on ${PORT}.`;
+    for (const id of ["evidence-content", "bolo-content", "timeline-content", "receipt-content"]) {
+      document.getElementById(id).innerHTML =
+        `<p class="empty-state">No crew records to show here. ${note}</p>`;
+    }
+    failures.push("crew records (/api/crew/status)");
   }
   // Cost ticker, refreshed as the chain runs.
   async function refreshCosts() {
@@ -265,6 +311,18 @@
   document.getElementById("systems-content").innerHTML =
     `<p>Loaded ${packsLoaded} of ${worldDirs.length} world packs.</p>` + systemsHome(systems);
   summarize();
+  // The browser scrolls to the anchor before these boards render, so the
+  // target sat above a page that then grew and the anchor landed on the wrong
+  // board (clicking Custos showed Officina). Re-scroll once the cards exist.
+  if (/^#board-/.test(window.location.hash)) {
+    const target = document.getElementById(window.location.hash.slice(1));
+    if (target) requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+  }
 </script>
+<!-- One chat box for every board on this page. The room follows the anchor, so
+     #board-custos talks in "custos" and #board-officina in "officina" — the
+     same rooms the Messages app shows—over the Board on 18935. -->
+<script src="js/logo-background.js"></script>
+<script src="js/site-chat.js" data-room="boards" data-label="Boards"></script>
 </body>
 </html>

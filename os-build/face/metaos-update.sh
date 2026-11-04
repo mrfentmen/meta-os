@@ -35,14 +35,17 @@ if [ "$CHECK_SITE" = 1 ]; then
       fails=$((fails + 1))
     fi
   }
-  for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.webmanifest icon-180.png; do
+  # index.html and bus.html are gone (dead hub; bus client for a relay we do not
+  # host). surfaces.html is the root page now, and js/site-chat.js is the one
+  # chat box every product page carries.
+  for f in surfaces.html styles.css manifest.webmanifest icon-180.png; do
     check_site "$f"
   done
   for f in labs/molecules/index.html labs/music3d/index.html labs/science-lab-review/index.html \
            aegis/index.html \
-           design/agent-budget-dashboard.html design/meta-musica-notes.html \
+           design/meta-musica-notes.html \
            design/meta-custos-watch.html design/meta-officina-blueprint.html \
-           js/app.js; do
+           js/app.js js/site-chat.js; do
     check_site "$f"
   done
   for p in os/worlds/nypd/pack.json os/worlds/fdny/pack.json os/worlds/ems/pack.json \
@@ -80,7 +83,7 @@ cp -r "$WORK/os-build/face/." "$FACE_DST/"
 # pack.json + officina runs + custos runs. http.server reads from disk
 # per request, so no service restart is needed after this copy.
 mkdir -p "$SITE_DST"
-for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.webmanifest icon-180.png; do
+for f in surfaces.html styles.css manifest.webmanifest icon-180.png; do
   if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "$f" 2>/dev/null; then
     cp -f "$WORK/$f" "$SITE_DST/$f"
     log "site: $f ($(wc -c <"$SITE_DST/$f" | tr -d ' ') bytes)"
@@ -88,15 +91,9 @@ for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.
     log "site: $f not in $BRANCH, keeping previous copy"
   fi
 done
-# Imperium's console links ../styles.css and ../vendor, so the site root is the
-# only place its page is styled. Keep a copy here for the Trio/Imperium tiles.
-if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- imperium 2>/dev/null; then
-  rm -rf "$SITE_DST/imperium"
-  cp -r "$WORK/imperium" "$SITE_DST/imperium"
-  log "site: imperium ($(wc -c <"$SITE_DST/imperium/index.html" | tr -d ' ') bytes)"
-else
-  log "site: imperium not in $BRANCH, keeping previous copy"
-fi
+# imperium/ is not copied any more: the single console page was the Trio before
+# the split, and every division now loads trio/<name>.html off the same backend.
+# No tile opens it, so the image stops shipping a page nothing links to.
 # The three division apps. They are ES modules, so they only work over http
 # from the site root; file:// blocks the import of ./core.js. Same backend as
 # Imperium (port 8080), same camera list, three different pages.

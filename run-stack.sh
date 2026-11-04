@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # run-stack.sh — start the full Meta Trio demo stack in one command.
 #
-#   1. Meta Nuntius relay        node relay/relay.mjs            (RELAY_PORT, default 8787)
+#   1. Board (the one messaging app) node board/board.mjs        (BOARD_PORT, default 8787)
 #   2. OS queue service          server/queue/queue_service.py   (port 8935)
-#   3. Resident queue agent      server/queue/trio_agent.py      (TRIO_RELAY_URL -> relay)
+#   3. Resident queue agent      server/queue/trio_agent.py      (TRIO_RELAY_URL -> board)
 #   4. Trio app server           node server/server.mjs          (PORT, default 8080,
 #                                  queue path on: TRIO_QUEUE_ENABLED=1,
 #                                  TRIO_QUEUE_URL -> queue service)
 #
-# Env names and ports are the ones documented in relay/README.md,
-# server/queue/README.md, and server/README.md. Ctrl-C (or any exit)
+# Env names and ports are the ones documented in board/ (README in
+# server/queue/README.md), and server/README.md. Ctrl-C (or any exit)
 # stops all four processes via the trap below.
 #
 # Generation transport: if SPARK_API_KEY is already in the environment
@@ -28,7 +28,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-RELAY_PORT="${RELAY_PORT:-8787}"
+BOARD_PORT="${BOARD_PORT:-8787}"
+RELAY_PORT="$BOARD_PORT"  # the board speaks the same notify line the agent posts
 QUEUE_PORT="${QUEUE_PORT:-8935}"
 APP_PORT="${PORT:-8080}"
 RELAY_BASE="http://127.0.0.1:${RELAY_PORT}"
@@ -70,10 +71,10 @@ wait_http() { # url, label
   return 1
 }
 
-echo "Starting Meta Nuntius relay on ${RELAY_BASE} ..."
-RELAY_PORT="$RELAY_PORT" node relay/relay.mjs &
+echo "Starting the Board on ${RELAY_BASE} ..."
+BOARD_PORT="$BOARD_PORT" node board/board.mjs &
 PIDS+=($!)
-wait_http "${RELAY_BASE}/health" "Meta Nuntius relay"
+wait_http "${RELAY_BASE}/health" "Board"
 
 echo "Starting queue service on ${QUEUE_BASE} ..."
 (cd server/queue && python3 queue_service.py --port "$QUEUE_PORT") &

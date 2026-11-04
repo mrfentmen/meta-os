@@ -250,6 +250,11 @@ export function createBoardServer(options = {}) {
     res.writeHead(status, {
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(body),
+      // The product pages (Custos, Officina, the two labs) are served from
+      // the site root on another port, and each carries the Board chat box.
+      // Without this header their reads and posts are blocked by the browser.
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
     });
     res.end(body);
   }
@@ -377,6 +382,18 @@ export function createBoardServer(options = {}) {
       const segments = url.pathname
         .split("/")
         .filter((segment) => segment.length > 0);
+
+      // CORS preflight for the chat box on the product pages (other port).
+      if (req.method === "OPTIONS") {
+        res.writeHead(204, {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Max-Age": "600",
+        });
+        res.end();
+        return;
+      }
 
       if (req.method === "GET" && url.pathname === "/") {
         let html;

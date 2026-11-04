@@ -4,13 +4,29 @@
  * Usage (manual, once): add <script src="notify.js"></script> before </body> in shell.html.
  * What it does:
  *  - injects a topbar bell with an unread badge (into #topbar .icons, fallback #topbar)
- *  - polls http://127.0.0.1:18935/messages?room=general every 10s
+ *  - polls the Board's room feed (http://127.0.0.1:18935/rooms/general/messages) every 10s
  *  - dropdown lists new messages; click marks read in localStorage
  *  - keeps a poll/message log (in-memory + localStorage + console)
  */
 (function () {
   var ROOM = "general";
-  var API = "http://127.0.0.1:18935/messages?room=" + encodeURIComponent(ROOM);
+  // The Board (board/board.mjs) returns room lines as text with their room
+  // index; this widget wants {id, author, text, ts}, so one small adapter
+  // keeps the shell bell working after board.py was retired.
+  var API = "http://127.0.0.1:18935/rooms/" + encodeURIComponent(ROOM) + "/messages";
+  function adapt(d) {
+    var lines = (d && d.messages) || [];
+    return lines.map(function (line, i) {
+      var text = String(line || "");
+      var cut = text.indexOf(": ");
+      var author = cut > 0 ? text.slice(0, cut) : "";
+      var body = cut > 0 ? text.slice(cut + 2) : text;
+      var ts = null;
+      var tag = body.match(/ \[ts:(\d+)\]$/);
+      if (tag) { ts = Number(tag[1]); body = body.slice(0, tag.index); }
+      return { id: i + 1, author: author, text: body, ts: ts };
+    });
+  }
   var POLL_MS = 10000;
   var LAST_READ_KEY = "metaos-notify-last-read-general";
   var LOG_KEY = "metaos-notify-log";
@@ -149,7 +165,7 @@
       bell.setAttribute("aria-label", "Board notifications");
     }
     var html = '<div class="hd"><span>Board #general</span>' +
-      '<button data-act="open-board" title="Open board.html">Board</button>' +
+      '<button data-act="open-board" title="Open the Board">Board</button>' +
       '<button data-act="mark-read" title="Mark all read">Mark read</button></div>';
     var fresh = state.messages.filter(function (m) { return m.id > state.lastRead; });
     var show = fresh.length ? fresh : state.messages.slice(-10);
@@ -162,7 +178,7 @@
     if (boardBtn) boardBtn.addEventListener("click", function (ev) {
       ev.stopPropagation();
       markRead();
-      try { window.open("board.html", "_blank"); } catch (e) { window.location.href = "board.html"; }
+      try { window.open("http://127.0.0.1:18935/", "_blank"); } catch (e) { window.location.href = "http://127.0.0.1:18935/"; }
     });
     var markBtn = drop.querySelector('[data-act="mark-read"]');
     if (markBtn) markBtn.addEventListener("click", function (ev) { ev.stopPropagation(); markRead(); });
@@ -206,7 +222,7 @@
       if (!r.ok) throw new Error("http " + r.status);
       return r.json();
     }).then(function (d) {
-      var msgs = (d && d.messages) || [];
+      var msgs = adapt(d);
       state.messages = msgs;
       var m = maxId(msgs);
       var unread = msgs.filter(function (x) { return x.id > state.lastRead; }).length;

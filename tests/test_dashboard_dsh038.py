@@ -17,7 +17,10 @@ import unittest
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPEC = os.path.join(REPO, "docs", "DASHBOARD_SPEC.md")
 BUS = os.path.join(REPO, "bus.html")
-INDEX = os.path.join(REPO, "index.html")
+# The dashboard page is bus.html. index.html was a second copy of it
+# (DSH-026) and then became an app hub that nothing linked to; it was
+# deleted 2026-11-04, so these tests read the one page that ships.
+INDEX = os.path.join(REPO, "bus.html")
 
 
 def read(path):

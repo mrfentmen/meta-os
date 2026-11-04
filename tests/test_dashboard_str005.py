@@ -20,7 +20,10 @@ import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUS = os.path.join(REPO, "bus.html")
-INDEX = os.path.join(REPO, "index.html")
+# The dashboard page is bus.html. index.html was a second copy of it
+# (DSH-026) and then became an app hub that nothing linked to; it was
+# deleted 2026-11-04, so these tests read the one page that ships.
+INDEX = os.path.join(REPO, "bus.html")
 SPEC = os.path.join(REPO, "docs", "DASHBOARD_SPEC.md")
 
 BASE = {
@@ -182,13 +185,14 @@ class DashboardStr005Test(unittest.TestCase):
         self.assertNotIn("Visual checks", data["html"])
         self.assertNotIn("data-brief-visual-checks", data["html"])
 
-    def test_index_matches_bus_and_spec_notes_str005(self):
+    def test_single_dashboard_page_and_spec_notes_str005(self):
         with open(BUS, encoding="utf-8") as f:
             bus = f.read()
-        with open(INDEX, encoding="utf-8") as f:
-            index = f.read()
-        self.assertEqual(bus, index, "bus.html and index.html differ")
-        self.assertIn("data-brief-visual-checks", index)
+        # index.html was the second copy of this page and was deleted
+        # 2026-11-04, so "the pages match" is now "there is only one page".
+        self.assertFalse(os.path.exists(os.path.join(REPO, "index.html")),
+                         "index.html must not exist; bus.html is the dashboard")
+        self.assertIn("data-brief-visual-checks", bus)
         with open(SPEC, encoding="utf-8") as f:
             spec = f.read()
         self.assertIn("Visual checks (STR-005", spec)

@@ -24,7 +24,7 @@
 //   GET  /api/weather/radar/:z/:x/:y.png
 //                      same-origin proxy for IEM NEXRAD radar tiles
 //                      (see weather.mjs; no key needed)
-//   GET  /<static>     index.html, styles.css, js/* from the repo root
+//   GET  /<static>     surfaces.html ("/"), styles.css, js/* from the repo root
 //
 // Environment: SPARK_API_KEY (key slot, server-side only),
 // ASSESS_LIVE_MODEL=1 (test-phase gate; leave unset during the build —
@@ -107,8 +107,12 @@ function readBody(req) {
   });
 }
 
+// "/" is the boards page now. index.html was the app hub: a Launchpad-style
+// list of pages the desktop dock already lists, and it is gone from the tree.
+const ROOT_PAGE = "surfaces.html";
+
 async function serveStatic(res, urlPath) {
-  const rel = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
+  const rel = urlPath === "/" ? ROOT_PAGE : urlPath.replace(/^\/+/, "");
   const ext = path.extname(rel);
   if (!Object.hasOwn(CONTENT_TYPES, ext)) {
     sendJson(res, 404, { error: `not found: ${urlPath}` });

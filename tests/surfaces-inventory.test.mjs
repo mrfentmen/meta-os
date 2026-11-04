@@ -42,9 +42,12 @@ test("id-less index.html controls work by group listener or native behavior", ()
   assert.equal((indexHtml.match(/<details/g) || []).length, 27);
 });
 
-test("index.html links resolve", () => {
-  assert.ok(existsSync(new URL("../design/meta-ascii-logo-studio.html", import.meta.url)));
+test("boards page is reachable and the hub page it replaced is gone", () => {
   assert.ok(existsSync(new URL("../surfaces.html", import.meta.url)));
+  // The root index.html was the app hub and the boards page used to link back
+  // to it. Both are retired (2026-11-04): the dock lists the apps, and this
+  // page is the site root. A link to it would be a dead link.
+  assert.equal(existsSync(new URL("../index.html", import.meta.url)), false);
 });
 
 test("boards page has zero interactive controls, so zero dead controls", () => {
@@ -59,7 +62,16 @@ test("every boards nav link resolves to a section on the page", () => {
   for (const href of internal) {
     assert.ok(ids.has(href.slice(1)), `unresolved ${href}`);
   }
-  assert.match(surfacesHtml, /href="index\.html"/);
+  // The page's only outward links are the three divisions. Every one of them
+  // must exist on disk — a nav chip that 404s is the same dead surface the
+  // audit is here to catch.
+  const outward = [...surfacesHtml.matchAll(/<a\b[^>]*href="(?!http|\.\.\/)([^"#][^"]*)"/g)]
+    .map((m) => m[1])
+    .filter((href) => !href.startsWith("#"));
+  assert.deepEqual(outward.sort(), ["trio/ignis.html", "trio/medicus.html", "trio/vigiles.html"]);
+  for (const href of outward) {
+    assert.ok(existsSync(new URL("../" + href, import.meta.url)), `missing ${href}`);
+  }
 });
 
 test("every boards content region is written by the page script", () => {

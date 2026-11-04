@@ -346,34 +346,38 @@ add_app controls  "Controls"  controls        /usr/share/metaos/apps/metaos-cont
 # backend and the same camera list, each with its own page and layout. The old
 # single "Trio" tile opened Imperium's page, so two tiles showed one screen;
 # it is gone, and each division now has a tile that opens its own page.
-add_app imperium  "Imperium"  imperium        "$IMPERIUM" --title "Imperium - Command"
+# No "Imperium" tile: the single console page it opened is gone from the
+# product — each division below is its own app on the same backend, and the
+# Boards tile carries the dispatch boards. imperium/index.html is archived in
+# the repo (the tests read it as a fixture) and is not installed.
 add_app police    "Vigiles"   police          "$IMPERIUM" --division vigiles
 add_app fire      "Ignis"     fire            "$IMPERIUM" --division ignis
 add_app ems       "Medicus"   ems             "$IMPERIUM" --division medicus
 
 if [ -x "$META_APP" ]; then
-  add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18934/index.html
+  # Web opens the local start page on 18900. It used to open 18934/index.html,
+  # the dead hub that listed apps the dock already lists; that page is gone.
+  add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18900/start.html
   add_app dashboard "Dashboard" dashboard       "$META_APP" --title Dashboard --url http://127.0.0.1:18900/dashboard.html
-  add_app board     "Board"     board           "$META_APP" --title Board --url http://127.0.0.1:18900/board.html
   add_app calendar  "Calendar"  calendar        "$META_APP" --title Calendar --url http://127.0.0.1:18900/calendar.html
   add_app musica    "Musica"    musica          "$META_APP" --title Musica --url http://127.0.0.1:18900/musica.html
   add_app science   "Science"   science         "$META_APP" --title Science --url http://127.0.0.1:18934/labs/molecules/index.html
   # Each app gets its own page. Custos and Officina used to point at Imperium's
   # surfaces.html and at the site index -- three tiles, two pages, so two of the
   # boss's apps looked unwired. These are the dedicated pages that already ship
-  # in /opt/face-site/design.
+  # in /opt/face-site/design, and each one carries the Board chat box for its
+  # own room (custos / officina).
   add_app custos    "Custos"    custos          "$META_APP" --title Custos --url http://127.0.0.1:18934/design/meta-custos-watch.html
   add_app officina  "Officina"  officina        "$META_APP" --title Officina --url http://127.0.0.1:18934/design/meta-officina-blueprint.html
   # Product pages that shipped with no tile (APP_INVENTORY.md section 4).
-  # Boards is the Imperium dispatch boards page; Messages is the live bus
-  # (agent-2 ships bus.html — before that lands this tile explains itself
-  # through meta-app's failure screen instead of opening blank).
+  # Boards is the dispatch boards page (surfaces.html, now the site root).
   add_app boards    "Boards"    boards          "$META_APP" --title Boards --url http://127.0.0.1:18934/surfaces.html
-  add_app messages  "Messages"  messages        "$META_APP" --title Messages --url http://127.0.0.1:18934/bus.html
-  add_app logo      "Logo Studio" logo          "$META_APP" --title "Logo Studio" --url http://127.0.0.1:18934/logo-studio.html
+  # One messaging app, not three: the Board (board/board.mjs on 18935).
+  # It replaced the face board.py stub, the Nuntius relay/viewer and the
+  # Upstash-token bus page; rooms, presence and NOTIFY lines all live here.
+  add_app messages  "Messages"  messages        "$META_APP" --title Messages --url http://127.0.0.1:18935/
   add_app music3d   "Music 3D"  music3d         "$META_APP" --title "Music 3D" --url http://127.0.0.1:18934/labs/music3d/index.html
   add_app notes3d   "3D Notes"  notes3d         "$META_APP" --title "3D Notes" --url http://127.0.0.1:18934/design/meta-musica-notes.html
-  add_app budget    "Agent Budget" budget       "$META_APP" --title "Agent Budget" --url http://127.0.0.1:18934/design/agent-budget-dashboard.html
   # Aegis is agent-3's page (lands at /opt/face-site/aegis/). Same contract as
   # Messages: the tile is wired now, meta-app explains a missing backend.
   add_app aegis     "Aegis"     aegis           "$META_APP" --title Aegis --url http://127.0.0.1:18934/aegis/index.html

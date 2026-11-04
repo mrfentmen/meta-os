@@ -34,7 +34,7 @@ echo "provision(face): mode=$MODE dst=$DST units=$U"
 
 # 0) clear stale manual servers from earlier dev sessions (live only)
 if [ "$MODE" = live ]; then
-  for pat in "http.server 18900" "http.server 18934" "launcher.py" "facts.py" "ptyd.py" "board.py" "files.py" "notesd.py"; do
+  for pat in "http.server 18900" "http.server 18934" "launcher.py" "facts.py" "ptyd.py" "board.mjs" "files.py" "notesd.py"; do
     pkill -f "python3 .*/$pat" 2>/dev/null || true
   done
   sleep 1
@@ -314,9 +314,13 @@ fi
 # 1b) stage repo-root product pages for the dock iframes (served on 18934).
 # Boards data only: os/worlds is ~100M, the pages fetch just pack.json,
 # officina runs and custos runs.
-if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
+# index.html and bus.html are gone from this repo: the hub page listed apps the
+# dock already lists, and the bus page was a client for a hosted relay we do not
+# run. The Board (18935) is the one messaging app. surfaces.html is the root
+# page now, so it is the sentinel that says this tree is a product site.
+if [ -f "$SITE_SRC/surfaces.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
   $SUDO mkdir -p "$SITE_DST"
-  for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.webmanifest icon-180.png; do
+  for f in surfaces.html styles.css manifest.webmanifest icon-180.png; do
     if [ -f "$SITE_SRC/$f" ]; then
       $SUDO cp -f "$SITE_SRC/$f" "$SITE_DST/$f"
     fi
@@ -337,16 +341,10 @@ if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
   # Aegis lives in the repo as aegis-page/ but is served as /aegis/ (that is
   # the path the dock tile opens). metaos-update.sh already did this copy; a
   # fresh provision did not, so a clean image shipped the tile and 404ed it.
-  # Imperium's console links ../styles.css and ../vendor, so it is served from
-  # the site root rather than from /usr/share/metaos/imperium where those
-  # relative paths fall off the end of the tree and the page renders unstyled.
-  if [ -f "$SITE_SRC/imperium/index.html" ]; then
-    $SUDO rm -rf "$SITE_DST/imperium"
-    $SUDO mkdir -p "$SITE_DST/imperium"
-    $SUDO cp -r "$SITE_SRC/imperium/." "$SITE_DST/imperium/"
-  else
-    echo "site stage: no imperium/ in $SITE_SRC — Trio falls back to the bare page"
-  fi
+  # imperium/ is deliberately NOT copied any more: the old single console page
+  # was the Trio before it was split, and every division now owns trio/<name>.html
+  # on the same backend. The page stays in the repo as the archived reference the
+  # tests read; no tile opens it and the image does not ship it.
   # The Imperium/Trio window is a python app that lives in the ISO payload, not
   # in the face, so a face-only sync left an old copy in the image: the one that
   # looked for the page under /usr/share/metaos/imperium and drew it unstyled.
@@ -469,12 +467,21 @@ Restart=on-failure
 [Install]
 WantedBy=default.target
 EOF
+# The Board is the one messaging app: board/board.mjs is the native room
+# board (rooms, NOTIFY lines, per-room index). It replaced the face board.py
+# stub, the Nuntius relay and the Upstash-backed bus page.
+BOARD_SRC="$HERE/../../board"
+if [ -f "$BOARD_SRC/board.mjs" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/metaos/board"
+  $SUDO install -m644 "$BOARD_SRC/board.mjs" "$BOARD_SRC/board.html" "$ROOT/usr/share/metaos/board/"
+fi
 cat > "$U/face-board.service" <<EOF
 [Unit]
-Description=face board 18935
+Description=Meta Board 18935 (the one messaging app)
 After=network.target
 [Service]
-ExecStart=/usr/bin/python3 $RUNTIME_DST/board.py
+Environment=BOARD_PORT=18935
+ExecStart=/usr/bin/node /usr/share/metaos/board/board.mjs
 Restart=on-failure
 [Install]
 WantedBy=default.target
@@ -578,11 +585,10 @@ check() {
 }
 if [ "$MODE" = live ]; then
   check "http 18900 /shell.html" curl -fs -o /dev/null http://127.0.0.1:18900/shell.html
-  check "site 18934 /index.html" curl -fs -o /dev/null http://127.0.0.1:18934/index.html
-  check "site 18934 /logo-studio.html" curl -fs -o /dev/null http://127.0.0.1:18934/logo-studio.html
+  check "site 18934 /surfaces.html" curl -fs -o /dev/null http://127.0.0.1:18934/surfaces.html
   check "site 18934 /js/app.js" curl -fs -o /dev/null http://127.0.0.1:18934/js/app.js
   check "site 18934 /aegis/index.html" curl -fs -o /dev/null http://127.0.0.1:18934/aegis/index.html
-  check "site 18934 /bus.html" curl -fs -o /dev/null http://127.0.0.1:18934/bus.html
+  check "site 18934 /js/site-chat.js" curl -fs -o /dev/null http://127.0.0.1:18934/js/site-chat.js
   check "launcher 18931 /launch" python3 -c "import http.client; c=http.client.HTTPConnection('127.0.0.1',18931,timeout=5); c.request('POST','/launch',body='{}',headers={'Content-Type':'application/json'}); assert b'ok' in c.getresponse().read()"
   check "facts 18932 /facts" curl -fs -o /dev/null http://127.0.0.1:18932/facts
   check "ptyd 18933 tcp" python3 -c "import socket;socket.create_connection(('127.0.0.1',18933),timeout=5).close()"
@@ -596,7 +602,7 @@ else
   for f in face-http face-site face-launcher face-facts face-ptyd face-board face-files face-notesd; do
     if [ -f "$U/$f.service" ]; then echo "unit $f: OK"; else echo "unit $f: FAIL"; FAIL=1; fi
   done
-  for f in shell.html start.html login.html notesd.py ptyd.py launcher.py files.py board.py facts.py notes.html calendar.html settings.html dashboard.html search.js; do
+  for f in shell.html start.html login.html notesd.py ptyd.py launcher.py files.py facts.py notes.html calendar.html settings.html dashboard.html search.js; do
     if [ -f "$DST/$f" ]; then echo "face $f: OK"; else echo "face $f: FAIL"; FAIL=1; fi
   done
   if [ -f "$U/default.target.wants/face.target" ]; then echo "face.target enabled: OK"; else echo "face.target enabled: FAIL"; FAIL=1; fi

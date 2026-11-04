@@ -22,11 +22,16 @@ import { join } from "node:path";
 const root = new URL("..", import.meta.url).pathname;
 
 function webSources() {
-  const files = ["index.html", "styles.css", "logo-studio.html"];
+  // The root index.html was the app hub and was deleted 2026-11-04; the pages
+  // that ship are the three divisions plus the boards page. Scanning them (and
+  // styles.css) is what this guard actually meant: every page a user can open.
+  const files = [
+    "trio/vigiles.html", "trio/ignis.html", "trio/medicus.html",
+    "surfaces.html", "styles.css",
+  ];
   for (const entry of readdirSync(join(root, "js"))) {
     if (entry.endsWith(".js")) files.push(join("js", entry));
   }
-  files.push(join("design", "meta-ascii-logo-studio.html"));
   return files;
 }
 

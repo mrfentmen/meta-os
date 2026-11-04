@@ -134,14 +134,14 @@ else
   row "18933" "TCP connect" "connect" "refused" 0 ""
 fi
 
-# 5) 18934 /index.html
-set -- $(http_code GET "http://$HOST:18934/index.html")
+# 5) 18934 /surfaces.html (the site root; index.html is gone from the tree)
+set -- $(http_code GET "http://$HOST:18934/surfaces.html")
 code="$1"; body="$2"
 if [ "$code" = "200" ]; then
-  row "18934" "/index.html" "200" "$code" 1 ""
+  row "18934" "/surfaces.html" "200" "$code" 1 ""
 else
   if [ "$code" = "000" ]; then got="conn refused"; else got="$code"; fi
-  row "18934" "/index.html" "200" "$got" 0 ""
+  row "18934" "/surfaces.html" "200" "$got" 0 ""
 fi
 
 # 6) 18935 /rooms

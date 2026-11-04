@@ -35,4 +35,9 @@ a.addEventListener('error',function(){
 });
 a.play().catch(function(){st.textContent+=' (autoplay blocked: press play)';});
 })();
-</script></body></html>
+</script>
+<!-- Desk chat over the Board (room "musica"). This page is served from
+     /opt/face on 18900, so it loads the box from the face-site on 18934; the
+     box states the port it cannot reach instead of failing silently. -->
+<script src="http://127.0.0.1:18934/js/site-chat.js" data-room="musica" data-label="Musica"></script>
+</body></html>

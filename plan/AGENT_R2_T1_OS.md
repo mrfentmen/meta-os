@@ -1,5 +1,31 @@
 # Agent R2-T1 lane: offline type, identity, boot surface, image build
 
+## Tree changes after this lane file (2026-11-04, Buffy) — read before starting
+
+These are merged into `main` already. Nothing below is a task; it is the map.
+
+- **One messaging system: `board/`.** `relay/` (Nuntius relay + viewer) and
+  `os-build/face/board.py` / `board.html` are deleted. `board/board.mjs` runs on
+  18935: `GET /rooms/<room>/messages?since=<n>`, `POST {nick,text}`,
+  `POST /rooms/<room>/notify`. The dock's Messages tile opens it; the shell bell
+  (`notify.js`) polls its `general` room. Do not add a second transport.
+- **`index.html` (repo root) is deleted.** It was the app hub; the dock lists
+  apps. The site root is `surfaces.html`, and `server/server.mjs` serves it for
+  `/`. `bus.html` stays: it is the dashboard page the DSH tests cover.
+- **`imperium/index.html` is archived**, not in the product: no dock tile, not
+  copied into the image. The tests read it as a fixture — leave the file alone
+  and do not wire a tile to it. The three divisions (`trio/vigiles.html`,
+  `ignis.html`, `medicus.html`) are the product.
+- **Both logo studio pages are deleted** (`logo-studio.html`,
+  `design/meta-ascii-logo-studio.html`), and with them the
+  `design/agent-budget-dashboard.html` mock. The spinning loop is
+  `js/logo-background.js` / `os-build/face/logo-background.js`; the studio-only
+  tests were removed with the pages.
+- **Shared chat box: `js/site-chat.js`.** `<script src="js/site-chat.js"
+  data-room="..." data-label="...">` gives a page the Board rooms (surfaces.html,
+  labs/molecules, labs/music3d, labs/science-lab-review, Custos, Officina,
+  face/musica.html). On surfaces.html the room follows `#board-<room>`.
+
 Paste this whole file to the agent. Work on branch `agent-r2-t1` in worktree
 `/tmp/agent-r2-t1`. Commit there. Do not merge. Do not push. Do not switch any
 other worktree's branch.
