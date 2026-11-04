@@ -23,9 +23,53 @@ from the repo root, so one process runs the whole demo stack locally.
 | --- | --- |
 | `POST /api/assess` | One frame in, one v2 assessment out (below). |
 | `GET /api/health` | `{ ok, service, products, model: { configured, live_enabled } }`. Never exposes key material. |
+| `GET /api/cameras` | Same-origin NYCTMC camera list, with any positioned IP cameras from `cams.json` appended. 502 only when both are empty and NYCTMC failed. |
+| `GET /api/ipcam` | `{ cameras, error, config, configMissing, ffmpeg }` for the configured IP cameras. The config problems are named, never hidden. |
+| `GET /api/ipcam/:id/snapshot` | One JPEG frame from that camera, taken through ffmpeg. 404 unknown id, 409 disabled, 502 ffmpeg failure with the reason. |
 | `GET /api/fires` | NASA FIRMS trailing-24 h hotspots, cached 15 min. 503 without `FIRMS_MAP_KEY`. |
 | `GET /api/weather/radar/:z/:x/:y.png` | Proxied IEM NEXRAD radar tile (PNG). 400 on out-of-range tiles. |
 | `GET /…` | Static web frontend (`index.html`, `styles.css`, `js/`). |
+
+## IP cameras (RTSP in, JPEG out)
+
+The NYCTMC cameras publish a JPEG per camera, so a page loads them directly.
+An IP camera speaks RTSP or ONVIF, which no browser plays. The server takes a
+frame with ffmpeg and answers the browser with a JPEG, so every page keeps one
+contract: a camera has a name, a position and an image URL.
+
+Create `server/cams.json` (or set `METAOS_IPCAMS` to another path):
+
+```json
+{
+  "cameras": [
+    {
+      "id": "lobby",
+      "name": "Lobby east",
+      "area": "Midtown",
+      "input": "rtsp://viewer:${CAM_PASSWORD}@10.0.0.5:554/stream1",
+      "latitude": 40.758,
+      "longitude": -73.9855,
+      "enabled": true
+    }
+  ]
+}
+```
+
+`id` is lowercase letters, digits, `-` or `_`, at most 41 characters, and it is
+the name in the URL. `input` is required. `name`, `area`, `latitude` and
+`longitude` are optional; a camera without both coordinates stays off the map
+list and is still listed on `/api/ipcam`. `${NAME}` is replaced from the server
+environment, so a password can live in the service environment instead of this
+file. Error text is redacted (`rtsp://***@host`, `password=***`) before it
+leaves the module.
+
+Each camera is grabbed at most once per 5 seconds (`IPCAM_SNAPSHOT_TTL_MS`),
+concurrent requests share one ffmpeg run, and at most 2 run at once
+(`IPCAM_MAX_CONCURRENT`). Numbers are environment settings, not code edits.
+
+ffmpeg must be installed where this server runs (`apt install ffmpeg` on the
+image). Without it, `/api/ipcam/:id/snapshot` answers 502 saying ffmpeg is not
+installed; no other route changes behaviour.
 
 ## The contract
 
@@ -81,6 +125,10 @@ Configuration is environment-only, server-side:
 | `SPARK_API_KEY` | The model key slot. Never in a request, a commit, or a log. |
 | `ASSESS_LIVE_MODEL` | `1` opens the test-phase gate. Leave unset during the build. |
 | `FIRMS_MAP_KEY` | NASA FIRMS map key (free). Without it `/api/fires` answers 503 and the map offers no fire layer. Never in a request, a commit, or a log. |
+| `METAOS_IPCAMS` | Path to the IP camera config. Default `server/cams.json`. |
+| `CAM_*` | Any variable a `cams.json` `input` refers to, for camera credentials. |
+| `FFMPEG` | ffmpeg binary name or path, default `ffmpeg`. |
+| `IPCAM_SNAPSHOT_TTL_MS` / `IPCAM_GRAB_TIMEOUT_MS` / `IPCAM_MAX_CONCURRENT` | Frame cache life (5000 ms), per-grab timeout (8000 ms), parallel grabs (2). |
 | `PORT` | Listen port, default `8080`. |
 
 Per-product prompt profiles (categories + limitations) are derived from

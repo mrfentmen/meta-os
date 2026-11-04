@@ -1,0 +1,4 @@
+{
+  "_readme": "RTSP/ONVIF cameras served as JPEG stills through ffmpeg. Copy this file or point METAOS_IPCAMS at your own. Credentials go in ${ENV_VAR} form and must be set in the server environment, never written here.",
+  "cameras": []
+}

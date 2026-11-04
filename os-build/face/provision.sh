@@ -365,7 +365,21 @@ if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
       [ -f "$mjs" ] || continue
       $SUDO cp -f "$mjs" "$ROOT/usr/share/metaos/server/"
     done
+    # IP camera config. Only when absent: a sync must never overwrite the
+    # RTSP URLs and credentials someone put on the installed machine.
+    if [ -f "$SITE_SRC/server/cams.json" ] && [ ! -f "$ROOT/usr/share/metaos/server/cams.json" ]; then
+      $SUDO cp -f "$SITE_SRC/server/cams.json" "$ROOT/usr/share/metaos/server/cams.json"
+      echo "provision(face): IP camera config -> /usr/share/metaos/server/cams.json"
+    fi
     echo "provision(face): console backend -> /usr/share/metaos/server"
+    # ffmpeg turns RTSP into the JPEGs /api/ipcam/:id/snapshot serves. Without
+    # it those routes answer 502 with the reason, so report it here instead of
+    # letting the console look broken.
+    if command -v ffmpeg >/dev/null 2>&1; then
+      echo "provision(face): ffmpeg present, RTSP cameras can be served"
+    else
+      echo "provision(face): WARNING no ffmpeg on this host — RTSP cameras stay 502 (apt install ffmpeg)"
+    fi
   fi
   if [ -f "$SITE_SRC/aegis-page/index.html" ]; then
     $SUDO rm -rf "$SITE_DST/aegis"

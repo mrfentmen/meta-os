@@ -65,7 +65,11 @@ test("maplibre is vendored locally and loaded before the command module", () => 
   assert.ok(maplibreTag !== -1 && commandTag !== -1 && maplibreTag < commandTag);
   assert.ok(!html.toLowerCase().includes("leaflet"), "no leaflet in the page");
   assert.ok(!commandJs.toLowerCase().includes("leaflet"), "no leaflet in the glue");
-  assert.ok(commandJs.includes("https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"));
+  // The basemap style ships in the repo: the offline guest has no network, and
+  // a CDN style left maplibre with nothing to draw. The local style names the
+  // vendored glyphs and the borough outlines.
+  assert.ok(commandJs.includes("/vendor/geo/meta-style.json"), "style comes from the vendored copy");
+  assert.ok(!commandJs.includes("cartocdn.com"), "no page reaches a basemap CDN");
 });
 
 test("3d buildings, selection ring, modes, and AI focus are wired to real data only", () => {
