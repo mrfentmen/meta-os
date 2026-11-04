@@ -28,3 +28,7 @@ refs/
 
 # Generated icon sheets (regenerate with app-icons.py / settings-symbols.py)
 os-build/captures/app-icons-*/
+
+# Agent run ledgers and per-agent memory are runtime state; re-created by running.
+runs/
+memory/

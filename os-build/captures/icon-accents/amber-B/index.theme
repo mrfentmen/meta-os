@@ -1,0 +1,15 @@
+[Icon Theme]
+Name=amber-B
+Comment=Amber — dawn
+Inherits=Papirus,elementary-xfce,hicolor
+Directories=128x128/apps,48x48/apps
+
+[128x128/apps]
+Size=128
+Type=Fixed
+Context=Applications
+
+[48x48/apps]
+Size=48
+Type=Fixed
+Context=Applications

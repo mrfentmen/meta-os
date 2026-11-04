@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "anti-ai-slop-ui": {
+      "source": "rwcod/anti-ai-slop-ui",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "f4cd7c30f7b851dabf070cd732def357cf5732781678dc2667af501370baa7b9"
+    },
+    "unslop": {
+      "source": "cursor/plugins",
+      "sourceType": "github",
+      "skillPath": "harness/pstack/claude-code/skills/unslop/SKILL.md",
+      "computedHash": "eca0ad9fa3a3867c83f3aaf3a058e247a569c8976a68ca423a569b93eb86de5d"
+    }
+  }
+}

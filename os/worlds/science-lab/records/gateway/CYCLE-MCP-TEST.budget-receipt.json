@@ -1,0 +1,10 @@
+{
+  "agent": "gateway",
+  "calls": 1,
+  "cycle_id": "CYCLE-MCP-TEST",
+  "kind": "budget-receipt",
+  "max_calls_per_cycle": 0,
+  "reason": "budget-cap-reached: cycle 'CYCLE-MCP-TEST' gateway cap exceeded: calls 1 > maxCallsPerCycle 0",
+  "recorded_at": "2026-11-04T11:45:23.479325Z",
+  "stopped": true
+}
