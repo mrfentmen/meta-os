@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Labs — Molecule viewer</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #06090f; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -46,7 +47,7 @@
 <div id="wrap"><canvas id="view"></canvas><div id="tip"></div><div id="legendbox"></div></div>
 <div id="err" role="alert"></div>
 <footer id="prov"></footer>
-<script src="vendor/three.min.js"></script>
+<script src="../../vendor/three.min.js"></script>
 <script>
 "use strict";
 // Bond rendering rule: order 1 and aromatic -> single cylinder; order 2 ->
@@ -196,7 +197,7 @@ async function loadEmbedded(id) {
       meta.name + " — " + meta.formula + " — " + meta.weight.toFixed(2) + " g/mol — embedded JSON (" +
       mol.atoms.length + " atoms, " + mol.bonds.length + " bonds)";
     document.getElementById("cap").textContent = CAPTIONS[id] || "";
-    document.getElementById("prov").textContent = "Source: PubChem CID " + meta.cid + " (" + meta.url + "). Embedded copy; counts checked against PubChem below.";
+    document.getElementById("prov").textContent = "Source: PubChem CID " + meta.cid + " 3D record (embedded copy; atom and bond counts checked against the record below).";
   } catch (err) { showError(err.message); }
 }
 
@@ -237,13 +238,28 @@ async function init() {
   if (!gl || new URLSearchParams(location.search).has("force2d")) {
     document.getElementById("meta").textContent =
       "3D unavailable in this browser (no WebGL context). Structures cannot be drawn — nothing is faked in their place.";
+    deadControls("needs the 3D view");
     fetch("data/meta.json", { cache: "no-store" })
       .then((r) => r.json())
       .then((j) => {
         document.getElementById("cap").textContent =
           "Available structures (text only): " + j.compounds.map((c) => c.name + " " + c.formula).join("; ");
       })
-      .catch(() => {});
+      .catch(() => {
+        document.getElementById("cap").textContent =
+          "Structure list unavailable — data/meta.json could not be read on 18934.";
+      });
+    return;
+  }
+  function deadControls(reason) {
+    document.querySelectorAll("#bar button, #bar input").forEach(function (b) {
+      b.disabled = true; b.title = reason;
+    });
+  }
+  if (!window.THREE) {
+    document.getElementById("meta").textContent =
+      "3D library missing (the shared vendor/three.min.js did not load on 18934). Structures cannot be drawn — nothing is faked in their place.";
+    deadControls("needs the 3D library");
     return;
   }
   renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
@@ -254,8 +270,19 @@ async function init() {
   const key = new THREE.DirectionalLight(0xffffff, 1.1);
   key.position.set(6, 9, 7);
   scene.add(key);
-  const res = await fetch("data/meta.json", { cache: "no-store" });
-  META = (await res.json()).compounds;
+  let metaRes;
+  try {
+    metaRes = await fetch("data/meta.json", { cache: "no-store" });
+    if (!metaRes.ok) throw new Error("HTTP " + metaRes.status);
+  } catch (err) {
+    showError("compound list unreachable on 18934 (data/meta.json: " + err.message + " — is face-site serving it?)");
+    return;
+  }
+  META = (await metaRes.json()).compounds;
+  if (!META.length) {
+    showError("compound list is empty on 18934 (data/meta.json carries no compounds).");
+    return;
+  }
   const pk = document.getElementById("picker");
   META.forEach((m) => {
     const b = document.createElement("button");
@@ -351,8 +378,6 @@ async function init() {
     e.currentTarget.textContent = measuring ? "Measure: click 2 atoms" : "Measure: off";
   });
   document.getElementById("btn-cid").addEventListener("click", () => loadCID(document.getElementById("cid").value));
-  const labelsBtn = document.getElementById("btn-labels");
-  labelsBtn.addEventListener("click", () => {});
   let lastT = 0;
   const frame = (t) => {
     requestAnimationFrame(frame);
