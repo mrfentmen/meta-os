@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Notes
 Comment=Local notes, stored as files in ~/Notes (offline)
-Exec=epiphany-browser http://127.0.0.1:18900/notes.html
-Icon=notes
+Exec=/usr/local/bin/meta-notes
+TryExec=/usr/local/bin/meta-notes
+Icon=/usr/share/icons/metaos/128x128/apps/notes.png
 Terminal=false
 Categories=Office;Notes;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-notes
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-notes

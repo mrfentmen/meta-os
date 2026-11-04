@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Musica
 Comment=Local music page (MetaOS local service)
-Exec=epiphany-browser http://127.0.0.1:18900/musica.html
-Icon=musica
+Exec=/usr/local/bin/meta-app --title Musica --app-id musica --url http://127.0.0.1:18900/musica.html
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/musica.png
 Terminal=false
 Categories=AudioVideo;Audio;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Musica --app-id musica --url http://127.0.0.1:18900/musica.html

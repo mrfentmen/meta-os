@@ -5,10 +5,16 @@ Name=MetaOS Welcome
 Comment=First-run welcome window for MetaOS 1.0
 Exec=/usr/share/metaos/apps/metaos-welcome.py
 TryExec=/usr/share/metaos/apps/metaos-welcome.py
-Icon=help-about
+Icon=/usr/share/icons/metaos/128x128/apps/about.png
 Terminal=false
 Categories=GTK;System;
 OnlyShowIn=XFCE;
 X-GNOME-Autostart-enabled=true
 NoDisplay=false
 StartupNotify=false
+StartupWMClass=metaos-welcome.py
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/share/metaos/apps/metaos-welcome.py

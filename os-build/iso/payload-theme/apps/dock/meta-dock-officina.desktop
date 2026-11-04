@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Officina
 Comment=Officina workshop page (MetaOS local service)
-Exec=epiphany-browser http://127.0.0.1:18934/design/meta-officina-blueprint.html
-Icon=officina
+Exec=/usr/local/bin/meta-app --title Officina --app-id officina --url http://127.0.0.1:18934/design/meta-officina-blueprint.html
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/officina.png
 Terminal=false
 Categories=Development;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Officina --app-id officina --url http://127.0.0.1:18934/design/meta-officina-blueprint.html

@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Dashboard
 Comment=System status at a glance (MetaOS local services)
-Exec=epiphany-browser http://127.0.0.1:18900/dashboard.html
-Icon=dashboard
+Exec=/usr/local/bin/meta-app --title Dashboard --app-id dashboard --url http://127.0.0.1:18900/dashboard.html
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/dashboard.png
 Terminal=false
 Categories=System;Monitor;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Dashboard --app-id dashboard --url http://127.0.0.1:18900/dashboard.html
