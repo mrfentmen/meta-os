@@ -12,6 +12,18 @@
 
 Built for the **Meta Global AI Developer Hackathon 2026**, Indie track.
 
+**Meta's first agentic reverse-engineered operating system.**
+
+Meta OS is a next-generation agentic platform: an autonomous, multi-agent
+operating system, reverse-engineered from first principles and rebuilt for
+the age of AI. Its agents perceive, reason, and act around the clock —
+patrolling live camera grids, running experiments in a science lab,
+inventing in a workshop, composing in a studio — orchestrated on one
+self-directed platform that boots to ring 3 and never sleeps.
+
+Agentic by design. Autonomous by default. Perception-driven,
+intent-orchestrated, ambient, always on.
+
 Meta OS is a platform. Systems plug into it, the way departments plug into a city. Each system is a place built for an AI agent to work in: a watch floor, a science lab, a workshop, a studio. The agent lives there, works around the clock, and keeps records of everything it does.
 
 One person directs the build. Del, known as Mrfentmen, makes the calls and does the final testing on his Mac. A crew of AI agents builds the rest in lanes, checks each other's work, and reports what is real and what is not. Nothing in this repo is a mock up presented as finished. Where something is partial, the page says so, in the open.
