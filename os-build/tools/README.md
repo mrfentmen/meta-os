@@ -8,8 +8,8 @@ Nothing in this directory is required to build the OS. These are the instruments
 all of them is the same: **a tool that cannot fail is not a check.** Each one exits non-zero on a
 finding, prints the finding, and is run in the same invocation the document it feeds quotes.
 
-`drive.py` (the Pax-12h driver harness) lives on `buffy/pax-12h-plan` and `main`, not on this
-branch; it is listed at the bottom with its home branch so nobody hunts for it here.
+`drive.py` is in this directory (standalone mode boots its own QEMU and is
+guarded; `--monitor` attach mode does not boot).
 
 ## The two gates
 
@@ -73,7 +73,6 @@ If one of those exits non-zero, the document it feeds is stale and the run is no
 
 | Tool | Home | What it does |
 |---|---|---|
-| `os-build/tools/drive.py` | `main`, `buffy/pax-12h-plan` | Drives the Pax-12h checkpoint list. Not on this branch — do not look for it here. |
 | `os-build/mcp/mcp_client.py` | this branch | The MCP client the lane used to wire its toolchain (`mcp/WIRING.md`). Not part of any build. |
 
 ## QEMU guard (OS-4): which tools boot, and how they refuse

@@ -32,7 +32,7 @@
 #                               the build prints a WARN and the sha256)
 #
 # Claim label: WRITTEN, UNRUN. XORRISO/mksquashfs are not on the build Mac;
-# --check is the only mode proven locally.
+# --check and --tree-only are the modes proven locally.
 set -euo pipefail
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
