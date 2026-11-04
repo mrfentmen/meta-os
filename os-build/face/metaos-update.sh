@@ -88,6 +88,15 @@ for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.
     log "site: $f not in $BRANCH, keeping previous copy"
   fi
 done
+# Imperium's console links ../styles.css and ../vendor, so the site root is the
+# only place its page is styled. Keep a copy here for the Trio/Imperium tiles.
+if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- imperium 2>/dev/null; then
+  rm -rf "$SITE_DST/imperium"
+  cp -r "$WORK/imperium" "$SITE_DST/imperium"
+  log "site: imperium ($(wc -c <"$SITE_DST/imperium/index.html" | tr -d ' ') bytes)"
+else
+  log "site: imperium not in $BRANCH, keeping previous copy"
+fi
 for lab in molecules music3d science-lab-review; do
   git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "labs/$lab" 2>/dev/null || log "site: labs/$lab not in $BRANCH, skipped"
 done
