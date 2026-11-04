@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metaos.local/agents/job.schema.json",
+  "title": "metaosd job submission",
+  "description": "Single copy of the metaosd job schema. Shared by agents/submit.mjs (imperative checks) and the metaosd daemon + server/queue/metaosd_store.mjs (which reads this file at runtime and enforces it generically: required, types, pattern, minimum, additionalProperties). Do NOT duplicate these field definitions anywhere else; import this file.",
+  "type": "object",
+  "required": ["agent"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Optional client-chosen job id (same alphabet as agents/submit.mjs ID_PATTERN). The server generates one when absent."
+    },
+    "agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required agent name. Must be non-empty; the daemon enforces a per-agent concurrency cap on it."
+    },
+    "input": {
+      "type": ["object", "string"],
+      "description": "Optional agent payload (orders string or parameter object). Passed to the child via METAOSD_JOB; never executed as code."
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional caps and retry policy. Unknown budget fields are refused like unknown top-level fields.",
+      "properties": {
+        "maxCostUsd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Cost cap in USD. Recorded, not billed; over-cap jobs are refused before spawn."
+        },
+        "maxWallMs": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Advisory wall-clock cap in ms. The authoritative kill timer is top-level timeout."
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total attempts including the first (default 1 = no retry). Terminal failed/timeout jobs are retried automatically with backoff."
+        },
+        "backoffMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Base backoff between attempts in ms; attempt n waits backoffMs * 2^(n-1). Visible per attempt in the run record."
+        }
+      }
+    },
+    "timeout": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Per-job wall-clock timeout in milliseconds. On expiry the child is killed (SIGTERM, then SIGKILL) and a timeout failure is recorded."
+    },
+    "dry-run": {
+      "type": "boolean",
+      "description": "When true the job is validated and recorded but no child is spawned and no model is contacted (record.spawned === false)."
+    }
+  }
+}

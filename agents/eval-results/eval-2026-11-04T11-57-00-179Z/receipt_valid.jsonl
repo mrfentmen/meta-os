@@ -1,0 +1,2 @@
+{"ts":"2026-11-04T00:00:00Z","kind":"assess","model":"muse-spark","surface":"trio","usage":{},"latency_ms":120,"est_cost_usd":0.002}
+{"ts":"2026-11-04T00:00:01Z","kind":"assess","model":"meta-spark-7","endpoint":"trio","usage":{},"latency_ms":0,"estimate":0}

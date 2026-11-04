@@ -1,0 +1,25 @@
+{
+  "outcome": "no-cameras",
+  "status": {
+    "service": "imperium-patrol",
+    "state": "idle",
+    "reason": "no cameras available (none loaded, or all paused by the supervisor)",
+    "at": "2026-11-04T00:00:00Z",
+    "camera_source": "test-empty",
+    "cameras": 0,
+    "interval_s": 0,
+    "counts": {
+      "checks": 0,
+      "baseline": 0,
+      "flagged": 0,
+      "reported": 0,
+      "feed_errors": 0,
+      "job_errors": 0
+    },
+    "last_camera_id": null,
+    "guardrail": {
+      "remaining_usd": 100
+    },
+    "paused_cameras": []
+  }
+}

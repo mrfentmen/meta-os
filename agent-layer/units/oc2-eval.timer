@@ -1,0 +1,10 @@
+[Unit]
+Description=OC2 agent layer: run the offline eval gate daily
+
+[Timer]
+OnBootSec=45min
+OnUnitActiveSec=24h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

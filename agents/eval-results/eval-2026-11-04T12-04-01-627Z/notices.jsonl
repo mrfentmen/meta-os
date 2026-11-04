@@ -1,0 +1,13 @@
+[
+  {
+    "ts": "2026-11-04T12:04:01.843Z",
+    "severity": "alarm",
+    "key": "job:eval-fail-1:failed",
+    "title": "Agent job failed: fail-fast",
+    "body": "exit 1",
+    "suppressed": false,
+    "delivered": [
+      "journal"
+    ]
+  }
+]
