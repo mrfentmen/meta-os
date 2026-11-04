@@ -3,12 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>Vigiles: Police console</title>
-<link rel="stylesheet" href="./trio.css">
 <style>
   /* Vigiles is the map-first division. Everything else floats over the map,
      the map never shares its column with a panel, and there are exactly three
-     numbers on screen. */
+     numbers on screen.
+
+     This page owns its whole stylesheet. The three division pages share
+     behaviour (core.js, ops.js) and share no look: Vigiles is a cold, square,
+     dense console; Ignis is a warm serif gallery; Medicus is light paper. */
+
+  /* ---- base (page-owned, not inherited from a shared skin) ---- */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #070b16;
+    color: #e6ebf5;
+    font-family: "Helvetica Neue", "DejaVu Sans", system-ui, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.45;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, p, ul, ol { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input, select { font: inherit; }
+  :focus-visible { outline: 1px solid #7fa8e0; outline-offset: 1px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(120, 150, 200, 0.25); }
+  .mono { font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace; }
+  .dim { color: #93a1ba; }
+  .dimmer { color: #66748c; }
+  .fail { color: #e0564f; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 5px 10px; border: 1px solid rgba(150, 175, 215, 0.32);
+    border-radius: 0; background: #121a2b; color: #e6ebf5;
+    font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .btn:hover { border-color: #7fa8e0; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: #2d5a9c; border-color: #4f7ec2; color: #fff; }
+  .btn.primary:hover { background: #3566ad; }
   :root {
     --ink: #070b16;
     --panel: #0b1220;
@@ -24,9 +62,17 @@
     background: linear-gradient(180deg, #0c1424, #080e1b);
   }
   .mark {
-    font-size: 14px; font-weight: 650; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   }
-  .mark span { color: var(--accent); }
+  .mark svg { color: var(--accent); }
+  .ops-trigger {
+    margin-left: 4px; padding: 4px 10px; border: 1px solid var(--line-strong);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .ops-trigger:hover { color: var(--text); border-color: var(--accent); }
+  .ops-trigger:disabled { opacity: 0.45; cursor: default; }
   .div-tag {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--dim);
@@ -41,7 +87,7 @@
   main { display: grid; grid-template-columns: 292px 1fr; min-height: 0; }
 
   .rail {
-    display: grid; grid-template-rows: auto 1fr;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) 232px;
     border-right: 1px solid var(--line); background: var(--panel); min-height: 0;
   }
   .rail-head { padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
@@ -115,7 +161,8 @@
   .inspector.open { transform: translateX(0); }
   .insp-head { display: flex; align-items: flex-start; gap: 8px; }
   .insp-head h2 { font-size: 13px; font-weight: 600; line-height: 1.3; }
-  .insp-head .close { margin-left: auto; color: var(--dim); font-size: 15px; line-height: 1; }
+  .insp-head .close { margin-left: auto; display: grid; place-items: center; width: 20px; height: 20px; color: var(--dim); border: 1px solid var(--line); }
+  .insp-head .close:hover { color: var(--text); border-color: var(--accent); }
   .inspier-meta { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
   .snap {
     width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
@@ -142,17 +189,156 @@
   .strip .flag-count b { color: var(--flag); }
   #activity { margin-left: auto; color: var(--dimmer); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* duty agent: a terminal at the bottom of the rail. Same console as the
+     other two divisions; here it is square, mono and cold. */
+  .rail-agent { min-height: 0; display: grid; border-top: 1px solid var(--line-strong); background: #080e1a; }
+  .agent { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+  .agent-head { display: flex; align-items: baseline; gap: 8px; padding: 8px 14px 6px; border-bottom: 1px solid var(--line); }
+  .agent-head h2 { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+  .agent-head .state { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--dimmer); }
+  .agent-head .state.bad { color: var(--flag); }
+  .agent-log { overflow-y: auto; padding: 8px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .agent-log .turn { font-size: 11px; line-height: 1.5; }
+  .agent-log .turn.user { align-self: flex-end; max-width: 92%; background: #14233a; border-right: 2px solid var(--accent); padding: 4px 8px; }
+  .agent-log .turn.agent { border-left: 2px solid var(--accent); padding-left: 8px; color: var(--text); }
+  .agent-log .turn.note { font-family: var(--mono); font-size: 9.5px; color: var(--dimmer); }
+  .agent-log .turn.bad { border-left: 2px solid var(--flag); padding-left: 8px; color: var(--flag); }
+  .agent form { display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--line); }
+  .agent input { flex: 1; min-width: 0; background: #070d18; border: 1px solid var(--line-strong); border-radius: 0; color: var(--text); padding: 5px 7px; font-size: 11px; }
+  .agent input:focus { outline: 1px solid var(--accent); outline-offset: 1px; }
+  .agent button { border: 1px solid var(--line-strong); background: #121a2b; color: var(--text); padding: 5px 9px; font-size: 10.5px; }
+  .agent button:hover { border-color: var(--accent); }
+
+  /* map modes: a strip, not a menu — four filters and the fires layer */
+  .map-controls {
+    position: absolute; right: 14px; top: 12px; display: flex;
+    border: 1px solid var(--line-strong); background: rgba(8, 13, 24, 0.86);
+  }
+  .map-controls button {
+    padding: 4px 9px; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim);
+    border-left: 1px solid var(--line);
+  }
+  .map-controls button:first-child { border-left: 0; }
+  .map-controls button[aria-pressed="true"] { background: rgba(79, 126, 194, 0.26); color: #fff; }
+  .map-controls button:hover { color: var(--text); }
+
+  /* ---- operations sheet: square edges, cold blue, mono tabs ---- */
+  .ops {
+    position: fixed; left: 0; right: 0; bottom: 32px; height: 62vh; z-index: 40;
+    display: flex; flex-direction: column; background: #0a1120;
+    border-top: 1px solid var(--line-strong); box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.55);
+    transform: translateY(100%); transition: transform 160ms ease;
+  }
+  .ops.open { transform: translateY(0); }
+  .ops[hidden] { display: none; }
+  .ops-head { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); }
+  .ops-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .ops-title h2 { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .ops-badge { font-family: var(--mono); font-size: 10px; color: var(--dimmer); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ops-head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .ops-source { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+  .ops-source.warn { color: #d8a23a; }
+  .ops-source.bad { color: var(--flag); }
+  .ops-close { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line-strong); color: var(--dim); }
+  .ops-close:hover { color: var(--text); border-color: var(--accent); }
+  .ops-tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .ops-tab {
+    padding: 7px 14px; font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
+    border-right: 1px solid var(--line); border-bottom: 2px solid transparent;
+  }
+  .ops-tab:hover { color: var(--text); }
+  .ops-tab[aria-pressed="true"] { color: var(--text); background: rgba(79, 126, 194, 0.12); border-bottom-color: var(--accent); }
+  .ops-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px 18px; display: grid; gap: 12px; align-content: start; }
+  .ops-status { padding: 5px 14px; font-family: var(--mono); font-size: 10.5px; color: var(--dim); border-bottom: 1px solid var(--line); }
+  .ops-status:empty { display: none; }
+  .ops-note { font-size: 11.5px; color: var(--dim); line-height: 1.5; }
+  .ops-note.muted { color: var(--dimmer); }
+  .ops-note.bad { color: var(--flag); }
+  .ops-note.ok { color: #79c39a; }
+  .ops-block { border: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 8px; }
+  .ops-block-head h3 { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+  .ops-hint { font-size: 11px; color: var(--dimmer); margin-top: 2px; }
+  .ops-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .ops-row-between { justify-content: space-between; }
+  .ops-btn { padding: 5px 10px; border: 1px solid var(--line-strong); background: var(--raised); color: var(--text); font-size: 11px; border-radius: 0; }
+  .ops-btn:hover { border-color: var(--accent); }
+  .ops-btn.primary { background: #2d5a9c; border-color: var(--accent); }
+  .ops-btn.ghost { background: none; }
+  .ops-btn:disabled { opacity: 0.45; }
+  .ops-input { width: 100%; padding: 5px 7px; background: #070d18; border: 1px solid var(--line-strong); border-radius: 0; color: var(--text); font-size: 12px; }
+  .ops-field { display: grid; gap: 3px; flex: 1 1 240px; font-family: var(--mono); font-size: 10px; color: var(--dim); }
+  .ops-file { font-size: 11px; color: var(--dim); }
+  .ops-video { width: 100%; max-height: 220px; background: #060a12; border: 1px solid var(--line); object-fit: contain; }
+  .ops-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .ops-wall-card { border: 1px solid var(--line); background: var(--panel); display: grid; }
+  .ops-wall-img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #060a12; }
+  .ops-wall-missing { aspect-ratio: 16 / 9; display: grid; place-items: center; padding: 12px; font-size: 10.5px; color: var(--dimmer); border-bottom: 1px dashed var(--line); }
+  .ops-wall-body { padding: 8px 10px 10px; display: grid; gap: 4px; }
+  .ops-wall-body h4 { font-size: 12px; }
+  .ops-wall-area { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .ops-wall-last { font-size: 10.5px; color: var(--dim); }
+  .ops-wall-last.flag { color: var(--flag); }
+  .ops-wall-last.bad { color: var(--flag); }
+  .ops-list { display: grid; border: 1px solid var(--line); }
+  .ops-hist-row { display: grid; grid-template-columns: 92px 1fr 130px 110px; gap: 8px; padding: 5px 9px; text-align: left; font-size: 11px; border-top: 1px solid var(--line); }
+  .ops-hist-row:first-child { border-top: 0; }
+  .ops-hist-row:hover, .ops-hist-row.on { background: rgba(79, 126, 194, 0.14); }
+  .ops-hist-time, .ops-hist-src { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .ops-hist-cat { color: var(--dim); }
+  .ops-hist-cat.flag, .ops-hist-cat.bad { color: var(--flag); }
+  .ops-detail { border: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 6px; background: #080e1a; }
+  .ops-detail:empty { display: none; }
+  .ops-cat { font-size: 13px; font-weight: 700; }
+  .ops-cat.flag, .ops-cat.bad { color: var(--flag); }
+  .ops-sum { font-size: 11.5px; color: var(--dim); }
+  .ops-meta { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .ops-steps { display: grid; gap: 2px; font-family: var(--mono); font-size: 10px; }
+  .ops-steps .done { color: #79c39a; }
+  .ops-steps .miss { color: var(--dimmer); }
+  .ops-metrics { display: flex; flex-wrap: wrap; gap: 22px; padding: 8px 0; }
+  .ops-metric { display: grid; }
+  .ops-metric-v { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .ops-metric-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .ops-metric-h { font-size: 10px; color: var(--dimmer); }
+  .ops-table { display: grid; font-size: 11px; }
+  .ops-tr { display: grid; grid-template-columns: 1fr 80px 120px; gap: 8px; padding: 3px 0; border-top: 1px solid var(--line); }
+  .ops-tr span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .ops-thead { color: var(--dimmer); font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; border-top: 0; }
+  .ops-kvlist { display: grid; gap: 2px; border: 1px solid var(--line); padding: 8px 10px; }
+  .ops-kv { display: grid; grid-template-columns: 150px 1fr; gap: 10px; font-size: 11px; padding: 2px 0; }
+  .ops-k { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+  .ops-kv.bad .ops-v { color: var(--flag); }
+  .ops-search { position: fixed; inset: 0; z-index: 60; background: rgba(4, 7, 13, 0.72); display: grid; place-items: start center; padding-top: 12vh; }
+  .ops-search[hidden] { display: none; }
+  .ops-search-box { width: min(560px, 92vw); background: #0a1120; border: 1px solid var(--line-strong); padding: 12px; display: grid; gap: 8px; }
+  .ops-search-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+  .ops-search-input { width: 100%; padding: 7px 9px; background: #060b14; border: 1px solid var(--line-strong); color: var(--text); }
+  .ops-search-results { display: grid; max-height: 44vh; overflow-y: auto; }
+  .ops-search-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 4px; border-top: 1px solid var(--line); text-align: left; font-size: 12px; }
+  .ops-search-row:hover { background: rgba(79, 126, 194, 0.16); }
+  .ops-search-meta { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .ops-help { display: grid; gap: 4px; font-size: 12px; }
+
   @media (max-width: 1000px) {
     main { grid-template-columns: 240px 1fr; }
     .inspector { width: 260px; }
+    .ops-hist-row { grid-template-columns: 78px 1fr 100px; }
+    .ops-hist-src { display: none; }
   }
 </style>
 </head>
 <body>
 <header class="topbar">
-  <p class="mark"><span>◈</span> Vigiles</p>
+  <p class="mark">
+    <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5 14 4v4.2c0 3.3-2.6 5.6-6 6.3-3.4-.7-6-3-6-6.3V4l6-2.5Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 6.2v3.2" stroke="currentColor" stroke-width="1.3"/></svg>
+    Vigiles
+  </p>
   <p class="div-tag">Meta OS / Police</p>
   <div class="top-right">
+    <button id="assess-watched" class="ops-trigger" type="button">Assess watched</button>
+    <button id="ops-open" class="ops-trigger" type="button" aria-haspopup="dialog">Operations</button>
     <p id="source" class="src">Loading the camera list.</p>
     <p id="clock" class="mono">--:--:--</p>
   </div>
@@ -172,6 +358,7 @@
       </div>
       <div id="cameras" class="cam-list"></div>
     </div>
+    <section class="rail-agent"><aside id="agent" class="agent"></aside></section>
   </aside>
 
   <section class="mapwrap">
@@ -181,6 +368,13 @@
       <span><b style="background:#e0564f"></b>flagged</span>
       <span><b style="background:rgba(180,200,230,.65)"></b>camera</span>
     </div>
+    <div class="map-controls" role="group" aria-label="Map mode and layers">
+      <button type="button" data-mode="city" aria-pressed="true">City</button>
+      <button type="button" data-mode="tactical" aria-pressed="false">Tactical</button>
+      <button type="button" data-mode="incident" aria-pressed="false">Incident</button>
+      <button type="button" data-mode="focus" aria-pressed="false">AI Focus</button>
+      <button type="button" id="fires-toggle" aria-pressed="false">Fires</button>
+    </div>
     <p class="map-note">Positions are the camera's own coordinates. No street basemap is drawn: the map library's style file is a remote request, and this machine runs offline.</p>
 
     <aside id="inspector" class="inspector" aria-label="Camera inspector" aria-hidden="true">
@@ -189,7 +383,9 @@
           <h2 id="insp-name">No camera selected</h2>
           <p id="insp-meta" class="inspier-meta"></p>
         </div>
-        <button id="insp-close" class="close" title="Close inspector" aria-label="Close inspector">✕</button>
+        <button id="insp-close" class="close" title="Close inspector" aria-label="Close inspector">
+          <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+        </button>
       </div>
       <div id="insp-media"></div>
       <div id="insp-result" class="result"></div>
@@ -209,8 +405,12 @@
   <span id="activity">Ready.</span>
 </footer>
 
+<div id="ops-mount"></div>
+
 <script type="module">
 import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS, backendLabel } from "./core.js";
+import { createOps } from "./ops.js";
+import { createAgent } from "./agent.js";
 
 const division = DIVISIONS.police;
 const store = createStore("police");
@@ -365,11 +565,21 @@ function render() {
   renderList();
   renderInspector();
   map.set({
-    cameras: store.cameras,
+    cameras: store.viewCameras(),
     results: store.results,
     watch: store.watch,
     selected: store.selected,
+    hotspots: store.hotspots,
   });
+  for (const b of document.querySelectorAll(".map-controls [data-mode]")) {
+    b.setAttribute("aria-pressed", b.dataset.mode === store.mapMode ? "true" : "false");
+  }
+  $("fires-toggle").setAttribute("aria-pressed", store.hotspots.length > 0 ? "true" : "false");
+  $("fires-toggle").title = store.firesError || "Active-fire hotspots from the local server";
+  const bulk = $("assess-watched");
+  bulk.textContent = store.busy.size > 0 ? "Working…" : "Assess watched (" + store.watch.size + ")";
+  bulk.disabled = store.watch.size === 0 || store.busy.size > 0;
+
   $("count-online").textContent = String(store.cameras.length);
   $("count-watch").textContent = String(store.watch.size);
   $("count-flag").textContent = String(store.flaggedCameras().length);
@@ -412,6 +622,29 @@ $("btn-assess").addEventListener("click", async () => {
   if (!store.selected) return;
   await store.assess(store.selected);
 });
+$("assess-watched").addEventListener("click", () => store.assessWatched());
+
+let firesOn = false;
+$("fires-toggle").addEventListener("click", async () => {
+  if (!firesOn) {
+    const r = await store.loadFires();
+    firesOn = r.ok;
+  } else {
+    store.hotspots = [];
+    store.firesError = null;
+    firesOn = false;
+    store.emit();
+  }
+});
+for (const b of document.querySelectorAll(".map-controls [data-mode]")) {
+  b.addEventListener("click", () => store.setMapMode(b.dataset.mode));
+}
+
+const ops = createOps({ store, division, mount: $("ops-mount"), variant: "vigiles" });
+$("ops-open").addEventListener("click", () => ops.toggle("wall"));
+
+// Same agent console the other two divisions carry, painted as a rail terminal.
+const agent = createAgent({ store, division, mount: $("agent") });
 
 setInterval(() => {
   $("clock").textContent = clock();
@@ -427,6 +660,7 @@ setInterval(() => {
 // request is still out.
 async function boot() {
   render();
+  agent.refreshHealth();
   await store.loadCameras();
   render();
   await store.loadHealth();

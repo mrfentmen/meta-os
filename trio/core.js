@@ -192,6 +192,7 @@ export function createStore(divisionKey) {
     source: { kind: "loading", note: "Loading the camera list." },
     watch: new Set(),
     results: new Map(), // camera id -> { status, category, summary, at, flagged, reason }
+    reviewed: new Set(), // camera ids a person marked seen; the flag stays in the record
     busy: new Set(),
     activity: [], // newest first { at, text, ok }
     crew: null,
@@ -201,6 +202,13 @@ export function createStore(divisionKey) {
     query: "",
     selected: null,
     usingOffline: false,
+    mapMode: "city", // city | tactical | incident | focus
+    // The assessment endpoint is a setting, not a constant: an operator can
+    // point the board at another server without a rebuild. Empty means the
+    // default this machine serves.
+    endpoint: "",
+    hotspots: [], // active-fire centroids, drawn under the camera dots
+    firesError: null,
 
     subscribe(fn) {
       listeners.add(fn);
@@ -351,6 +359,71 @@ export function createStore(divisionKey) {
       }
     },
 
+    // A review clears the flag from the queue but never edits the assessment:
+    // the category, confidence and summary stay exactly as the model returned
+    // them, and the log keeps saying what it said.
+    markReviewed(id) {
+      if (!store.byId.has(id)) return { ok: false, reason: "no camera " + id };
+      store.reviewed.add(id);
+      store.note("Marked reviewed: " + store.byId.get(id).name);
+      store.emit();
+      return { ok: true };
+    },
+
+    setMapMode(mode) {
+      if (!["city", "tactical", "incident", "focus"].includes(mode)) {
+        return { ok: false, reason: "unknown map mode " + mode };
+      }
+      store.mapMode = mode;
+      store.emit();
+      return { ok: true };
+    },
+
+    // Which cameras the map draws. The list on the left always keeps the whole
+    // roster: a mode narrows the map, it does not hide the search results.
+    viewCameras() {
+      if (store.mapMode === "tactical") {
+        return store.cameras.filter(
+          (c) => store.watch.has(c.id) || store.results.get(c.id)?.flagged
+        );
+      }
+      if (store.mapMode === "incident") {
+        return store.cameras.filter((c) => store.results.get(c.id)?.flagged);
+      }
+      if (store.mapMode === "focus") {
+        return store.cameras.filter((c) => c.id === store.selected || store.watch.has(c.id));
+      }
+      return store.cameras;
+    },
+
+    async loadFires() {
+      try {
+        const res = await fetch(backendBase() + "/api/fires", { cache: "no-store" });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) {
+          store.hotspots = [];
+          store.firesError =
+            (body && typeof body.error === "string" ? body.error : "HTTP " + res.status) +
+            " from " + backendLabel();
+          store.emit();
+          return { ok: false, reason: store.firesError };
+        }
+        const list = Array.isArray(body?.fires) ? body.fires : [];
+        store.hotspots = list
+          .filter((f) => Number.isFinite(f.latitude) && Number.isFinite(f.longitude))
+          .map((f) => ({ lat: f.latitude, lon: f.longitude, frp: f.frp ?? null }));
+        store.firesError = null;
+        store.note("Fires layer: " + store.hotspots.length + " hotspots");
+        store.emit();
+        return { ok: true, count: store.hotspots.length };
+      } catch {
+        store.hotspots = [];
+        store.firesError = "backend unreachable on " + backendLabel();
+        store.emit();
+        return { ok: false, reason: store.firesError };
+      }
+    },
+
     toggleWatch(id) {
       if (!store.byId.has(id)) return { ok: false, reason: "no camera " + id };
       if (store.watch.has(id)) {
@@ -403,7 +476,7 @@ export function createStore(divisionKey) {
         return { ok: false, reason: err.message };
       }
       try {
-        const res = await fetch(backendBase() + "/api/assess", {
+        const res = await fetch(store.endpoint || backendBase() + "/api/assess", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -463,11 +536,12 @@ export function createStore(divisionKey) {
     },
 
     // The order a page draws: newest flag first, then newest result, then name.
+    // A reviewed camera stays flagged in its record but leaves this queue.
     flaggedCameras() {
       return store.cameras
         .filter((c) => {
           const r = store.results.get(c.id);
-          return r && r.flagged;
+          return r && r.flagged && !store.reviewed.has(c.id);
         })
         .sort((a, b) => (store.results.get(b.id).at ?? 0) - (store.results.get(a.id).at ?? 0));
     },
@@ -582,6 +656,7 @@ export function LocalMap(canvas, opts = {}) {
     results: new Map(),
     watch: new Set(),
     selected: null,
+    hotspots: [],
     onSelect: opts.onSelect ?? (() => {}),
     accent: opts.accent ?? "#4F7EC2",
     drag: null,
@@ -658,6 +733,22 @@ export function LocalMap(canvas, opts = {}) {
       const [x, y] = project(b.lat, b.lon, state.center, state.zoom, w, h);
       if (x < 20 || y < 20 || x > w - 20 || y > h - 20) continue;
       ctx.fillText(b.name.toUpperCase(), x, y);
+    }
+
+    // Fire hotspots sit under the camera dots: a satellite centroid is
+    // context, not a dispatch, so it never draws over a camera.
+    for (const h of state.hotspots) {
+      const [x, y] = project(h.lat, h.lon, state.center, state.zoom, w, h);
+      if (x < -10 || y < -10 || x > w + 10 || y > h + 10) continue;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(224, 102, 47, 0.75)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(224, 102, 47, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
     // Plain dots first, then flagged, then watched, then selected. At 975
@@ -766,6 +857,7 @@ export function LocalMap(canvas, opts = {}) {
       if (data.cameras) state.cameras = data.cameras;
       if (data.results) state.results = data.results;
       if (data.watch) state.watch = data.watch;
+      if (data.hotspots) state.hotspots = data.hotspots;
       if ("selected" in data) state.selected = data.selected;
       draw();
     },
