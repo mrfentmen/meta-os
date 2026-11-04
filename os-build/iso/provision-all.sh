@@ -68,23 +68,42 @@ else
   echo "=== [2] SKIP installer lane (no iso/provision.sh)"
 fi
 
-# 3) identity: de-Ubuntu, then the brand pass
+# 3) identity: GATED (identity lane, single-writer rule). dexubuntu's
+# apply-in-chroot.sh addresses /etc absolutely: it must run INSIDE the
+# chroot (Cubic phase), never here — running it now would brand the BUILD
+# HOST's own /etc instead of $ROOT. $ROOT identity is already owned by step 2
+# (provision.sh -> debrand.sh runs last, last writer wins at build time), so
+# there is nothing for this step to add on the host.
 if [ "$SKIP_IDENTITY" = 0 ]; then
-  DEX="$REPO/os-build/metaos1-base/dexubuntu/apply-in-chroot.sh"
-  if [ -f "$DEX" ]; then
-    step 3 "identity (dexubuntu)" sh "$DEX"
-  else
-    echo "=== [3] SKIP identity (no dexubuntu)"
-  fi
+echo "=== [3] SKIP dexubuntu on host (chroot-only; debrand owns $ROOT)"
   if [ -f "$REPO/os-build/metaos-brand/brand.sh" ]; then
     step 4 "branding (wallpaper, panel, dock, theme)" \
       sh "$REPO/os-build/metaos-brand/brand.sh" --root "$ROOT"
+  elif [ -f "$HERE/payload-theme/apply.sh" ]; then
+    step 4 "branding via payload-theme/apply.sh (greeter, backgrounds, gtk/xfwm4, panel, dock, icons)" \
+      env METAOS_SKIP_IDENTITY=1 sh "$HERE/payload-theme/apply.sh" "$ROOT"
   else
-    echo "=== [4] SKIP branding (no brand.sh)"
+    echo "=== [4] SKIP branding (no brand.sh, no payload-theme/apply.sh)"
   fi
 else
   echo "=== [3][4] SKIP identity + branding"
 fi
+
+# 4c) identity re-stamp (identity lane, single-writer rule): step 4's theme
+# apply writes its own identity copies (os-release without DOCUMENTATION_URL,
+# motd naming the base). debrand.sh runs again last so $ROOT ends
+# contract-correct; --check proves it.
+if [ "$SKIP_IDENTITY" = 0 ]; then
+  step "4c" "identity re-stamp (debrand last writer)" \
+    sh "$REPO/os-build/identity/debrand.sh" --apply --root "$ROOT"
+  step "4c-check" "identity re-stamp check" \
+    sh "$REPO/os-build/identity/debrand.sh" --check --root "$ROOT"
+fi
+
+# 4b) fonts: the six vendored Meta families + fontconfig aliases. Installs
+# files, not font packages: a font-package pull can reintroduce a non-Meta
+# family name, so the image takes type from payload-theme/fonts/ instead.
+step "4b" "fonts (Meta vendored)" sh "$HERE/payload-theme/fonts/install.sh" "$ROOT"
 
 # 5) THE DESKTOP: the face, its seven backends, and the kiosk at login.
 # This is the stage the old build was missing.

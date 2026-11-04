@@ -292,3 +292,17 @@ os-build/identity/README.md	Ubuntu	attribution	lane checker doc quotes leak line
 os-build/identity/README.md	Xubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
 os-build/identity/test_check_strings.sh	ubuntu	attribution	lane test fixtures must contain the word to prove detection
 os-build/identity/test_check_strings.sh	Ubuntu	attribution	lane test fixtures must contain the word to prove detection
+metaos-theme/fonts/FONTS.md	ubuntu	compat	real font/package name (fonts-ubuntu), not branding
+os-build/iso/payload-theme/fonts/META-FONTS.md	ubuntu	compat	real font/package name (fonts-ubuntu), not branding
+os-build/iso/payload-theme/fonts/META-FONTS.md	Ubuntu	compat	real font name (Ubuntu Mono, the face being replaced), not branding
+os-build/iso/grub-fix.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/grub-fix.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/grub-fix.sh	Xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/grub-fix.sh	xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/grub/check-grub.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/grub/check-grub.sh	xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/fonts/test-no-ubuntu.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/fonts/test-no-ubuntu.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/fonts/META-FONTS.md	ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/payload-theme/fonts/META-FONTS.md	Ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/payload-theme/fonts/META-FONTS.md	Xubuntu	attribution	honest evidence record quoting what was found and removed

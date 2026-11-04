@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MetaOS desktop backdrop default (lane D).
+     Install: /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+              + /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+     via payload-theme/apply.sh (wallpaper section).
+     Static fallback only: the live session replaces this with the animated
+     wallpaper player (meta-live.py via metaos-livebg.desktop, installed by
+     iso/provision.sh). Value matches the login-screen default
+     (greeter/99_metaos-greeter.gschema.override background=meta-rays.png),
+     so greeter and desktop agree on first boot. image-style 5 = zoomed fill.
+     Xfce writes per-monitor keys on first login; the user's own channel wins
+     once they change it. -->
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitor0" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="last-image" type="string" value="/usr/share/backgrounds/meta-rays.png"/>
+          <property name="image-style" type="int" value="5"/>
+        </property>
+        <property name="workspace1" type="empty">
+          <property name="last-image" type="string" value="/usr/share/backgrounds/meta-rays.png"/>
+          <property name="image-style" type="int" value="5"/>
+        </property>
+      </property>
+    </property>
+  </property>
+</channel>

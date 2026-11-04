@@ -6,7 +6,7 @@
 # the first and leaves the second alone, on purpose:
 #
 #   rewritten   /etc/os-release, /usr/lib/os-release, /etc/lsb-release,
-#               /etc/issue, /etc/issue.net, /etc/hostname, /etc/hosts
+#               /etc/issue, /etc/issue.net, /etc/motd, /etc/hostname, /etc/hosts
 #               (127.0.1.1 line), login motd scripts, dead plymouth themes,
 #               stock Xubuntu wallpapers, every backdrop pointer, Xubuntu
 #               names in desktop-directories/applications
@@ -73,6 +73,7 @@ LOGO=metaos
 HOME_URL="https://metaos.local"
 SUPPORT_URL="https://metaos.local/support"
 BUG_REPORT_URL="https://metaos.local/issues"
+DOCUMENTATION_URL="https://metaos.local/docs"
 EOF
 }
 
@@ -119,6 +120,12 @@ EOF
   install_text "$ROOT/etc/issue" "$TMP"
   printf '%s\n' "$PRETTY" > "$TMP"
   install_text "$ROOT/etc/issue.net" "$TMP"
+
+  # Static motd: the same identity for non-login shells. Kept free of the
+  # base name on purpose (never "Built on X..."): this file is read by a
+  # person, so it carries only the product name and where truth lives.
+  printf '%s\nIdentity lives in /etc/os-release.\n' "$PRETTY" > "$TMP"
+  install_text "$ROOT/etc/motd" "$TMP"
 
   # Hostname and the 127.0.1.1 line name the machine; both must say metaos.
   printf 'metaos\n' > "$TMP"
@@ -251,6 +258,14 @@ do_check() {
     [ "$like" = "ID_LIKE=debian" ] \
       && say "$rel id_like" ok "ID_LIKE=debian" "$like" "" \
       || say "$rel id_like" no "ID_LIKE=debian" "${like:-missing}" "ID_LIKE is not debian"
+    code=$(grep "^VERSION_CODENAME=" "$f" 2>/dev/null | head -1)
+    [ "$code" = "VERSION_CODENAME=ribbon" ] \
+      && say "$rel codename" ok "VERSION_CODENAME=ribbon" "$code" "" \
+      || say "$rel codename" no "VERSION_CODENAME=ribbon" "${code:-missing}" "VERSION_CODENAME is not ribbon"
+    doc=$(grep "^DOCUMENTATION_URL=" "$f" 2>/dev/null | head -1)
+    [ "$doc" = 'DOCUMENTATION_URL="https://metaos.local/docs"' ] \
+      && say "$rel doc_url" ok 'DOCUMENTATION_URL="https://metaos.local/docs"' "$doc" "" \
+      || say "$rel doc_url" no 'DOCUMENTATION_URL="https://metaos.local/docs"' "${doc:-missing}" "DOCUMENTATION_URL is not the Meta docs URL"
     if grep -qi "ubuntu" "$f" 2>/dev/null; then
       say "$rel no-ubuntu" no "no ubuntu string" "$(grep -oi "ubuntu" "$f" | head -1)" "file still mentions ubuntu"
     else
@@ -286,6 +301,16 @@ do_check() {
       || say "issue.net no-ubuntu" ok "no ubuntu string" "clean" ""
   else
     say "issue.net" no "regular file" "missing" "missing"
+  fi
+  if [ -f "$ROOT/etc/motd" ]; then
+    grep -q "Meta OS 1.0 (Ribbon)" "$ROOT/etc/motd" \
+      && say "motd title" ok "Meta OS 1.0 (Ribbon)" "present" "" \
+      || say "motd title" no "Meta OS 1.0 (Ribbon)" "$(head -1 "$ROOT/etc/motd")" "no Meta OS title"
+    grep -qi "ubuntu" "$ROOT/etc/motd" \
+      && say "motd no-ubuntu" no "no ubuntu string" "present" "file still mentions ubuntu" \
+      || say "motd no-ubuntu" ok "no ubuntu string" "clean" ""
+  else
+    say "motd" no "regular file" "missing" "missing"
   fi
   if [ -f "$ROOT/etc/hostname" ]; then
     grep -qx "metaos" "$ROOT/etc/hostname" 2>/dev/null \
