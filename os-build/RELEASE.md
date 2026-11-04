@@ -9,8 +9,9 @@ printed by a command in this document; none is a estimate.
 |---|---|
 | Branch | `release` (also fast-forwarded to `main` locally — **not pushed**) |
 | Ancestry | `agent-r3` (lane merges, in-app chat, debrand, deletions) merged with `agent-r5` (this round's gates, receipts, kernel/PCI/framebuffer evidence) |
-| Merge commit | see `git log --oneline -n 6`; the merge message lists every conflict and how it was decided |
-| Image | `os-build/iso/output/metaos-1.0-arm64.iso`, 2.3 GB, **built 2026-11-03, before this merge** |
+| Merge commit | `b9ed7b21` — its message lists every conflict and how it was decided |
+| Image | `os-build/iso/output/metaos-demo-image-2026-11-03-arm64.iso`, 2.3 GB, **built 2026-11-03, before this merge** |
+| Image checksum | `d376f3d4046761f0bfd66c05e6b54e2ee11af19cb4cd036c136f53ba2bb5bca7` (SHA-256) |
 
 The ISO on disk does **not** contain this merge. Rebuilding it needs Docker with
 `--privileged` (the `--rebuild` path) and a base ISO; the full build is
@@ -71,35 +72,38 @@ Not proven, stated plainly:
 - **The desktop is a remaster of a base distribution**, not our kernel running
   our apps. The README's section 7 lists this and the other limits.
 
-## Putting the ISO on GitHub (50 MB batches)
+## Putting the image on GitHub Releases
 
-GitHub refuses a single release asset over 2 GB, and this image is 2.3 GB, so it
-goes up split. Code first, then the parts.
+GitHub refuses a single release asset over 2 GB and this image is 2.3 GB, so it
+goes up as two parts. The split and the hash are already done — the files sit in
+`os-build/iso/output/` beside the image and are gitignored.
 
 ```sh
-# 1. code and tags (needs your credentials; nothing is pushed for you)
+# 1. code and the tag (needs your credentials; nothing here is pushed for you)
 git push origin release:main
-git push origin --tags
+git push origin v1.0.0
 
-# 2. a release to hang the parts on
+# 2. a release to hang the parts on, in one step
 gh release create v1.0.0 --title "Meta OS 1.0" \
-  --notes-file os-build/RELEASE.md
+  --notes-file os-build/RELEASE.md \
+  os-build/iso/output/metaos-demo-image-2026-11-03-arm64.iso.part-* \
+  os-build/iso/output/metaos-demo-image-2026-11-03-arm64.iso.sha256
 
-# 3. split the image: 50,000,000-byte parts (47 MB each, 48 parts for 2.3 GB)
-cd os-build/iso/output
-split -b 50000000 metaos-1.0-arm64.iso metaos-1.0-arm64.iso.part-
-
-# 4. upload every part, plus the checksum
-gh release upload v1.0.0 metaos-1.0-arm64.iso.part-* \
-  metaos-1.0-arm64.iso.sha256 --clobber
-
-# 5. what a downloader runs
-cat metaos-1.0-arm64.iso.part-* > metaos-1.0-arm64.iso
-shasum -a 256 -c metaos-1.0-arm64.iso.sha256   # or sha256sum on Linux
+# 3. what a downloader runs — put this in the release notes too
+cat metaos-demo-image-2026-11-03-arm64.iso.part-* > metaos-demo-image-2026-11-03-arm64.iso
+shasum -a 256 -c metaos-demo-image-2026-11-03-arm64.iso.sha256   # sha256sum on Linux
 ```
 
-`gh` needs `GH_TOKEN` or an interactive login. The 2.3 GB upload takes a while on
-a home connection; the parts can be re-uploaded individually if one fails.
+The parts are `part-aa` (1.2 GB) and `part-ab` (1.1 GB), both under GitHub's
+per-asset ceiling. `gh` is **not installed** on the build Mac — `brew install gh`
+then `gh auth login` first, or create the release in the web UI and drag the
+files in. A 1.2 GB upload takes a while on a home connection; if one part fails,
+re-upload just that part with `gh release upload v1.0.0 <file> --clobber`.
+
+A single-file mirror is worth having for judges who should not have to run `cat`:
+Hugging Face accepts the whole 2.3 GB on a free public repo and gives one direct
+link. Google Drive works as a *backup* only — it shows a virus-scan interstitial
+on files this size and throttles a file after a handful of downloads.
 
 ## Reproduce this release from scratch
 
