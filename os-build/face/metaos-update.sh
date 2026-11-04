@@ -97,6 +97,16 @@ if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- imper
 else
   log "site: imperium not in $BRANCH, keeping previous copy"
 fi
+# The three division apps. They are ES modules, so they only work over http
+# from the site root; file:// blocks the import of ./core.js. Same backend as
+# Imperium (port 8080), same camera list, three different pages.
+if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- trio 2>/dev/null; then
+  rm -rf "$SITE_DST/trio"
+  cp -r "$WORK/trio" "$SITE_DST/trio"
+  log "site: trio ($(ls "$SITE_DST/trio"/*.html 2>/dev/null | wc -l | tr -d ' ') pages, $(du -sk "$SITE_DST/trio" | cut -f1) KB)"
+else
+  log "site: trio not in $BRANCH, keeping previous copy"
+fi
 for lab in molecules music3d science-lab-review; do
   git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "labs/$lab" 2>/dev/null || log "site: labs/$lab not in $BRANCH, skipped"
 done

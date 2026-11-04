@@ -1,0 +1,121 @@
+/* Meta Trio shared base. Each division page sets its own tokens on :root and
+   is free to ignore every rule below; this file only holds what all three
+   genuinely share: the reset, the type, the button and chip bases, the scroll
+   bar, and the one pulse used for a flag. */
+
+:root {
+  --ink: #070b16;
+  --panel: #0d1424;
+  --raised: #131c30;
+  --line: rgba(140, 165, 205, 0.16);
+  --line-strong: rgba(150, 175, 215, 0.32);
+  --text: #e6ebf5;
+  --dim: #93a1ba;
+  --dimmer: #66748c;
+  --accent: #4f7ec2;
+  --accent-ink: #ffffff;
+  --flag: #e0564f;
+  --ok: #4fbf8b;
+  --radius: 0;
+  --mono: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace;
+  --sans: -apple-system, "Segoe UI", "DejaVu Sans", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, ul, ol { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 170, 200, 0.22);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* ---- buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--raised);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:disabled { opacity: 0.45; cursor: default; border-color: var(--line); }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn.primary:hover { filter: brightness(1.1); }
+.btn.ghost { background: transparent; }
+
+/* ---- chips and tags ---- */
+
+.chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.chip.flag { border-color: var(--flag); color: var(--flag); }
+.chip.ok { border-color: var(--ok); color: var(--ok); }
+
+.mono { font-family: var(--mono); }
+.dim { color: var(--dim); }
+.dimmer { color: var(--dimmer); }
+
+/* A failure line is always the same colour and always names a port. */
+.fail { color: var(--flag); }
+
+@keyframes trio-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulsing { animation: trio-pulse 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulsing { animation: none; }
+}

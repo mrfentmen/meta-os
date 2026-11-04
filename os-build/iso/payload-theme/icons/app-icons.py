@@ -275,6 +275,51 @@ def glyph(name):
     elif name == "settings":
         p.gear(0.5, 0.5, 0.46, teeth=8)
         p.circ(0.5, 0.5, 0.16)
+    elif name == "police":
+        # shield + five-point star, the Vigiles tile
+        p.poly([(0.5, 0.06), (0.92, 0.22), (0.86, 0.60), (0.5, 0.94),
+                (0.14, 0.60), (0.08, 0.22)])
+        import math
+        star = []
+        for i in range(10):
+            a = math.pi / 2 + i * math.pi / 5
+            rad = 0.26 if i % 2 == 0 else 0.11
+            star.append((0.5 + math.cos(a) * rad, 0.47 - math.sin(a) * rad))
+        p.poly(star, close=True, w=0.75)
+    elif name == "fire":
+        # flame: outer teardrop with a lit inner tongue
+        p.poly([(0.5, 0.04), (0.74, 0.34), (0.80, 0.58), (0.68, 0.82),
+                (0.5, 0.94), (0.32, 0.82), (0.20, 0.58), (0.30, 0.36),
+                (0.42, 0.46), (0.40, 0.26)], close=True, w=0.9)
+        p.poly([(0.5, 0.44), (0.62, 0.62), (0.62, 0.74), (0.5, 0.84),
+                (0.38, 0.74), (0.38, 0.62)], close=True, w=0.7)
+    elif name == "ems":
+        # Caduceus, read as two snakes and a staff, nothing else. An earlier
+        # version joined the coils with straight points, which at 44 px drew a
+        # ladder: the eye saw rungs, not serpents. These are sampled sine
+        # curves (40 points each, opposite phase) so the coil reads as a coil.
+        import math
+        p.line([(0.50, 0.08), (0.50, 0.98)], w=0.55)
+        p.dot(0.50, 0.08, 0.045)
+        amp = 0.26
+        n = 80
+        for s in (-1, 1):
+            pts = []
+            for i in range(n + 1):
+                t = i / float(n)
+                # cosine, so each snake starts at its own side of the staff
+                # instead of both leaving from the centre (which drew one head)
+                x = 0.50 + s * amp * math.cos(2 * math.pi * 1.0 * t)
+                y = 0.28 + 0.60 * t
+                pts.append((x, y))
+            p.line(pts, w=0.5)
+            hx, hy = pts[0]
+            p.dot(hx, hy, 0.04)
+            p.line([(hx, hy), (hx + s * 0.11, hy - 0.015)], w=0.45)
+        # wings: two swept strokes off the staff crown, clear of both heads
+        for s in (-1, 1):
+            p.line([(0.51 + s * 0.02, 0.16), (0.51 + s * 0.30, 0.08),
+                    (0.51 + s * 0.46, 0.15)], w=0.55)
     elif name == "trio":
         p.poly([(0.5, 0.06), (0.94, 0.24), (0.88, 0.62), (0.5, 0.94),
                 (0.12, 0.62), (0.06, 0.24)])
@@ -292,7 +337,7 @@ ORDER = ["terminal", "files", "editor", "web", "messages", "boards", "board",
          "agents", "aegis", "custos", "imperium", "science", "musica",
          "music3d", "notes", "notes3d", "officina", "nervus", "budget",
          "dashboard", "calendar", "calculator", "logo", "controls", "settings",
-         "trash", "about"]
+         "trash", "about", "police", "fire", "ems"]
 LABEL = {"terminal": "Terminal", "files": "Files", "editor": "Editor",
          "web": "Web", "messages": "Messages", "boards": "Boards",
          "board": "Boards", "agents": "Agents", "aegis": "Aegis",
@@ -302,7 +347,7 @@ LABEL = {"terminal": "Terminal", "files": "Files", "editor": "Editor",
          "nervus": "Nervus", "budget": "Budget", "dashboard": "Dashboard",
          "calendar": "Calendar", "calculator": "Calculator", "logo": "Logo",
          "controls": "Controls", "settings": "Settings", "trash": "Trash",
-         "about": "About"}
+         "about": "About", "police": "Police", "fire": "Fire", "ems": "EMS"}
 
 
 def font(sz, bold=False):

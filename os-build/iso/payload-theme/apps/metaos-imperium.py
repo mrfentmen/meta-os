@@ -22,6 +22,16 @@ SITE_INDEX = os.path.join(SITE_ROOT, "imperium", "index.html")
 INDEX = SITE_INDEX if os.path.exists(SITE_INDEX) else os.path.join(APP_DIR, "index.html")
 PORT = int(os.environ.get("META_IMPERIUM_PORT", "8080"))
 
+# One backend, four windows. Imperium is the command console; Vigiles, Ignis
+# and Medicus are the three divisions, each with its own page and its own
+# layout, sharing the camera list, the watch list and the agent crew through
+# /trio/core.js. --division picks which page a tile opens.
+DIVISIONS = {
+    "vigiles": ("Vigiles", "vigiles.html"),
+    "ignis": ("Ignis", "ignis.html"),
+    "medicus": ("Medicus", "medicus.html"),
+}
+
 
 def backend_up():
     import socket
@@ -65,11 +75,12 @@ def ensure_backend():
         return None
 
 
-def doc_url():
+def doc_url(index=None):
     """http:// when the backend answers, file:// only as the fallback."""
-    rel = os.path.relpath(INDEX, SITE_ROOT)
+    index = index or INDEX
+    rel = os.path.relpath(index, SITE_ROOT)
     http = "http://127.0.0.1:%d/%s" % (PORT, rel.replace(os.sep, "/"))
-    return http if backend_up() else "file://" + INDEX
+    return http if backend_up() else "file://" + index
 
 
 def main(argv):
@@ -78,9 +89,24 @@ def main(argv):
     # differ, and it is passed in by the launcher rather than guessed here.
     title = os.environ.get("META_IMPERIUM_TITLE", "Imperium Console")
     args = [a for a in argv[1:] if a != ""]
+    division = None
     for i, a in enumerate(args):
         if a == "--title" and i + 1 < len(args):
             title = args[i + 1]
+        elif a == "--division" and i + 1 < len(args):
+            division = args[i + 1].strip().lower()
+    index = INDEX
+    if division is not None:
+        if division not in DIVISIONS:
+            sys.stderr.write(
+                "metaos-imperium: unknown division %r (have: %s)\n"
+                % (division, ", ".join(sorted(DIVISIONS))))
+            return 2
+        label, page = DIVISIONS[division]
+        title = os.environ.get("META_IMPERIUM_TITLE", "Meta %s" % label)
+        index = os.path.join(SITE_ROOT, "trio", page)
+        if not os.path.exists(index):
+            index = os.path.join(APP_DIR, "trio", page)
     ensure_backend()
     try:
         import gi
@@ -90,14 +116,14 @@ def main(argv):
     except (ImportError, ValueError) as e:
         sys.stderr.write("metaos-imperium: GTK/WebKit unavailable (%s)\n" % e)
         return 1
-    if not os.path.exists(INDEX):
-        sys.stderr.write("metaos-imperium: missing %s\n" % INDEX)
+    if not os.path.exists(index):
+        sys.stderr.write("metaos-imperium: missing %s\n" % index)
         return 1
     win = Gtk.Window(title=title)
     win.set_default_size(1280, 800)
     from gi.repository import WebKit2
     view = WebKit2.WebView()
-    view.load_uri(doc_url())
+    view.load_uri(doc_url(index))
     win.add(view)
     win.connect("destroy", Gtk.main_quit)
     win.show_all()

@@ -341,8 +341,15 @@ add_app trash     "Trash"      trash           thunar trash:///
 # Native, not a wrapped page: the control gallery is a GTK app that draws one of
 # every widget the theme styles. It is the tile a judge clicks to see the theme.
 add_app controls  "Controls"  controls        /usr/share/metaos/apps/metaos-controls.py
-add_app trio      "Trio"      imperium        "$IMPERIUM" --title "Meta Trio - Dispatch"
+# The Trio split into three apps. Imperium stays the cross-division command
+# console. Vigiles, Ignis and Medicus are separate programs on the same
+# backend and the same camera list, each with its own page and layout. The old
+# single "Trio" tile opened Imperium's page, so two tiles showed one screen;
+# it is gone, and each division now has a tile that opens its own page.
 add_app imperium  "Imperium"  imperium        "$IMPERIUM" --title "Imperium - Command"
+add_app police    "Vigiles"   police          "$IMPERIUM" --division vigiles
+add_app fire      "Ignis"     fire            "$IMPERIUM" --division ignis
+add_app ems       "Medicus"   ems             "$IMPERIUM" --division medicus
 
 if [ -x "$META_APP" ]; then
   add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18934/index.html

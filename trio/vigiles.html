@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigiles: Police console</title>
+<link rel="stylesheet" href="./trio.css">
+<style>
+  /* Vigiles is the map-first division. Everything else floats over the map,
+     the map never shares its column with a panel, and there are exactly three
+     numbers on screen. */
+  :root {
+    --ink: #070b16;
+    --panel: #0b1220;
+    --raised: #121a2b;
+    --accent: #4f7ec2;
+    --radius: 0;
+  }
+  body { display: grid; grid-template-rows: 46px 1fr 32px; height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 14px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #0c1424, #080e1b);
+  }
+  .mark {
+    font-size: 14px; font-weight: 650; letter-spacing: 0.02em;
+  }
+  .mark span { color: var(--accent); }
+  .div-tag {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dim);
+    border-left: 1px solid var(--line-strong); padding-left: 12px;
+  }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .src { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+  .src.warn { color: #d8a23a; }
+  .src.bad { color: var(--flag); }
+  #clock { font-family: var(--mono); font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  main { display: grid; grid-template-columns: 292px 1fr; min-height: 0; }
+
+  .rail {
+    display: grid; grid-template-rows: auto 1fr;
+    border-right: 1px solid var(--line); background: var(--panel); min-height: 0;
+  }
+  .rail-head { padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
+  .rail-head h2 {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--dim); font-weight: 600;
+  }
+  .flags { padding: 6px 0 10px; }
+  .flag-row {
+    display: block; width: 100%; text-align: left; padding: 7px 14px;
+    border-left: 2px solid transparent; font-size: 12px;
+  }
+  .flag-row:hover { background: rgba(120, 160, 220, 0.07); border-left-color: var(--accent); }
+  .flag-row .flag-name { display: block; }
+  .flag-row .flag-meta { display: block; font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 2px; }
+  .flag-row .flag-cat { color: var(--flag); }
+  .empty {
+    padding: 10px 14px 16px; font-size: 11.5px; color: var(--dimmer); line-height: 1.5;
+  }
+
+  .list-head { padding: 10px 14px 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .list-head input {
+    width: 100%; margin-top: 7px; padding: 6px 8px;
+    background: #070d18; border: 1px solid var(--line-strong); border-radius: 0;
+    color: var(--text); font: inherit; font-size: 12px;
+  }
+  .list-head input::placeholder { color: var(--dimmer); }
+  .cam-list { overflow-y: auto; min-height: 0; padding-bottom: 12px; }
+  .cam {
+    display: block; width: 100%; text-align: left; padding: 6px 14px;
+    border-left: 2px solid transparent; font-size: 12px;
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 8px;
+  }
+  .cam:hover { background: rgba(120, 160, 220, 0.07); }
+  .cam[aria-current="true"] { background: rgba(79, 126, 194, 0.18); border-left-color: var(--accent); }
+  .cam .cam-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cam .cam-area { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .cam .cam-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dimmer); align-self: center; }
+  .cam .cam-dot.watched { background: var(--accent); }
+  .cam .cam-dot.flagged { background: var(--flag); }
+
+  .mapwrap { position: relative; min-width: 0; background: #060a13; }
+  #map { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  .map-legend {
+    position: absolute; left: 14px; top: 12px; display: flex; gap: 14px;
+    padding: 6px 10px; background: rgba(8, 13, 24, 0.82);
+    border: 1px solid var(--line); font-family: var(--mono); font-size: 10px;
+    color: var(--dim); letter-spacing: 0.06em;
+  }
+  .map-legend b { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .map-note {
+    position: absolute; left: 14px; bottom: 12px; max-width: 52ch;
+    font-family: var(--mono); font-size: 10px; color: var(--dimmer); line-height: 1.5;
+  }
+
+  /* inspector: a drawer, not a column. Closing it gives the map its width back. */
+  .inspector {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 306px;
+    background: rgba(10, 16, 29, 0.97); border-left: 1px solid var(--line-strong);
+    display: flex; flex-direction: column; gap: 10px; padding: 14px;
+    overflow-y: auto; transform: translateX(100%); transition: transform 140ms ease;
+  }
+  .inspector.open { transform: translateX(0); }
+  .insp-head { display: flex; align-items: flex-start; gap: 8px; }
+  .insp-head h2 { font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .insp-head .close { margin-left: auto; color: var(--dim); font-size: 15px; line-height: 1; }
+  .inspier-meta { font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .snap {
+    width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+    background: #060a12; border: 1px solid var(--line);
+  }
+  .snap-missing {
+    padding: 18px 10px; text-align: center; font-size: 11px; color: var(--dimmer);
+    border: 1px dashed var(--line-strong);
+  }
+  .result { border-top: 1px solid var(--line); padding-top: 10px; }
+  .result .cat { font-size: 13px; font-weight: 600; }
+  .result .cat.flag { color: var(--flag); }
+  .result .sum { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  .result .meta { font-family: var(--mono); font-size: 10px; color: var(--dimmer); margin-top: 6px; }
+  .insp-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 12px; }
+  .insp-actions .btn { flex: 1; justify-content: center; }
+
+  .strip {
+    display: flex; align-items: center; gap: 22px; padding: 0 14px;
+    border-top: 1px solid var(--line); background: #080e1a;
+    font-family: var(--mono); font-size: 11px; color: var(--dim);
+  }
+  .strip b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .strip .flag-count b { color: var(--flag); }
+  #activity { margin-left: auto; color: var(--dimmer); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (max-width: 1000px) {
+    main { grid-template-columns: 240px 1fr; }
+    .inspector { width: 260px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <p class="mark"><span>◈</span> Vigiles</p>
+  <p class="div-tag">Meta OS / Police</p>
+  <div class="top-right">
+    <p id="source" class="src">Loading the camera list.</p>
+    <p id="clock" class="mono">--:--:--</p>
+  </div>
+</header>
+
+<main>
+  <aside class="rail">
+    <div class="rail-head">
+      <h2>Flagged for review</h2>
+      <div id="flags" class="flags"></div>
+      <p id="flags-empty" class="empty">Nothing flagged. A camera lands here when an assessment asks for a human look. Nothing in this app dispatches anyone.</p>
+    </div>
+    <div style="display:grid; grid-template-rows: auto 1fr; min-height:0;">
+      <div class="list-head">
+        <h2 style="font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); font-weight:600;">Cameras</h2>
+        <input id="search" type="search" placeholder="Name or borough" autocomplete="off" aria-label="Filter cameras">
+      </div>
+      <div id="cameras" class="cam-list"></div>
+    </div>
+  </aside>
+
+  <section class="mapwrap">
+    <canvas id="map" aria-label="Camera map"></canvas>
+    <div class="map-legend">
+      <span><b style="background:#4f7ec2"></b>watched</span>
+      <span><b style="background:#e0564f"></b>flagged</span>
+      <span><b style="background:rgba(180,200,230,.65)"></b>camera</span>
+    </div>
+    <p class="map-note">Positions are the camera's own coordinates. No street basemap is drawn: the map library's style file is a remote request, and this machine runs offline.</p>
+
+    <aside id="inspector" class="inspector" aria-label="Camera inspector" aria-hidden="true">
+      <div class="insp-head">
+        <div>
+          <h2 id="insp-name">No camera selected</h2>
+          <p id="insp-meta" class="inspier-meta"></p>
+        </div>
+        <button id="insp-close" class="close" title="Close inspector" aria-label="Close inspector">✕</button>
+      </div>
+      <div id="insp-media"></div>
+      <div id="insp-result" class="result"></div>
+      <div class="insp-actions">
+        <button id="btn-watch" class="btn">Watch</button>
+        <button id="btn-assess" class="btn primary">Assess now</button>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<footer class="strip">
+  <span>Online <b id="count-online">0</b></span>
+  <span>Watching <b id="count-watch">0</b> / 6</span>
+  <span class="flag-count">Flagged <b id="count-flag">0</b></span>
+  <span id="crew" class="dimmer">Crew: reading…</span>
+  <span id="activity">Ready.</span>
+</footer>
+
+<script type="module">
+import { createStore, LocalMap, clock, ago, el, DIVISIONS, backendLabel } from "./core.js";
+
+const division = DIVISIONS.police;
+const store = createStore("police");
+const $ = (id) => document.getElementById(id);
+
+const canvas = $("map");
+const map = LocalMap(canvas, {
+  accent: division.accent,
+  onSelect: (id) => store.setSelected(id),
+});
+
+let listSig = "";
+
+function resultFor(camera) {
+  return store.results.get(camera.id) ?? null;
+}
+
+function renderFlags() {
+  const host = $("flags");
+  const flagged = store.flaggedCameras();
+  host.replaceChildren(
+    ...flagged.map((cam) => {
+      const r = resultFor(cam);
+      const row = el("button", { class: "flag-row", type: "button" }, [
+        el("span", { class: "flag-name", text: cam.name }),
+        el("span", { class: "flag-meta" }, [
+          el("span", { class: "flag-cat", text: r.category }),
+          " · " + ago(r.at),
+        ]),
+      ]);
+      row.addEventListener("click", () => store.setSelected(cam.id));
+      return row;
+    })
+  );
+  $("flags-empty").hidden = flagged.length > 0;
+}
+
+function renderList() {
+  const sig = [
+    store.cameras.length,
+    store.query,
+    store.selected,
+    store.watch.size,
+    [...store.results.values()].filter((r) => r.flagged).length,
+  ].join("|");
+  if (sig === listSig) return;
+  listSig = sig;
+
+  const list = store.filter(store.query);
+  const host = $("cameras");
+  if (list.length === 0) {
+    host.replaceChildren(
+      el("p", {
+        class: "empty",
+        text: store.cameras.length
+          ? "No camera matches that filter."
+          : "No camera list. " + (store.source.note ?? ""),
+      })
+    );
+    return;
+  }
+  host.replaceChildren(
+    ...list.slice(0, 400).map((cam) => {
+      const r = resultFor(cam);
+      const dot = r && r.flagged ? "flagged" : store.watch.has(cam.id) ? "watched" : "";
+      const row = el(
+        "button",
+        {
+          class: "cam",
+          type: "button",
+          "aria-current": cam.id === store.selected ? "true" : "false",
+          title: cam.name + " · " + cam.area,
+        },
+        [
+          el("span", { class: "cam-name", text: cam.name }),
+          el("span", { class: "cam-dot " + dot }),
+          el("span", { class: "cam-area", text: cam.area }),
+        ]
+      );
+      row.addEventListener("click", () => store.setSelected(cam.id));
+      return row;
+    })
+  );
+}
+
+function renderInspector() {
+  const cam = store.selected ? store.byId.get(store.selected) : null;
+  const panel = $("inspector");
+  panel.classList.toggle("open", Boolean(cam));
+  panel.setAttribute("aria-hidden", cam ? "false" : "true");
+  if (!cam) {
+    $("insp-name").textContent = "No camera selected";
+    $("insp-meta").textContent = "";
+    $("insp-media").replaceChildren();
+    $("insp-result").replaceChildren();
+    return;
+  }
+  $("insp-name").textContent = cam.name;
+  $("insp-meta").textContent = cam.area + " · " + cam.latitude.toFixed(4) + ", " + cam.longitude.toFixed(4);
+
+  const media = $("insp-media");
+  const img = el("img", { class: "snap", alt: "Latest snapshot of " + cam.name });
+  img.src = cam.imageUrl + (cam.imageUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+  img.addEventListener("error", () => {
+    media.replaceChildren(
+      el("p", {
+        class: "snap-missing",
+        text: "Snapshot did not load. The camera host is a public internet service and this machine may be offline.",
+      })
+    );
+  });
+  media.replaceChildren(img);
+
+  const r = resultFor(cam);
+  const host = $("insp-result");
+  if (!r) {
+    host.replaceChildren(
+      el("p", { class: "dimmer", text: "Not assessed yet. Assess now sends one frame to the local model on " + backendLabel() + "." })
+    );
+  } else if (r.status === "failed") {
+    host.replaceChildren(
+      el("p", { class: "cat fail", text: "Assessment failed" }),
+      el("p", { class: "sum", text: r.reason }),
+      el("p", { class: "meta", text: ago(r.at) })
+    );
+  } else {
+    host.replaceChildren(
+      el("p", { class: "cat " + (r.flagged ? "flag" : ""), text: r.category }),
+      el("p", { class: "sum", text: r.summary || "No summary returned." }),
+      el("p", {
+        class: "meta",
+        text:
+          ago(r.at) +
+          " · " + (r.latency ?? 0) + " ms" +
+          (r.model ? " · " + r.model : "") +
+          (r.flagged ? " · needs a human look" : " · no flag"),
+      })
+    );
+  }
+
+  const watchBtn = $("btn-watch");
+  watchBtn.textContent = store.watch.has(cam.id) ? "Unwatch" : "Watch";
+  const busy = store.busy.has(cam.id);
+  const assessBtn = $("btn-assess");
+  assessBtn.disabled = busy;
+  assessBtn.textContent = busy ? "Assessing…" : "Assess now";
+}
+
+function render() {
+  renderFlags();
+  renderList();
+  renderInspector();
+  map.set({
+    cameras: store.cameras,
+    results: store.results,
+    watch: store.watch,
+    selected: store.selected,
+  });
+  $("count-online").textContent = String(store.cameras.length);
+  $("count-watch").textContent = String(store.watch.size);
+  $("count-flag").textContent = String(store.flaggedCameras().length);
+
+  const src = $("source");
+  src.textContent = store.source.note;
+  src.className = "src " + (store.source.kind === "live" ? "" : store.source.kind === "offline" ? "warn" : "bad");
+
+  const last = store.activity[0];
+  $("activity").textContent = last ? clock(last.at) + "  " + last.text : "Ready.";
+  $("activity").className = last && !last.ok ? "fail" : "dimmer";
+
+  const crew = $("crew");
+  if (store.crew) {
+    // No crew records is an empty state, not a broken backend. Only a request
+    // that never answered gets the failure colour.
+    const patrol = store.crew.patrol;
+    crew.textContent = store.crewError
+      ? "Crew: " + store.crewError
+      : patrol
+        ? "Crew: patrol " + (patrol.status ?? "running") + ", " + (store.crew.events ?? []).length + " events"
+        : "Crew: no records yet";
+    crew.className = "dimmer";
+  } else if (store.crewError) {
+    crew.textContent = "Crew: " + store.crewError;
+    crew.className = "fail";
+  }
+}
+
+store.subscribe(render);
+$("search").addEventListener("input", (ev) => {
+  store.query = ev.target.value;
+  render();
+});
+$("insp-close").addEventListener("click", () => store.setSelected(null));
+$("btn-watch").addEventListener("click", () => {
+  if (store.selected) store.toggleWatch(store.selected);
+});
+$("btn-assess").addEventListener("click", async () => {
+  if (!store.selected) return;
+  await store.assess(store.selected);
+});
+
+setInterval(() => {
+  $("clock").textContent = clock();
+}, 1000);
+$("clock").textContent = clock();
+
+setInterval(() => {
+  render();
+}, 15000);
+
+// No top level await: the load event must finish even when the backend is
+// slow, otherwise the window looks like a dead white page while the camera
+// request is still out.
+async function boot() {
+  render();
+  await store.loadCameras();
+  render();
+  await store.loadHealth();
+  await store.loadCrew();
+  render();
+}
+boot();
+</script>
+</body>
+</html>

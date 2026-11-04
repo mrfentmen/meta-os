@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ignis: Fire watch</title>
+<link rel="stylesheet" href="./trio.css">
+<style>
+  /* Ignis is the wall-first division. Large frames own the screen, the map is
+     a small inset that starts closed, and the session reads as a timeline down
+     the left rather than as a table. */
+  :root {
+    --ink: #120b08;
+    --panel: #1a110c;
+    --raised: #241711;
+    --line: rgba(214, 160, 120, 0.16);
+    --line-strong: rgba(214, 160, 120, 0.32);
+    --text: #f3e9e2;
+    --dim: #b39c8d;
+    --dimmer: #7d6a5e;
+    --accent: #d9602b;
+    --radius: 0;
+  }
+  body { display: grid; grid-template-rows: 40px 1fr; height: 100vh; background: var(--ink); }
+
+  .top {
+    display: flex; align-items: baseline; gap: 14px; padding: 0 16px;
+    border-bottom: 1px solid var(--line); background: #170f0a;
+  }
+  .mark { font-family: Georgia, "Times New Roman", serif; font-size: 17px; letter-spacing: 0.02em; }
+  .mark b { color: var(--accent); font-weight: 400; }
+  .sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dimmer); }
+  .top .right { margin-left: auto; display: flex; gap: 16px; align-items: baseline; }
+  .src { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+  .src.warn { color: #d8a23a; }
+  .src.bad { color: var(--flag); }
+  #clock { font-family: Georgia, serif; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  main { display: grid; grid-template-columns: 218px 1fr; min-height: 0; }
+
+  /* session timeline, elapsed time in the gutter */
+  .timeline {
+    display: grid; grid-template-rows: auto 1fr auto;
+    border-right: 1px solid var(--line); background: #160e09; min-height: 0;
+  }
+  .timeline h2 {
+    font-family: var(--mono); font-size: 10px; line-height: 1.4; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--dimmer); font-weight: 500;
+    padding: 14px 14px 8px; border-bottom: 1px solid var(--line);
+  }
+  .feed { overflow-y: auto; min-height: 0; }
+  .entry { display: grid; grid-template-columns: 46px 1fr; gap: 8px; padding: 7px 12px; }
+  .entry + .entry { border-top: 1px solid rgba(214, 160, 120, 0.08); }
+  .entry .when { font-family: Georgia, serif; font-size: 11px; color: var(--dimmer); font-variant-numeric: tabular-nums; }
+  .entry .what { font-size: 11.5px; color: var(--dim); line-height: 1.4; }
+  .entry.bad .what { color: var(--flag); }
+  .entry b { color: var(--text); font-weight: 600; }
+  .timeline-foot {
+    padding: 10px 12px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 9.5px; color: var(--dimmer); line-height: 1.45;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  }
+
+  /* The stage is the wall plus a fixed strip. min-height:0 on every grid child
+     is what stops a 16:9 snapshot from forcing its row taller than the window
+     and pushing the strip off screen. */
+  .stage { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 84px; }
+  .wall {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1px; background: var(--line); min-height: 0;
+  }
+  .slot {
+    position: relative; background: #0d0806; overflow: hidden;
+    display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; min-height: 0;
+  }
+  .slot img { width: 100%; height: 100%; min-height: 0; object-fit: cover; display: block; opacity: 0.92; }
+  .slot .slot-empty {
+    display: grid; place-items: center; height: 100%;
+    font-family: var(--mono); font-size: 10px; color: var(--dimmer); text-align: center; padding: 12px;
+  }
+  .slot .slot-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; background: rgba(12, 8, 6, 0.9);
+    border-top: 1px solid var(--line);
+  }
+  .slot .slot-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot .slot-state { font-family: var(--mono); font-size: 10px; color: var(--dimmer); margin-left: auto; white-space: nowrap; }
+  .slot .slot-state.flag { color: var(--flag); }
+  .slot .slot-actions { display: flex; gap: 6px; }
+  .slot .mini {
+    padding: 2px 8px; border: 1px solid var(--line-strong); font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+  }
+  .slot .mini:hover { border-color: var(--accent); color: var(--text); }
+  .slot .mini[disabled] { opacity: 0.45; }
+  /* a 2 px left edge carries the division state, no rounded corners anywhere */
+  .slot.flagged { box-shadow: inset 3px 0 0 var(--flag); }
+  .slot.watched { box-shadow: inset 3px 0 0 var(--accent); }
+
+  /* hot frames: one strip, newest on the right */
+  .strip {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    border-top: 1px solid var(--line); background: #170f0a; overflow-x: auto;
+    min-width: 0; height: 84px;
+  }
+  .strip .label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dimmer); white-space: nowrap;
+  }
+  .hot { display: flex; gap: 8px; }
+  .hot button {
+    position: relative; width: 104px; height: 60px; flex: none;
+    border: 1px solid var(--line-strong); background: #0d0806; padding: 0; overflow: hidden;
+  }
+  .hot button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hot button .tag {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 4px;
+    background: rgba(10, 6, 4, 0.86); font-family: var(--mono); font-size: 9px;
+    color: var(--dim); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hot button.flag { border-color: var(--flag); }
+  .hot .empty { font-size: 11px; color: var(--dimmer); }
+
+  /* map inset: closed by default, opens on demand */
+  .inset {
+    position: absolute; right: 14px; bottom: 92px; width: 268px; height: 196px;
+    border: 1px solid var(--line-strong); background: #0b0705; display: none;
+  }
+  .inset.open { display: block; }
+  .inset canvas { width: 100%; height: 100%; display: block; }
+  .inset .close {
+    position: absolute; top: 2px; right: 4px; color: var(--dim); font-size: 13px;
+    line-height: 1; padding: 2px 4px;
+  }
+  /* The map toggle lives in the strip, not over a frame: a control floating on
+     top of a snapshot hides the one line that says what the snapshot is. */
+  .map-toggle {
+    margin-left: auto; flex: none;
+    padding: 4px 10px; border: 1px solid var(--line-strong);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--dim); background: rgba(18, 11, 8, 0.9);
+  }
+  .map-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+  @media (max-width: 1040px) {
+    main { grid-template-columns: 178px 1fr; }
+    .inset { width: 220px; height: 160px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <p class="mark"><b>❖</b> Ignis</p>
+  <p class="sub">Meta OS / Fire</p>
+  <div class="right">
+    <p id="source" class="src">Loading the camera list.</p>
+    <p id="clock">--:--:--</p>
+  </div>
+</header>
+
+<main>
+  <aside class="timeline">
+    <h2>Session</h2>
+    <div id="feed" class="feed"></div>
+    <p id="crew" class="timeline-foot">Crew: reading…</p>
+  </aside>
+
+  <section class="stage">
+    <div id="wall" class="wall"></div>
+    <div class="strip">
+      <span class="label">Hot frames</span>
+      <div id="hot" class="hot"><span class="empty">Nothing assessed yet.</span></div>
+      <button id="map-toggle" class="map-toggle" type="button">Map</button>
+    </div>
+    <div id="inset" class="inset">
+      <canvas id="map" aria-label="Camera map"></canvas>
+      <button id="map-close" class="close" type="button" aria-label="Close map">✕</button>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+import { createStore, LocalMap, clock, ago, el, DIVISIONS } from "./core.js";
+
+const division = DIVISIONS.fire;
+const store = createStore("fire");
+const $ = (id) => document.getElementById(id);
+
+const map = LocalMap($("map"), {
+  accent: division.accent,
+  center: { lat: 40.73, lon: -73.95 },
+  zoom: 10.6,
+  onSelect: (id) => {
+    store.setSelected(id);
+    const target = slots().find((c) => c.id === id);
+    if (target) store.assess(id);
+  },
+});
+
+const SLOTS = 4;
+
+function slots() {
+  const out = [];
+  for (const id of store.watch) {
+    const cam = store.byId.get(id);
+    if (cam) out.push(cam);
+    if (out.length === SLOTS) return out;
+  }
+  for (const cam of store.recent(6)) {
+    if (out.includes(cam)) continue;
+    out.push(cam);
+    if (out.length === SLOTS) return out;
+  }
+  for (const cam of store.cameras) {
+    if (out.includes(cam)) continue;
+    out.push(cam);
+    if (out.length === SLOTS) return out;
+  }
+  return out;
+}
+
+function stamp(at) {
+  return at ? clock(at) : "--:--";
+}
+
+function renderWall() {
+  const host = $("wall");
+  const cams = slots();
+  host.replaceChildren(
+    ...Array.from({ length: SLOTS }, (_, i) => {
+      const cam = cams[i];
+      const node = el("div", { class: "slot" });
+      if (!cam) {
+        node.append(
+          el("div", { class: "slot-empty", text: "No camera in this slot. Watch one from the timeline or open the map." })
+        );
+        return node;
+      }
+      const r = store.results.get(cam.id);
+      const busy = store.busy.has(cam.id);
+      if (r && r.flagged) node.classList.add("flagged");
+      else if (store.watch.has(cam.id)) node.classList.add("watched");
+
+      const img = el("img", { alt: "Snapshot of " + cam.name, loading: "lazy" });
+      img.src = cam.imageUrl + (cam.imageUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+      img.addEventListener("error", () => {
+        img.replaceWith(
+          el("div", { class: "slot-empty", text: "Snapshot did not load from the camera host." })
+        );
+      });
+      node.append(img);
+
+      const state = busy
+        ? "assessing…"
+        : r
+          ? r.status === "failed"
+            ? "failed: " + r.reason
+            : r.category + " · " + ago(r.at)
+          : "not assessed";
+      const stateNode = el("span", { class: "slot-state" + (r && r.flagged ? " flag" : ""), text: state });
+      stateNode.title = state;
+
+      const watchBtn = el("button", {
+        class: "mini",
+        type: "button",
+        text: store.watch.has(cam.id) ? "Unwatch" : "Watch",
+      });
+      watchBtn.addEventListener("click", () => store.toggleWatch(cam.id));
+
+      const assessBtn = el("button", {
+        class: "mini",
+        type: "button",
+        text: busy ? "…" : "Assess",
+      });
+      assessBtn.disabled = busy;
+      assessBtn.addEventListener("click", () => store.assess(cam.id));
+
+      node.append(
+        el("div", { class: "slot-bar" }, [
+          el("span", { class: "slot-name", text: cam.name, title: cam.name + " · " + cam.area }),
+          el("div", { class: "slot-actions" }, [watchBtn, assessBtn]),
+          stateNode,
+        ])
+      );
+      return node;
+    })
+  );
+}
+
+function renderFeed() {
+  const host = $("feed");
+  const items = store.activity.slice(0, 40);
+  if (items.length === 0) {
+    host.replaceChildren(
+      el("p", { class: "entry" }, [el("span", { class: "when", text: "—" }), el("span", { class: "what", text: "Nothing has happened yet. Assess a frame to start the session." })])
+    );
+    return;
+  }
+  host.replaceChildren(
+    ...items.map((item) =>
+      el("div", { class: "entry" + (item.ok ? "" : " bad") }, [
+        el("span", { class: "when", text: stamp(item.at) }),
+        el("span", { class: "what", text: item.text }),
+      ])
+    )
+  );
+}
+
+function renderHot() {
+  const host = $("hot");
+  const recent = store.recent(10).reverse();
+  if (recent.length === 0) {
+    host.replaceChildren(el("span", { class: "empty", text: "Nothing assessed yet." }));
+    return;
+  }
+  host.replaceChildren(
+    ...recent.map((cam) => {
+      const r = store.results.get(cam.id);
+      const btn = el("button", { type: "button", class: r && r.flagged ? "flag" : "", title: cam.name + ": " + (r.category ?? r.reason) });
+      const img = el("img", { alt: cam.name, loading: "lazy" });
+      img.src = cam.imageUrl + (cam.imageUrl.includes("?") ? "&" : "?") + "t=" + r.at;
+      btn.append(img, el("span", { class: "tag", text: (r.category ?? "failed") }));
+      btn.addEventListener("click", () => {
+        store.setSelected(cam.id);
+        store.assess(cam.id);
+      });
+      return btn;
+    })
+  );
+}
+
+function render() {
+  renderWall();
+  renderFeed();
+  renderHot();
+  map.set({
+    cameras: store.cameras,
+    results: store.results,
+    watch: store.watch,
+    selected: store.selected,
+  });
+  const src = $("source");
+  src.textContent = store.source.note;
+  src.className = "src " + (store.source.kind === "live" ? "" : store.source.kind === "offline" ? "warn" : "bad");
+
+  const crew = $("crew");
+  if (store.crew) {
+    const patrol = store.crew.patrol;
+    crew.textContent = store.crewError
+      ? "Crew: " + store.crewError
+      : patrol
+        ? "Crew: patrol " + (patrol.status ?? "running")
+        : "Crew: no records yet";
+    crew.style.color = "";
+  } else if (store.crewError) {
+    crew.textContent = "Crew: " + store.crewError;
+    crew.style.color = "var(--flag)";
+  }
+}
+
+$("map-toggle").addEventListener("click", () => {
+  $("inset").classList.add("open");
+  $("map-toggle").style.display = "none";
+  map.draw();
+});
+$("map-close").addEventListener("click", () => {
+  $("inset").classList.remove("open");
+  $("map-toggle").style.display = "";
+});
+
+store.subscribe(render);
+setInterval(() => {
+  $("clock").textContent = clock();
+}, 1000);
+$("clock").textContent = clock();
+setInterval(render, 15000);
+
+async function boot() {
+  render();
+  await store.loadCameras();
+  render();
+  await store.loadHealth();
+  await store.loadCrew();
+  render();
+}
+boot();
+</script>
+</body>
+</html>

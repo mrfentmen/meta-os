@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medicus: EMS triage</title>
+<link rel="stylesheet" href="./trio.css">
+<style>
+  /* Medicus is the board-first division. No map, no wall grid, no rail: three
+     lanes of cards, one search field, one action. Light spacing, round cards,
+     teal accent, and mono only for a timestamp. */
+  :root {
+    --ink: #08110f;
+    --panel: #0b1614;
+    --raised: #10201c;
+    --line: rgba(150, 200, 185, 0.14);
+    --line-strong: rgba(150, 200, 185, 0.3);
+    --text: #e8f2ef;
+    --dim: #9db3ac;
+    --dimmer: #667d77;
+    --accent: #3fa88b;
+    --accent-ink: #06120f;
+    --radius: 14px;
+    --flag: #e7836b;
+  }
+  body {
+    display: grid; grid-template-rows: 64px 1fr 30px; height: 100vh;
+    background: radial-gradient(circle at 12% -10%, #0f201c, #08110f 60%);
+  }
+  /* The triage lanes stop at their last card. Without this bar the bottom
+     third of the screen was empty background, which read as a page that had
+     not finished loading. The bar carries the crew and board state instead. */
+  footer.strip {
+    display: flex; align-items: center; gap: 18px; padding: 0 20px;
+    border-top: 1px solid var(--line); font-size: 10.5px; color: var(--dimmer);
+    font-family: var(--mono); min-width: 0;
+  }
+  footer.strip .grow { flex: 1; }
+  footer.strip .k { color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  footer.strip .bad { color: var(--flag); }
+
+  header.bar {
+    display: flex; align-items: center; gap: 16px; padding: 0 20px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; }
+  .brand h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand h1 span { color: var(--accent); }
+  .brand .dept {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dimmer);
+  }
+  .searchwrap { position: relative; margin-left: 12px; }
+  #search {
+    width: 268px; padding: 8px 12px; border-radius: 10px;
+    border: 1px solid var(--line-strong); background: rgba(16, 32, 28, 0.8);
+    color: var(--text); font: inherit; font-size: 12px;
+  }
+  #search::placeholder { color: var(--dimmer); }
+  #results {
+    position: absolute; top: 38px; left: 0; width: 330px; z-index: 20;
+    background: #0e1c18; border: 1px solid var(--line-strong); border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5); overflow: hidden; max-height: 320px;
+    overflow-y: auto; display: none;
+  }
+  #results.open { display: block; }
+  #results button {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;
+    width: 100%; text-align: left; padding: 8px 12px; font-size: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  #results button:last-child { border-bottom: 0; }
+  #results button:hover { background: rgba(63, 168, 139, 0.14); }
+  #results .area { font-family: var(--mono); font-size: 9.5px; color: var(--dimmer); }
+  #results .add { color: var(--accent); font-family: var(--mono); font-size: 10px; align-self: center; }
+  #results .none { padding: 12px; font-size: 11.5px; color: var(--dimmer); }
+
+  .bar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  #source { font-family: var(--mono); font-size: 10.5px; color: var(--dim); max-width: 300px; text-align: right; line-height: 1.35; }
+  #source.warn { color: #d8b45f; }
+  #source.bad { color: #e7836b; }
+  #clock { font-family: var(--mono); font-size: 11px; color: var(--dimmer); font-variant-numeric: tabular-nums; }
+
+  main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 0 18px 18px; min-height: 0; }
+
+  /* Column rules run the full height so an empty board still reads as three
+     triage columns rather than as a page with nothing on it. */
+  .lane {
+    display: grid; grid-template-rows: auto 1fr; min-height: 0;
+    padding-left: 14px; border-left: 1px solid var(--line);
+  }
+  .lane:first-child { padding-left: 0; border-left: 0; }
+  .lane-head { border-bottom: 1px solid var(--line); }
+  .lane-head {
+    display: flex; align-items: baseline; gap: 10px; padding: 6px 4px 10px;
+  }
+  .lane-head h2 { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+  .lane-head .n {
+    font-family: var(--mono); font-size: 11px; color: var(--text);
+    background: rgba(63, 168, 139, 0.16); border: 1px solid var(--line-strong);
+    border-radius: 999px; padding: 0 8px;
+  }
+  .lane-head .hint { margin-left: auto; font-size: 10.5px; color: var(--dimmer); }
+  .lane-body {
+    overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 10px;
+    padding: 2px 2px 12px;
+  }
+  .lane.immediate .lane-head h2 { color: #f0b49f; }
+  .lane.immediate .lane-head .n { background: rgba(231, 131, 107, 0.16); }
+
+  .card {
+    border-radius: var(--radius); background: rgba(16, 32, 28, 0.72);
+    border: 1px solid var(--line); overflow: hidden;
+    display: grid; grid-template-rows: auto auto;
+    /* flex: none stops the lane from squeezing the card and hiding its
+       caption row behind the snapshot. */
+    flex: none;
+  }
+  .card.flag { border-color: rgba(231, 131, 107, 0.55); }
+  .card .shot { position: relative; aspect-ratio: 16 / 9; background: #050b0a; }
+  .card .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .shot .missing {
+    display: grid; place-items: center; height: 100%; font-size: 10.5px; color: var(--dimmer);
+    text-align: center; padding: 10px; font-family: var(--mono);
+  }
+  .card .body { padding: 10px 12px 12px; display: grid; gap: 5px; }
+  .card .name { font-size: 12.5px; font-weight: 600; }
+  .card .line { font-size: 11.5px; color: var(--dim); line-height: 1.4; }
+  .card .line.flag { color: #f0b49f; }
+  .card .line.bad { color: #e7836b; }
+  .card .foot { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .card .stamp { font-family: var(--mono); font-size: 10px; color: var(--dimmer); margin-left: auto; }
+  .card .btn { border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+  .card .btn.primary { background: rgba(63, 168, 139, 0.2); border-color: rgba(63, 168, 139, 0.5); color: #bfe9dc; }
+  .card .btn.primary:hover { background: rgba(63, 168, 139, 0.3); }
+
+  .lane .empty {
+    border: 1px dashed var(--line-strong); border-radius: var(--radius);
+    padding: 16px; font-size: 11.5px; color: var(--dimmer); line-height: 1.5;
+  }
+
+  #toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px;
+    padding: 8px 16px; border-radius: 999px; background: #12241f;
+    border: 1px solid var(--line-strong); font-size: 11.5px; color: var(--text);
+    opacity: 0; transition: opacity 160ms ease; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  #toast.bad { border-color: rgba(231, 131, 107, 0.6); color: #f0b49f; }
+
+  @media (max-width: 1080px) {
+    main { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0 12px 12px; }
+    #search { width: 190px; }
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <h1><span>✚</span> Medicus</h1>
+    <p class="dept">Meta OS / EMS</p>
+  </div>
+  <div class="searchwrap">
+    <input id="search" type="search" placeholder="Add a camera: name or borough" autocomplete="off" aria-label="Search cameras">
+    <div id="results" role="listbox" aria-label="Camera search results"></div>
+  </div>
+  <div class="bar-right">
+    <p id="source">Loading the camera list.</p>
+    <button id="assess-all" class="btn primary" type="button">Assess watched</button>
+    <p id="clock">--:--:--</p>
+  </div>
+</header>
+
+<main>
+  <section class="lane immediate">
+    <div class="lane-head"><h2>Immediate</h2><span class="n" id="n-immediate">0</span><span class="hint">assessment asked for a human look</span></div>
+    <div class="lane-body" id="lane-immediate"></div>
+  </section>
+  <section class="lane delayed">
+    <div class="lane-head"><h2>Delayed</h2><span class="n" id="n-delayed">0</span><span class="hint">assessed, no flag raised</span></div>
+    <div class="lane-body" id="lane-delayed"></div>
+  </section>
+  <section class="lane unseen">
+    <div class="lane-head"><h2>Unseen</h2><span class="n" id="n-unseen">0</span><span class="hint">watched, no successful assessment yet</span></div>
+    <div class="lane-body" id="lane-unseen"></div>
+  </section>
+</main>
+
+<footer class="strip">
+  <span><span class="k">Crew</span> <span id="crew">reading…</span></span>
+  <span><span class="k">Board</span> <span id="board">0 / 6</span></span>
+</footer>
+
+<p id="toast" role="status"></p>
+
+<script type="module">
+import { createStore, clock, ago, el, DIVISIONS, MAX_WATCHED } from "./core.js";
+
+const division = DIVISIONS.ems;
+const store = createStore("ems");
+const $ = (id) => document.getElementById(id);
+let toastTimer = null;
+
+function toast(text, bad = false) {
+  const node = $("toast");
+  node.textContent = text;
+  node.className = "show" + (bad ? " bad" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    node.className = "";
+  }, 3200);
+}
+
+function card(cam) {
+  const r = store.results.get(cam.id);
+  const busy = store.busy.has(cam.id);
+  const node = el("article", { class: "card" + (r && r.flagged ? " flag" : "") });
+
+  const shot = el("div", { class: "shot" });
+  const img = el("img", { alt: "Snapshot of " + cam.name, loading: "lazy" });
+  img.src = cam.imageUrl + (cam.imageUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+  img.addEventListener("error", () => {
+    shot.replaceChildren(el("div", { class: "missing", text: "No snapshot. The camera host did not answer." }));
+  });
+  shot.append(img);
+
+  const line = !r
+    ? el("p", { class: "line", text: "Watched, not assessed. " + cam.area + "." })
+    : r.status === "failed"
+      ? el("p", { class: "line bad", text: r.reason })
+      : el("p", { class: "line" + (r.flagged ? " flag" : ""), text: r.category + (r.summary ? ". " + r.summary : "") });
+
+  const watch = el("button", { class: "btn", type: "button", text: "Remove" });
+  watch.addEventListener("click", () => store.toggleWatch(cam.id));
+
+  const assess = el("button", {
+    class: "btn primary",
+    type: "button",
+    text: busy ? "Assessing" : "Assess",
+  });
+  assess.disabled = busy;
+  assess.addEventListener("click", () => store.assess(cam.id));
+
+  node.append(
+    shot,
+    el("div", { class: "body" }, [
+      el("p", { class: "name", text: cam.name }),
+      line,
+      el("div", { class: "foot" }, [
+        assess,
+        watch,
+        el("span", { class: "stamp", text: r ? ago(r.at) : "new" }),
+      ]),
+    ])
+  );
+  return node;
+}
+
+function lane(hostId, countId, cameras, emptyText) {
+  const host = $(hostId);
+  $(countId).textContent = String(cameras.length);
+  if (cameras.length === 0) {
+    host.replaceChildren(el("p", { class: "empty", text: emptyText }));
+    return;
+  }
+  host.replaceChildren(...cameras.map(card));
+}
+
+function render() {
+  const watched = [...store.watch].map((id) => store.byId.get(id)).filter(Boolean);
+  const immediate = watched.filter((c) => {
+    const r = store.results.get(c.id);
+    return r && r.status === "ok" && r.flagged;
+  });
+  const delayed = watched.filter((c) => {
+    const r = store.results.get(c.id);
+    return r && r.status === "ok" && !r.flagged;
+  });
+  // A failed assessment is not a priority signal, so it stays in Unseen where
+  // its card shows the failure in red. Moving it to Delayed would read as
+  // "assessed, nothing to see", which is the opposite of what happened.
+  const unseen = watched.filter((c) => {
+    const r = store.results.get(c.id);
+    return !r || r.status !== "ok";
+  });
+
+  lane("lane-immediate", "n-immediate", immediate,
+    "Nothing needs a human look. Flags land here when an assessment asks for one.");
+  lane("lane-delayed", "n-delayed", delayed,
+    "Nothing assessed without a flag yet.");
+  lane("lane-unseen", "n-unseen", unseen,
+    watched.length >= MAX_WATCHED
+      ? "Watch list is full at " + MAX_WATCHED + ". Remove a card to add another camera."
+      : "Nothing waiting. Add a camera from the search field. The board holds " + MAX_WATCHED + " cameras.");
+
+  // First run has an empty board, and an empty board teaches nothing. One
+  // button fills it with six real cameras from the list already loaded. It is
+  // a click, not a hidden default, so the board never pretends the operator
+  // chose those cameras.
+  if (watched.length === 0 && store.cameras.length > 0) {
+    const start = el("button", { class: "btn primary", type: "button", text: "Fill the board with six cameras" });
+    start.addEventListener("click", () => {
+      for (const cam of store.cameras.slice(0, MAX_WATCHED)) store.toggleWatch(cam.id);
+      toast("Added " + Math.min(MAX_WATCHED, store.cameras.length) + " cameras to the board.");
+    });
+    $("lane-unseen").append(start);
+  }
+
+  const src = $("source");
+  src.textContent = store.source.note;
+  src.className = store.source.kind === "live" ? "" : store.source.kind === "offline" ? "warn" : "bad";
+
+  const all = $("assess-all");
+  all.disabled = watched.length === 0 || store.busy.size > 0;
+  all.textContent = store.busy.size > 0 ? "Working" : "Assess watched";
+
+  $("board").textContent = watched.length + " / " + MAX_WATCHED;
+  const crew = $("crew");
+  if (store.crew) {
+    const patrol = store.crew.patrol;
+    crew.textContent = store.crewError
+      ? store.crewError
+      : patrol
+        ? "patrol " + (patrol.status ?? "running")
+        : "no records yet";
+    crew.className = store.crewError ? "bad" : "";
+  } else if (store.crewError) {
+    crew.textContent = store.crewError;
+    crew.className = "bad";
+  }
+}
+
+function renderResults() {
+  const box = $("results");
+  const q = $("search").value.trim();
+  box.classList.toggle("open", q.length > 0);
+  if (!q) {
+    box.replaceChildren();
+    return;
+  }
+  const matches = store.filter(q).slice(0, 24);
+  if (matches.length === 0) {
+    box.replaceChildren(el("p", { class: "none", text: "No camera matches that filter." }));
+    return;
+  }
+  box.replaceChildren(
+    ...matches.map((cam) => {
+      const btn = el("button", { type: "button", role: "option" }, [
+        el("span", { text: cam.name }),
+        el("span", { class: "add", text: store.watch.has(cam.id) ? "watching" : "add" }),
+        el("span", { class: "area", text: cam.area }),
+      ]);
+      btn.addEventListener("click", () => {
+        const res = store.toggleWatch(cam.id);
+        if (!res.ok) toast(res.reason, true);
+        $("search").value = "";
+        $("results").classList.remove("open");
+      });
+      return btn;
+    })
+  );
+}
+
+$("search").addEventListener("input", renderResults);
+$("search").addEventListener("blur", () => {
+  setTimeout(() => $("results").classList.remove("open"), 150);
+});
+$("assess-all").addEventListener("click", async () => {
+  const res = await store.assessWatched();
+  if (!res.ok) toast(res.reason, true);
+  else toast("Assessed " + res.results.length + " watched cameras.");
+});
+
+store.subscribe(render);
+setInterval(() => {
+  $("clock").textContent = clock();
+}, 1000);
+$("clock").textContent = clock();
+setInterval(render, 15000);
+
+async function boot() {
+  render();
+  await store.loadCameras();
+  // ?seed=6 fills the board for a screenshot or a demo. Nothing else uses it.
+  const seed = Number(new URLSearchParams(location.search).get("seed") || 0);
+  if (seed > 0) for (const cam of store.cameras.slice(0, Math.min(MAX_WATCHED, seed))) store.toggleWatch(cam.id);
+  render();
+  await store.loadHealth();
+  await store.loadCrew();
+  render();
+}
+boot();
+</script>
+</body>
+</html>
