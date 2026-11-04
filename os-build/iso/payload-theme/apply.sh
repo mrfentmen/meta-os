@@ -41,6 +41,7 @@ for f in \
   icons/metaos.index.theme \
   apps/metaos-welcome.py apps/metaos-welcome.desktop \
   apps/metaos-imperium.py apps/metaos-imperium.desktop \
+  apps/metaos-controls.py apps/metaos-controls.desktop \
   identity/os-release identity/lsb-release identity/hostname identity/issue \
   identity/issue.net identity/motd identity/00-header \
   ; do need "$HERE/$f"; done
@@ -151,6 +152,11 @@ put "$HERE/apps/metaos-welcome.desktop" /usr/share/applications/metaos-welcome.d
 put "$HERE/apps/metaos-welcome.desktop" /etc/xdg/autostart/metaos-welcome.desktop
 put "$HERE/apps/metaos-imperium.py" /usr/share/metaos/apps/metaos-imperium.py 755
 put "$HERE/apps/metaos-imperium.desktop" /usr/share/applications/metaos-imperium.desktop
+# The control gallery: a native GTK window that draws one of every widget the
+# theme styles, so the theme can be judged in the running OS. Installed here so
+# a plain `apply.sh /mnt` (no ISO rebuild) puts it on the image.
+put "$HERE/apps/metaos-controls.py" /usr/share/metaos/apps/metaos-controls.py 755
+put "$HERE/apps/metaos-controls.desktop" /usr/share/applications/metaos-controls.desktop
 for f in "$HERE"/apps/dock/*.desktop; do
   put "$f" "/usr/share/applications/$(basename "$f")"
 done

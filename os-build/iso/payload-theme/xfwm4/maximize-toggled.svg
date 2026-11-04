@@ -3,6 +3,6 @@
      maximize button, toggled state, 22px disc.
      Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py -->
 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-  <circle cx="11.0" cy="11.0" r="11.0" fill="#0750bcd9"/>
-  <path d="M7.4 7.4 L14.6 7.4 L14.6 14.6 L7.4 14.6 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="11.0" cy="11.0" r="11.0" fill="#0750bcff"/>
+  <path d="M7.4 7.4 L14.6 7.4 L14.6 14.6 L7.4 14.6 Z" fill="none" stroke="#ffffffff" stroke-width="1.5" stroke-linejoin="round"/>
 </svg>

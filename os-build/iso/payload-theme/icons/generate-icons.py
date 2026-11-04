@@ -153,6 +153,19 @@ def budget():
     save("budget.png", img)
 
 
+def controls():
+    """Meta OS Controls: three sliders with their knobs, the plainest possible
+    glyph for 'this is the widget set'. Knob positions differ so it does not
+    read as a barcode at 32 px."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    for i, (y, knob) in enumerate(((32, 40), (64, 82), (96, 58))):
+        d.line((24, y, 104, y), fill=EDGE, width=8)
+        d.ellipse((knob - 12, y - 12, knob + 12, y + 12), fill=FILL,
+                  outline=LITE, width=4)
+    save("controls.png", img)
+
+
 def main():
     os.makedirs(DST, exist_ok=True)
     web()
@@ -165,6 +178,7 @@ def main():
     music3d()
     notes3d()
     budget()
+    controls()
 
 
 if __name__ == "__main__":

@@ -133,3 +133,388 @@ separator { background-color: rgba(127, 127, 127, 0.3); min-width: 1px; min-heig
 /* The plank dock and the panel paint themselves; these rules exist so GTK apps
    launched from them do not arrive in the base theme's grey. */
 .xfce4-panel { font-size: 13px; }
+
+/* ---- controls ------------------------------------------------------ */
+
+/* switch: 40x22 track, 18 px thumb. Off is the hairline wash, on is accent. */
+switch {
+  min-width: 40px;
+  min-height: 22px;
+  border-radius: 11px;
+  background-color: rgba(127, 127, 127, 0.18);
+  border: 1px solid rgba(127, 127, 127, 0.3);
+}
+switch:checked { background-color: @meta_accent; border-color: @meta_accent; }
+switch slider {
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 9px;
+  background-color: @meta_paper;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+}
+switch:disabled, switch:disabled slider { opacity: .45; }
+
+/* check + radio: 16 px, accent when on, paper glyph */
+check, radio {
+  min-width: 16px;
+  min-height: 16px;
+  border-radius: 5px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  background-color: rgba(127, 127, 127, 0.12);
+  color: transparent;
+}
+radio { border-radius: 999px; }
+check:checked, radio:checked {
+  background-color: @meta_accent;
+  border-color: @meta_accent;
+  color: @meta_paper;
+}
+check:disabled, radio:disabled { opacity: .45; }
+
+/* slider: 4 px trough, accent fill, 14 px thumb with a hairline */
+scale trough {
+  min-height: 4px;
+  border-radius: 2px;
+  background-color: rgba(127, 127, 127, 0.18);
+  border: 0;
+}
+scale highlight {
+  background-color: @meta_accent;
+  border-radius: 2px;
+}
+scale slider {
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 7px;
+  background-color: @meta_paper;
+  border: 1px solid @meta_accent;
+}
+scale slider:hover { background-color: rgba(79, 126, 194, 0.25); }
+
+/* tabs: the Meta tab, and a real close button on each one, because closing a
+   tab by right-clicking it is not a design, it is a missing feature. */
+notebook header {
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+}
+notebook tab {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 8px 8px 0 0;
+  background-color: rgba(127, 127, 127, 0.1);
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-bottom: 0;
+  color: #8b93a7;
+}
+notebook tab:checked {
+  background-color: @meta_window;
+  color: @meta_win_fg;
+  box-shadow: inset 0 2px 0 @meta_accent;
+}
+notebook tab:hover:not(:checked) { background-color: rgba(127, 127, 127, 0.18); }
+notebook tab button {
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  border-radius: 9px;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+}
+notebook tab button:hover { background-color: @meta_accent; color: @meta_paper; }
+
+/* progress: 6 px, accent */
+progressbar trough {
+  min-height: 6px;
+  border-radius: 3px;
+  background-color: rgba(127, 127, 127, 0.18);
+}
+progressbar progress {
+  min-height: 6px;
+  border-radius: 3px;
+  background-color: @meta_accent;
+}
+
+/* lists, cards, badges */
+row:hover, .view row:hover { background-color: rgba(127, 127, 127, 0.1); }
+.card, frame > border {
+  background-color: rgba(127, 127, 127, 0.1);
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 9px;
+  padding: 6px 12px;
+}
+.badge, .pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid @meta_accent;
+  color: @meta_accent;
+}
+
+/* flat and round buttons: a toolbar or headerbar needs an icon button that is
+   not a grey slab */
+button.flat, headerbar button.flat, toolbar button.flat {
+  background-color: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+button.flat:hover, headerbar button.flat:hover { background-color: rgba(127, 127, 127, 0.18); }
+button.circular {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 15px;
+}
+
+/* on-screen display (volume, brightness): black plate, white text, accent bar */
+.osd, .osd .background, .osd popover.background {
+  background-color: @meta_ink;
+  color: @meta_paper;
+  border: 1px solid @meta_accent;
+  border-radius: 12px;
+}
+.osd label { font-size: 15px; font-weight: 700; }
+.osd progressbar progress { background-color: @meta_accent; }
+
+/* ============================================================================
+ * The rest of the control set.
+ *
+ * Every widget below is here because an app in this image actually uses it, not
+ * to be complete for its own sake: the settings-style pages (Meta Controls, the
+ * welcome app) use the sidebar, the row and the heading; the face's apps use
+ * menus, comboboxes, infobars and toasts; the file dialogs use the treeview
+ * header and the statusbar. A GTK widget with no rule here is a widget that
+ * arrives in Adwaita grey in the middle of a Meta window, which reads as a bug.
+ * ========================================================================== */
+
+/* ---- menubar (inside a window, not the 30 px panel) ---------------------- */
+menubar {
+  min-height: 28px;
+  background-color: transparent;
+  padding: 0 4px;
+}
+menubar > menuitem {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+}
+menubar > menuitem:hover { background-color: rgba(127, 127, 127, 0.18); }
+menu separator, popover separator, .menu separator {
+  background-color: rgba(127, 127, 127, 0.3);
+  min-height: 1px;
+  margin: 4px 6px;
+}
+
+/* ---- menu button + combo box -------------------------------------------- */
+menubutton > button, button.combo, combobox button.combo {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  background-color: rgba(127, 127, 127, 0.12);
+}
+menubutton > button:hover, button.combo:hover, combobox button.combo:hover {
+  background-color: rgba(127, 127, 127, 0.18);
+}
+combobox arrow, menubutton arrow {
+  min-width: 9px;
+  min-height: 9px;
+  color: #8b93a7;
+}
+combobox window.popup, combobox menu {
+  border-radius: 9px;
+}
+
+/* ---- tree / list column headers ----------------------------------------- */
+treeview.view header button, treeview header button {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  background-color: transparent;
+  font-weight: 700;
+  color: #8b93a7;
+}
+treeview.view header button:hover { background-color: rgba(127, 127, 127, 0.12); color: @meta_win_fg; }
+treeview.view { background-color: transparent; }
+
+/* ---- settings sidebar --------------------------------------------------- */
+.sidebar, .navigation-sidebar {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-right: 1px solid rgba(127, 127, 127, 0.3);
+  padding: 8px 0;
+}
+.sidebar row, .navigation-sidebar row {
+  min-height: 34px;
+  margin: 2px 8px;
+  padding: 0 10px;
+  border-radius: 8px;
+}
+.sidebar row:hover:not(:selected) { background-color: rgba(127, 127, 127, 0.12); }
+.sidebar row:selected {
+  background-color: @meta_accent;
+  color: @meta_paper;
+  font-weight: 600;
+}
+
+/* ---- search entry ------------------------------------------------------- */
+entry.search { border-radius: 999px; background-color: rgba(127, 127, 127, 0.12); padding-left: 12px; }
+
+/* ---- settings page + section heading ------------------------------------ */
+.dim-label, label.dim-label, .preferences-page .dim-label {
+  color: #8b93a7;
+  opacity: 0.9;
+}
+.preferences-page, .settings-page { padding: 18px 20px; }
+.preferences-page .heading, .settings-page .heading,
+.section-heading {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #8b93a7;
+  margin: 14px 0 6px;
+}
+
+/* ---- infobar ------------------------------------------------------------ */
+infobar > revealer > box { padding: 8px 12px; }
+infobar.info > revealer > box {
+  background-color: rgba(79, 126, 194, 0.18);
+  border: 1px solid @meta_accent;
+  border-radius: 9px;
+}
+infobar.warning > revealer > box, infobar.error > revealer > box {
+  background-color: rgba(232, 85, 63, 0.18);
+  border: 1px solid #e8553f;
+  border-radius: 9px;
+}
+
+/* ---- toast / in-app notification ---------------------------------------- */
+.app-notification, .toast {
+  min-width: 320px;
+  padding: 10px 14px;
+  background-color: @meta_window;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- dialogs ------------------------------------------------------------ */
+dialog, messagedialog { border-radius: 14px; }
+dialog .dialog-action-area button, dialog actionbar button, messagedialog button {
+  min-height: 30px;
+}
+messagedialog .titlebar { background-color: transparent; border: 0; box-shadow: none; }
+messagedialog box.message-area, messagedialog .message-area { padding: 18px 20px; }
+
+/* ---- statusbar ---------------------------------------------------------- */
+statusbar {
+  min-height: 24px;
+  padding: 0 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(127, 127, 127, 0.3);
+  color: #8b93a7;
+  font-size: 12px;
+}
+
+/* ---- spinbutton steppers ------------------------------------------------ */
+spinbutton button {
+  min-width: 22px;
+  min-height: 14px;
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+spinbutton button:hover { background-color: rgba(127, 127, 127, 0.18); }
+
+/* ---- slider marks + value label ---------------------------------------- */
+scale marks { color: #8b93a7; }
+scale value { color: #8b93a7; font-size: 11px; }
+
+/* ---- level bar ---------------------------------------------------------- */
+levelbar trough {
+  min-height: 8px;
+  border: 0;
+  border-radius: 999px;
+  background-color: rgba(127, 127, 127, 0.12);
+}
+levelbar block, levelbar block.filled, levelbar block.high {
+  min-height: 8px;
+  border-radius: 999px;
+  background-color: @meta_accent;
+}
+levelbar block.low { background-color: #9dc0f2; }
+levelbar block.full { background-color: #e8553f; }
+
+/* ---- paned handle + expander ------------------------------------------- */
+paned > separator { background-color: rgba(127, 127, 127, 0.3); min-width: 1px; min-height: 1px; }
+paned > separator:hover { background-color: @meta_accent; }
+expander title:hover { background-color: rgba(127, 127, 127, 0.12); }
+
+/* ---- calendar ----------------------------------------------------------- */
+calendar {
+  padding: 6px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 9px;
+}
+calendar.header { border-bottom: 1px solid rgba(127, 127, 127, 0.3); }
+calendar.button { border-radius: 6px; }
+calendar:selected, calendar:selected:focus {
+  background-color: @meta_accent;
+  color: @meta_paper;
+  border-radius: 6px;
+}
+
+/* ---- segmented control / pill tabs ------------------------------------- */
+.segmented button, .pill-tabs button {
+  min-height: 30px;
+  border-radius: 0;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  background-color: transparent;
+}
+.segmented button:first-child { border-radius: 999px 0 0 999px; }
+.segmented button:last-child { border-radius: 0 999px 999px 0; }
+.segmented button:checked { background-color: @meta_accent; color: @meta_paper; border-color: @meta_accent; }
+stackswitcher > button { min-height: 26px; border-radius: 999px; }
+
+/* ---- flat icon button --------------------------------------------------- */
+button.image-button {
+  min-width: 26px;
+  min-height: 26px;
+  padding: 4px;
+  border-radius: 8px;
+  background-color: transparent;
+}
+button.image-button:hover { background-color: rgba(127, 127, 127, 0.18); }
+
+/* ---- client-side-decorated titlebar: the same black/white/blue trio ------
+ * Apps that draw their own titlebar (mousepad, dialogs, our own apps) get the
+ * identical close/minimise/maximise colours as the window manager's buttons, so
+ * a window never shows one set of buttons in the WM frame and another inside. */
+headerbar button.titlebutton {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 999px;
+}
+headerbar button.titlebutton.close { background-color: #000000; color: #ffffff; }
+headerbar button.titlebutton.close:hover { background-color: #2b2b2b; }
+headerbar button.titlebutton.minimize { background-color: #ffffff; color: #000000; }
+headerbar button.titlebutton.minimize:hover { background-color: #e8ecf4; }
+headerbar button.titlebutton.maximize { background-color: @meta_accent; color: @meta_paper; }
+headerbar button.titlebutton.maximize:hover { background-color: #6a96d8; }
+
+/* ---- thin scrollbar ----------------------------------------------------- */
+scrollbar { min-width: 10px; min-height: 10px; }
+
+/* focus ring: 2 px accent, the same everywhere, so keyboard use is visible */
+*:focus {
+  outline-style: solid;
+  outline-width: 2px;
+  outline-color: @meta_accent;
+  outline-offset: -1px;
+}

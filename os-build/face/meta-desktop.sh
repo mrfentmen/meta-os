@@ -313,6 +313,9 @@ add_app editor    "Editor"     editor          mousepad
 add_app calc      "Calculator" calculator      galculator
 add_app settings  "Settings"   settings        xfce4-settings-manager
 add_app trash     "Trash"      trash           thunar trash:///
+# Native, not a wrapped page: the control gallery is a GTK app that draws one of
+# every widget the theme styles. It is the tile a judge clicks to see the theme.
+add_app controls  "Controls"  controls        /usr/share/metaos/apps/metaos-controls.py
 add_app trio      "Trio"      imperium        "$IMPERIUM" --title "Meta Trio - Dispatch"
 add_app imperium  "Imperium"  imperium        "$IMPERIUM" --title "Imperium - Command"
 

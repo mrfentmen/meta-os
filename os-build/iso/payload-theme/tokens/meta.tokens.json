@@ -118,8 +118,67 @@
     "_size": "face.css .win-btns button is 22x22 with margin-left 6px.",
     "states": ["active", "inactive", "prelight", "pressed", "toggled"],
     "_states": "xfwm4 looks up <name>-<state>.svg. toggled is what maximise shows when the window is already maximised, so it gets the restore glyph.",
+
+    "discs": {
+      "_note": "Boss's call: close is black, minimise is white, maximise is blue. That is the Meta trio itself — the reference's own palette comment is 'bars white/blue/black' — so the three window buttons now spell the brand instead of being three greys. Glyph contrast is explicit per button; there is no formula that gets white-on-white right.",
+      "close": {
+        "base": "#000000", "prelight": "#2b2b2b", "pressed": "#000000",
+        "glyph": "#ffffff",
+        "_note": "black disc, white cross; pressed darkens the ring, not the disc"
+      },
+      "hide": {
+        "base": "#ffffff", "prelight": "#e8ecf4", "pressed": "#cfd6e2",
+        "glyph": "#000000",
+        "_note": "white disc, black bar — the one button that inverts the titlebar"
+      },
+      "maximize": {
+        "base": "#4f7ec2", "prelight": "#6a96d8", "pressed": "#0750bc",
+        "glyph": "#ffffff",
+        "_note": "accent disc, paper plus; pressed uses the deep accent"
+      }
+    },
+    "inactive_alpha": 0.55,
+    "_inactive_alpha": "unfocused windows keep their colours but fade to 55%, so a background window never competes with the focused one",
+    "glyph_alpha_inactive": 0.8,
     "csd_layout": "icon:minimize,maximize,close",
     "_csd_layout": "The same three buttons for GTK apps that draw their own titlebar (mousepad, dialogs). Without Gtk/DecorationLayout set, a client-side-decorated window shows no buttons at all — the second half of the missing-x report."
+  },
+
+  "controls": {
+    "_note": "The rest of the widget set, so every control in the OS is one of these rather than whatever GTK ships by default. Sizes in px at 1x; GTK3 sizes are integers.",
+    "height": 30,
+    "radius": 9,
+    "pad_x": 12,
+    "pad_y": 6,
+    "focus_ring": 2,
+    "switch_w": 40,
+    "switch_h": 22,
+    "switch_thumb": 18,
+    "check_size": 16,
+    "slider_track": 4,
+    "slider_thumb": 14,
+    "tab_h": 30,
+    "tab_radius": 8,
+    "badge_radius": 6,
+    "badge_px": 10,
+    "osd_px": 15,
+    "row_h": 34,
+    "_row_h": "One list/table row: 8 px pad + 13.5 px text + hairline, rounded.",
+    "sidebar_w": 196,
+    "_sidebar_w": "Preferences/settings sidebar. Wide enough for 'Window controls' at 13 px without ellipsis.",
+    "scrollbar_w": 10,
+    "_scrollbar_w": "Thin overlay scrollbar; the reference has none, so this is the smallest width that stays grabbable.",
+    "stepper_w": 22,
+    "_stepper_w": "Spinbutton up/down stepper column, same 22 px as a window button.",
+    "menubar_h": 28,
+    "_menubar_h": "In-window menubar strip. Not the 30 px panel: this one sits inside a window's content.",
+    "statusbar_h": 24,
+    "level_h": 8,
+    "dialog_radius": 14,
+    "_dialog_radius": "Dialogs are a touch rounder than windows (14 vs 12) so a modal reads as a different layer.",
+    "toast_radius": 12,
+    "toast_w": 320,
+    "_only": "These are the controls face.css actually defines or that the OS needs to look native: button (default / suggested / destructive / flat / icon), entry, check, radio, switch, slider, tab, menu, tooltip, scrollbar, progress, badge, list row, card, OSD. Anything not in this list is a GTK default and therefore a bug, not a choice."
   },
 
   "type": {

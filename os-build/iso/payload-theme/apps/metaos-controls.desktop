@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Controls
+Comment=Every native control the MetaOS theme draws, in one window
+Exec=/usr/share/metaos/apps/metaos-controls.py
+TryExec=/usr/share/metaos/apps/metaos-controls.py
+Icon=controls
+Terminal=false
+Categories=Settings;DesktopSettings;Utility;
+OnlyShowIn=XFCE;
+StartupNotify=true
