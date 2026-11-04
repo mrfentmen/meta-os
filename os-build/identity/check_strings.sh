@@ -8,6 +8,8 @@
 #   sh /path/to/check_strings.sh                       # from anywhere (task 41)
 #   sh os-build/identity/check_strings.sh --explain   # every hit + which row
 #                                                     # suppressed it, or why not
+#   sh os-build/identity/check_strings.sh --root DIR  # scan a tree that is
+#                                                     # not this repo (tests)
 #
 # Banned words (case-sensitive, whole-word): ubuntu Ubuntu Xubuntu xubuntu
 # canonical Canonical. `canonical` matches the English word on purpose: every
@@ -33,15 +35,24 @@ ALLOW="$ROOT/os-build/identity/ALLOWLIST.tsv"
 TAB=$(printf '\t')
 
 EXPLAIN=0
+ROOT_OVERRIDE=""
+prev=""
 for a in "$@"; do
+  if [ -n "$prev" ]; then ROOT_OVERRIDE="$a"; prev=""; continue; fi
   case "$a" in
     --explain) EXPLAIN=1 ;;
+    --root) prev="--root" ;;
+    --root=*) ROOT_OVERRIDE="${a#--root=}" ;;
     -h|--help)
       sed -n '2,/^set -eu$/p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "check_strings: unknown flag $a (try --help)" >&2; exit 2 ;;
   esac
 done
+[ -z "$prev" ] || { echo "check_strings: --root needs a directory" >&2; exit 2; }
+[ -n "$ROOT_OVERRIDE" ] && ROOT="$ROOT_OVERRIDE"
+ALLOW="$ROOT/os-build/identity/ALLOWLIST.tsv"
+[ -d "$ROOT" ] || { echo "check_strings: no such directory $ROOT" >&2; exit 2; }
 
 # allow <path> <word>: print the row and exit 0 if allowlisted.
 allow() {

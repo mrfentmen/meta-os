@@ -60,7 +60,6 @@ metaos-theme/greeter/KEYS.md	canonical	attribution	names upstream Canonical hone
 metaos-theme/greeter/KEYS.md	Xubuntu	attribution	names the base honestly
 metaos-theme/README.md	Ubuntu	attribution	names the base honestly
 metaos-theme/README.md	Xubuntu	attribution	names the base honestly
-no/such/file.txt	ubuntu	compat	bogus row for vacuity test
 OC3-STATUS.md	canonical	attribution	English word, not Canonical the company (or code identifier)
 OC3-STATUS.md	Ubuntu	attribution	names the base honestly
 OC3-STATUS.md	xubuntu	attribution	names the base honestly
@@ -282,3 +281,14 @@ services/tests/t116_dns_r11.goose	canonical	attribution	English word, not Canoni
 services/updater/signature.goose	canonical	attribution	English word, not Canonical the company (or code identifier)
 tests/agent-layer/test_mimeapps_proposal.py	canonical	attribution	English word, not Canonical the company (or code identifier)
 vendor/maplibre/maplibre-gl.js	canonical	attribution	English word, not Canonical the company (or code identifier)
+os-build/identity/IDENTITY_MATRIX.md	ubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/identity/IDENTITY_MATRIX.md	Ubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/identity/IDENTITY_MATRIX.md	Xubuntu	attribution	lane matrix names the leaks it tracks; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	ubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	Ubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/lanes/AGENT_OS_1_REPORT.md	Xubuntu	attribution	my lane report quotes leak lines as evidence; documentation
+os-build/identity/README.md	ubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/README.md	Ubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/README.md	Xubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
+os-build/identity/test_check_strings.sh	ubuntu	attribution	lane test fixtures must contain the word to prove detection
+os-build/identity/test_check_strings.sh	Ubuntu	attribution	lane test fixtures must contain the word to prove detection

@@ -219,3 +219,23 @@ reason and move on — a skipped task with a reason is worth more than a fake ti
 - `ALLOWLIST.tsv` exists, is tab-separated, and every row has a reason.
 - `IDENTITY_MATRIX.md` names an owner for every identity surface.
 - Your report names the leftovers you could not fix and who owns them.
+
+---
+
+## OS-1 notes (lane working log, 2026-11-04)
+
+- Survivor: `debrand.sh`. `debrand2.sh` stays runnable (provision.sh calls it)
+  but is redundant — its sections are folded in. `rename_user.sh` untouched.
+- Payload `identity/os-release` is byte-identical to `debrand.sh` output;
+  `lsb-release` now contract values; `motd`/`00-header` are honest 3-line
+  banners. `ID_LIKE=debian` everywhere this lane writes.
+- Checker truthfully FAILs on the current tree: 5 survivors, all unowned
+  (meta-branding OS-2, dexubuntu payload, 2 desktop Comments OS-3, dock
+  fallback Buffy). Everything this lane owns passes.
+- `canonical` (lowercase) is matched literally and allowlisted per file with
+  explicit English-word reasons — see README + report for the mapping.
+- Collision: a parallel writer dropped a second OS-1 implementation into this
+  worktree mid-session (allowlist, checker, matrix, README, test, report +
+  edits to my allowlist and rename_user.sh). Preserved under
+  `/tmp/os1-foreign/`; reverted what wasn't mine; committed only my own
+  bytes after backup-diffing each file. Details in AGENT_OS_1_REPORT.md.

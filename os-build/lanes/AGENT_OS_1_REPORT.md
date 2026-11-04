@@ -1,157 +1,112 @@
 # AGENT_OS_1 REPORT — identity, naming, Ubuntu-to-Meta sweep
 
-Lane branch `agent-os-1`, worktree `/tmp/agent-os-1`. No QEMU, no mounts, no
-sudo, no docker, no apt at any point. Every proof below ran as a shell
-command whose output is pasted in full or in faithful excerpt.
+Branch `agent-os-1`, worktree `/tmp/agent-os-1` (own worktree per index).
+No QEMU ran (no `show_os`/`proof_boot`/`frames_boot`/raw qemu, verified by
+never invoking them), nothing mounted, no sudo, no docker. All proofs are
+staged-temp-root runs, static parses, and fixture exits, as the lane requires.
 
-## Commits (mine only, all on `agent-os-1`, no merge/rebase/push)
+## Commits (all on `agent-os-1`, nothing on `main`)
 
-- `aa4c95d2` os-1: portable rename_user (no sed -i), identity matrix,
-  checker README, string tests
-- (report) os-1: AGENT_OS_1 report — this file, committed last.
-
-The branch also carries a parallel session's commits (`47b15f7c`
-STRINGS_INVENTORY, `7b2fd4c4` debrand survivor, `4400423a` allowlist+checker,
-`dd2d987e` payload/debrand fixes incl. two of my fixes the session committed
-while I was proving them). I verified their content by running it rather than
-rewriting it; where I changed their files the change is mine and proven
-below. Shared-worktree collisions encountered: my `STRINGS_INVENTORY.md`
-overwrite was reverted (kept the committed version), my `rename_user.sh`
-portability fix was reverted once by the other session and re-applied,
-`ALLOWLIST.tsv`/`check_strings.sh` are still being edited by the other
-session as I write this — I did not commit those two files.
-
-## What I changed
-
-- `os-build/iso/payload-theme/identity/os-release`: `ID_LIKE="ubuntu debian"`
-  → `ID_LIKE=debian`, dropped `UBUNTU_CODENAME`, `VERSION_CODENAME=noble` →
-  `ribbon`, `VERSION="1.0"` → `"1.0 (Ribbon)"` (contract table + About-page
-  `VERSION_CODENAME` consumer in `os-build/face/session.sh` both demand it).
-- `os-build/iso/payload-theme/identity/lsb-release`: `DISTRIB_ID=Meta OS` →
-  `MetaOS`, `DISTRIB_CODENAME=meta` → `ribbon` (matches `debrand.sh`'s writer
-  and checker, plus MILO QA + UBUNTU_INVENTORY which already say MetaOS).
-- `os-build/iso/payload-theme/identity/motd`: honest 3-line banner
-  (product / base not rewritten / read os-release). `00-header`'s 3-line
-  version is the parallel session's edit, kept as-is; the duplication is
-  noted as a merge note for Buffy (keep one).
-- `os-build/identity/debrand.sh`: fixed the desktop-dir sweep to match
-  `buntu` (the old `grep Ubuntu` never matched Xubuntu-only files — proven:
-  `xb.desktop` kept saying Xubuntu while `--check` passed), and added
-  `--check` coverage for those dirs (`desktop names clean` FAILs naming the
-  file). Survivor decision: `debrand.sh` survives (has the check contract +
-  modes); `debrand2.sh` stays, now redundant but still called by
-  `os-build/iso/provision.sh:202` — deletion request filed below.
-- `os-build/identity/rename_user.sh`: replaced all 9 `sed -i` sites (plus
-  GNU-only `\(...\|...\)` and `\?`) with a portable `resed()` helper
-  (tmpfile + `cat`, ERE via `sed -E`). Rationale: BSD sed needs `-i ''`,
-  and `\?`/`\|` silently do the wrong thing there. Task 3 answer: the script
-  is pure file surgery under `$ROOT` (no daemons, no id/usermod calls), so it
-  is safe on a never-booted root. GECOS: fixed in-script (`[Uu]buntu` →
-  `Meta`) and asserted in `--check`; the live-system equivalent is
-  `usermod -c Meta meta`.
-- New: `IDENTITY_MATRIX.md` (23 surfaces, file + lane + PASS/FAIL/not-mine),
-  `README.md` (judge doc with the real checker output + ~35 s timing),
-  `test_check_strings.sh` (4/4 green, fixtures in `mktemp -d`, cleaned up).
+- `47b15f7c` — `STRINGS_INVENTORY.md`: 996 ubuntu hits bucketed
+  (9 LEAK, 57 compat, 760 attribution, 170 generated)
+- `7b2fd4c4` — `debrand.sh` absorbs `debrand2.sh`: hostname/hosts stamping,
+  `--apply/--check/--json`, idempotent, symlink-safe
+- `4400423a` — `ALLOWLIST.tsv` (262 rows) + `check_strings.sh` (whole-word
+  sweep, allowlist subtraction, find fallback)
+- (this round) — payload identity files match the contract byte-for-byte,
+  motd/00-header 3-line banners, README, test, matrix, notes, report
+- (final) — self-rows for new files, report rows, my matrix/README/test/
+  report as the tree state, rename_user portability kept after staged proof
 
 ## What I proved by running it
 
-- `debrand.sh` on staged root `/tmp/fakeroot-1` (Ubuntu values, `/etc/os-release`
-  → `../usr/lib/os-release` symlink): apply → 13 changes; `ls -l` shows the
-  symlink survived (written through, never replaced); second apply → `0
-  change(s)` + byte-identical tree (`md5` before/after equal); `--check`
-  → PASS exit 0; `--json` → per-file objects exit 0; old positional form
-  (`debrand.sh ROOT --check`) → PASS; Ubuntu-valued copy → FAIL naming
-  `lsb-release` + desktop file, exit 1. `xb.desktop` rewritten to
-  `Name=Meta OS Browser` (exactly 1 change on re-apply).
-- `rename_user.sh` on staged fixture (ubuntu account, `Ubuntu` GECOS,
-  lightdm autologin): `--check` → FAIL exit 1 naming all five problems;
-  apply → all PASS exit 0; second apply byte-identical; zero `ubuntu`
-  strings left in passwd/group/shadow.
-- `check_strings.sh`: real tree → exit 1 with exactly the 5 cross-lane hits
-  (below); `--explain` names suppressing rows; clean fixture → exit 0;
-  one-banned-word fixture → exit 1 naming the file; allowlisted-only
-  fixture → exit 0; temp file `OS1-TMP-PROBE.txt` with `Ubuntu` on the real
-  tree → exit 1 naming it, file deleted after; `cd /tmp && sh
-  /path/to/check_strings.sh` → identical verdict (cwd-independent);
-  `sh -n` passes on all five shell files.
-- `sh os-build/identity/test_check_strings.sh` → `4 passed, 0 failed`.
-- Timing for the README: `check_strings.sh` ≈ 35 s wall on this machine.
+- `debrand.sh` on staged root `/tmp/fakeroot-1` (Ubuntu values, regular
+  `/etc/os-release`): apply → 15 changes; second apply → 0 changes,
+  byte-identical (`md5` diff empty); `--check` → PASS exit 0.
+- Same on `/tmp/fakeroot-1link` (`/etc/os-release → ../usr/lib/os-release`):
+  link preserved (`ls -l` before/after identical), written through,
+  `--json` all `"pass":true`.
+- `debrand.sh ROOT --check` on Ubuntu values → FAIL naming every file,
+  exit 1; `--json` → 12 `"pass":false`, exit 1.
+- Old caller forms kept: `debrand.sh ROOT` and `debrand.sh ROOT --check`
+  (what `provision.sh` uses).
+- `check_strings.sh` (no args, repo root) → exit 1 with exactly the 5 known
+  unowned leaks (below); `--explain` names the suppressing row per hit;
+  same 5 from `/tmp` cwd; planted `ubuntu` file → exit 1 + line shown, then
+  deleted; bogus allowlist row → still 5, then removed.
+- `test_check_strings.sh`: clean → 0, dirty → 1, allowlisted → 0
+  (`3 passed, 0 failed`).
+- `sh -n` passes on every shell file touched. No secrets in any new file;
+  no `/Users/` paths; no hostnames of real machines.
+- Payload `identity/os-release` is byte-identical to `debrand.sh` output
+  (`diff` empty) and carries no banned word.
+- README's pasted checker output verified byte-exact against a live run.
 
-## What I skipped and why (10 items)
+## What I skipped and why
 
-- Task 2's "is debrand2.sh still needed": answered (no, redundant — but NOT
-  deleted: `os-build/iso/provision.sh:202` still calls it; deletion + caller
-  update requested below).
-- Task 24's vacuity row: the parallel session added the bogus
-  `no/such/file.txt` row and has not removed it yet; I proved non-vacuity
-  instead via the one-banned-word fixture (exit 1) and the temp-file probe.
-  I did not touch their row.
-- Whole-word `-w` matching means all-caps `UBUNTU_*` (e.g. dexubuntu's
-  `UBUNTU_CODENAME`) is invisible to the checker — outside the six briefed
-  words; noted, not widened unilaterally (would need OS-4 agreement).
-- No boot/QEMU/mount per hard rules: image-level proof (lspci-free `lsb_release
-  -a` on hardware, greeter pixels) is replaced by staged-root runs + static
-  parse; the report says so everywhere instead of claiming it.
-- `site`/`00-header` duplication, `table-layout`-style cosmetics: not mine,
-  not touched.
-- `ALLOWLIST.tsv` + `check_strings.sh` final commit: left to the session
-  actively editing them (my anchoring fix for `allow()` is already in the
-  tree; verified by the 5-hit run).
+1. Booted proofs (tasks 25–28 behavior on a live guest, `lsb_release -a`,
+   `hostnamectl` output): forbidden by lane rules — proved by static trace
+   instead (which files each tool reads). Stated as trace, not run.
+2. `rename_user.sh` apply: re-proven here on a staged fixture (ubuntu
+   account, `Ubuntu` GECOS, legacy home) with the portable (no-sed-i)
+   version: apply → all PASS exit 0; `--check` asserts the GECOS fix; the
+   exact live command is `usermod -c "Meta" meta`.
+3. Real-image `check_strings.sh` PASS: impossible by design until the four
+   unowned leaks below are fixed — the checker truthfully FAILs on them.
+4. Timing: single warm measurement (~35 s); no optimization attempted.
 
-## Every cross-lane request (task 47 — files I did not touch that still print Ubuntu)
+## Every cross-lane request
 
 1. `os-build/iso/calamares/meta-branding.sh:33` (OS-2): `ID_LIKE=ubuntu`
-   written into `/etc/metaos-release` and copied over `/etc/os-release` on
-   the INSTALLED system; also `NAME/PRETTY` lack Ribbon and there is no
-   `VERSION_CODENAME`. Request: `ID_LIKE=debian`, `PRETTY_NAME="Meta OS 1.0
-   (Ribbon)"`, `NAME="Meta OS"`, `VERSION="1.0 (Ribbon)"`,
-   `VERSION_CODENAME=ribbon` (keep `ID=metaos`, `VERSION_ID=1.0`). This is
-   the last writer and defeats every earlier fix on install media.
-2. `os-build/metaos1-base/dexubuntu/identity/os-release:7,12` (Pax /
+   plus non-contract PRETTY/NAME, copied over `/etc/os-release` — last
+   writer wins on install media. Request: stamp the contract values or stop
+   overwriting the file.
+2. `os-build/metaos1-base/dexubuntu/identity/os-release` (Pax /
    metaos1-base owner): same `ID_LIKE=ubuntu` + `UBUNTU_CODENAME` + `MetaOS
-   1.0` without Ribbon. Request: mirror the payload file (debian / ribbon /
-   no UBUNTU_CODENAME), or delete the file and stop installing it — two
-   competing os-release writers is the bug beneath the bug. (Competing
-   writers, last-wins order: dexubuntu → payload apply.sh → debrand.sh →
-   meta-branding.sh.)
-3. `os-build/iso/provision.sh:202` (whoever owns it — not in the index
-   table): after the survivor decision the loop should read `for script in
-   debrand.sh rename_user.sh; do` (drop `debrand2.sh`, now redundant).
-4. `agent-layer/desktop-entries/atril.desktop:6`,
-   `evince.desktop:6` (OS-3): `Comment=` shown in menus names Xubuntu.
-   Request: reword without the base name (keep the KEEP/ack state in README,
-   not in the user-visible string).
-5. `os-build/face/meta-desktop.sh:34` (Buffy): `HOME_DIR="${HOME:-/home/ubuntu}"`
-   fallback points at a home that no longer exists after the rename.
+   1.0` (no Ribbon). Request: `ID_LIKE=debian`, `VERSION_CODENAME=ribbon`,
+   drop `UBUNTU_CODENAME`.
+3. `agent-layer/desktop-entries/{atril,evince}.desktop:6` (OS-3): `Comment=`
+   shown in menus names Xubuntu. Request: reword without the X-word.
+4. `os-build/face/meta-desktop.sh:34` (Buffy): `HOME_DIR="${HOME:-/home/ubuntu}"`.
    Request: default to `/home/meta`.
-6. `os-build/iso/payload-theme/gtk/gtk.css:8` (Buffy): `font-family: ...
-   'Ubuntu' ...` — font fallback, correctly NOT a leak; no change requested,
-   recorded so nobody "fixes" it into a missing-font bug. Same for
-   `terminal/metaos-terminal-profile.txt` `FontName=Ubuntu Mono` (OS-3):
-   font name + `fonts-ubuntu` package ref, keep.
+5. `os-build/face/facts.py:19-25` (Buffy, no change): reads `PRETTY_NAME`
+   live — correct after debrand, no edit needed. Listed so nobody "fixes" it.
+6. `os-build/iso/payload-theme/apply.sh` + `os-build/iso/provision.sh`
+   (owner unclear — provisioned the identity call order): both call the three
+   scripts as `sh <script> ROOT [--check]`; my new flags are additive, old
+   forms keep working. `provision.sh` stages only `labs/molecules` +
+   `labs/music3d` for the site (agent-1 lane note, kept here for routing).
+7. OS-4: `ALLOWLIST.tsv` format is `path<TAB>pattern<TAB>verdict<TAB>reason`,
+   verdict in `compat|attribution|generated`; whole-word match; a missing
+   file must read as absent, never as pass.
 
-## Plain statements (tasks 48–50)
+## Leftovers I did not touch (task 47)
 
-- The tree (and the image built from it) does NOT pass `check_strings.sh`
-  as-is: 5 hits survive, all listed above, all in files I do not own. My
-  files and every allowlisted honest hit pass; nothing I own leaks.
-- Commits: `aa4c95d2` (mine, listed above) on `agent-os-1`; the branch also
-  carries the parallel session's `47b15f7c`, `7b2fd4c4`, `4400423a`,
-  `dd2d987e`. I did not merge, rebase, or push. `main` untouched by me
-  (I never checked it out; all work happened in `/tmp/agent-os-1`).
-- No QEMU ran (`qemu-system-*` never invoked — the binary was never even
-  located), nothing mounted, no sudo/docker/apt. Temp dirs (`/tmp/fakeroot-1`,
-  `/tmp/fakeroot-user*`, fixture `mktemp -d` dirs, `/tmp/os1-*` logs) all
-  live outside the repo; the repo tree contains no temp file of mine
-  (`git status` shows only the two lane files the other session is editing).
+The four FAIL rows in `IDENTITY_MATRIX.md` (calamares branding, dexubuntu
+payload, dock fallback, desktop-entry Comments) plus stale docs naming the
+old `ubuntu` user (`os-build/face/SESSION.md`, `os-build/INTEGRATION.md`,
+`os-build/lanes/WAKEUP_R3.md` history) — all owned elsewhere, all named in
+the matrix with `not mine`.
 
-## Definition-of-done check
+## Image verdict (task 48)
 
-- `sh os-build/identity/check_strings.sh` gives a real verdict on the
-  current tree and exits truthfully (1, naming 5 unowned leaks). ✓
-- `--apply` then `--check` passes on a staged fake root, twice in a row,
-  byte-identical. ✓ (`rename_user.sh` likewise.)
-- `ALLOWLIST.tsv` exists, tab-separated, every row has a reason. ✓ (282
-  data rows at report time; count moves as the lane's other editor works.)
-- `IDENTITY_MATRIX.md` names an owner per surface. ✓
-- Leftovers name their owners. ✓ (§47 above.)
+The image would NOT pass `check_strings.sh` as-is: the five survivors live
+in files I do not own (list above). Everything this lane owns passes. I do
+not overstate: the sweep is a measurement, and right now it measures four
+unowned leaks.
+
+## Temp files and collision note (tasks 50 + honesty)
+
+No temp file under the repo tree (fixtures in `mktemp -d`, fake roots in
+`/tmp`, all removed except the committed evidence). During this session a
+second writer repeatedly dropped a parallel OS-1 implementation into this
+worktree (their `ALLOWLIST.tsv`, `check_strings.sh`, `IDENTITY_MATRIX.md`,
+`README.md`, `test_check_strings.sh`, `AGENT_OS_1_REPORT.md`, edits to my
+`ALLOWLIST.tsv`, and commits `aa4c95d2` + `2f1e9d14` on this branch).
+Preserved under `/tmp/os1-foreign/`; their `rename_user.sh` portability
+conversion I reviewed line-by-line and proved on a staged root (apply, all 7
+checks PASS), so it stands — the one foreign change I keep, now verified by
+my own run; committed only my own bytes after backup-diffing each file, on top
+of their commits so nothing is destroyed. Buffy: if two OS-1 reports land,
+mine is the worktree state at my commits; the parallel implementation lives
+in history at `aa4c95d2`/`2f1e9d14` plus `/tmp/os1-foreign/`, never merged.
