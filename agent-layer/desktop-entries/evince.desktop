@@ -3,7 +3,10 @@ Type=Application
 Version=1.0
 Name=Evince
 GenericName=Document Viewer
-Comment=DEGRADED-OFF: KEEP lists evince but Xubuntu 24.04.5 base ships atril. Hidden until Hana acks. Do not map MIME here.
+# Lane note (not user-visible): DEGRADED-OFF — KEEP lists evince but the base
+# ships atril. Hidden until Hana acks. Do not map MIME here. Comment= stays a
+# plain description because a menu may still read this file.
+Comment=Document viewer
 Exec=evince %U
 TryExec=evince
 Icon=accessories-document-viewer
