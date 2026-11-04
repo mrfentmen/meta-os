@@ -1,0 +1,28 @@
+$ lobster bus-send.lobster
+sent 0001.txt
+RC=0
+$ lobster bus-recv.lobster
+got 0001.txt: from lobster-agent: K5 tasks sleep and wake
+RC=0
+$ lobster service-roundtrip.lobster
+service exit: 0
+service said: > echo: hello from lobster
+> 
+RC=0
+$ lobster agent-call.lobster
+host exit: 0
+host said: {"ok":true,"tools":["echo"]}
+
+host exit: 0
+host said: {"ok":true,"result":"hello from lobster"}
+
+RC=0
+$ lobster board-roundtrip.lobster
+board-roundtrip.lobster(24): warning: condition will always succeed with non-nil reference type `string`
+board-roundtrip.lobster(27): warning: condition will always succeed with non-nil reference type `string`
+post head: HTTP/1.1 201 Created
+Content-Type: application/json
+Conten
+get tail: dtrip [ts:1793820385]","lane-c: lobster tcp roundtrip [ts:1793820389]","lane-c: lobster tcp roundtrip [ts:1793820411]"]}
+BOARD ROUNDTRIP OK
+RC=0
