@@ -1,6 +1,9 @@
 # ClearCam Pattern — Camera Layer for Imperium — Spec
 
 Status: SPEC ONLY — nothing built. Written 2026-11-16 at Del's order.
+Decision (Del, 2026-11-16): rebuild the ClearCam pattern clean-room
+in Rust, as part of the Meta OS Rust rebuild. The separate GPL
+service option is closed unless Del reopens it.
 System: Imperium / Meta Sentinel (Meta OS system one) — all three
 services (Vigiles, Ignis, Medicus) sit on top of this layer.
 Source stimulus: Instagram post by @githubprojects (Github Projects),
@@ -142,10 +145,10 @@ the operator's own systems only. See hard rule 3.
 1. **GPL-3.0 — no copied code.** ClearCam is GPL-3.0. Clean-room
    rule applies as always: study the approach, reimplement the
    behavior, never copy code or assets into Meta OS. Running
-   upstream ClearCam itself, as a separate GPL service, is a
-   different option with its own license obligations — that
-   decision is Del's, recorded before anything is installed or
-   imported.
+   upstream ClearCam itself, as a separate GPL service, was the
+   other option — DECIDED 2026-11-16 by Del: closed. The rebuild
+   is clean-room, in Rust. Nothing of upstream gets installed or
+   imported under this spec.
 2. **A detection is not a finding.** A bounding box and a track are
    a sensor observation, unconfirmed, same status as a CSI flag.
    It may open a review item; assessment and human verification
@@ -208,11 +211,19 @@ stability, zone accuracy, and clip start/end accuracy.
 
 ## Build order (when Del says go)
 
-1. Read the upstream repo in full (code-inspected) and record the
-   separate-service vs clean-room decision with Del, GPL first.
-2. Standalone harness: RTSP ingest → detect → track → zones on the
-   README's public test feed and our own staged footage; run the
-   eval classes above and publish per-class numbers.
+1. Read the upstream repo in full (code-inspected), GPL first.
+   The separate-service vs clean-room decision is already
+   recorded: clean-room, in Rust (Del, 2026-11-16). One open
+   design question to settle in this step: how the YOLO-class
+   detector runs inside a Rust stack (upstream uses tinygrad,
+   which is Python) — no runtime is chosen yet, and none may be
+   claimed until it runs.
+2. Standalone Rust harness: RTSP ingest → detect → track → zones
+   on the README's public test feed and our own staged footage;
+   run the eval classes above and publish per-class numbers.
+   Rust proof follows the house rule: it counts when it compiles
+   on Del's Mac, not on a sandbox claim (this sandbox cannot
+   compile Rust).
 3. Adapter emitting the event contract into the Imperium pipeline,
    beside livecams.py, simulated endpoint only.
 4. Event store + index (camera / time / class / zone / track) and
