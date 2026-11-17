@@ -213,11 +213,16 @@ stability, zone accuracy, and clip start/end accuracy.
 
 1. Read the upstream repo in full (code-inspected), GPL first.
    The separate-service vs clean-room decision is already
-   recorded: clean-room, in Rust (Del, 2026-11-16). One open
-   design question to settle in this step: how the YOLO-class
-   detector runs inside a Rust stack (upstream uses tinygrad,
-   which is Python) — no runtime is chosen yet, and none may be
-   claimed until it runs.
+   recorded: clean-room, in Rust (Del, 2026-11-16). Detector
+   runtime DECIDED 2026-11-16 (Del's tap): **ort** — the Rust
+   bindings for Microsoft ONNX Runtime (pykeio/ort). The
+   YOLO-class detector is exported to ONNX and runs under ort
+   (CPU or GPU), no Python at runtime. The alternatives
+   (od_opencv, tract, candle) are closed unless Del reopens
+   them. Still open, honestly: the YOLOv9 weights licence has
+   not been checked against the clean-room boundary, and RTSP
+   decode in Rust (ffmpeg bindings vs GStreamer) is a separate
+   unsettled piece. Nothing may be claimed until it runs.
 2. Standalone Rust harness: RTSP ingest → detect → track → zones
    on the README's public test feed and our own staged footage;
    run the eval classes above and publish per-class numbers.
